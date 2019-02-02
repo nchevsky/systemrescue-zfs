@@ -1,0 +1,15 @@
+SystemRescueCd ChangeLog
+========================
+
+-------------------------------------------------------------------------------
+6.0.0 (2019-02-02):
+-------------------------------------------------------------------------------
+* System is now based on ArchLinux and built using archiso and its dependencies
+* Kernel and user space programs are now fully 64 bit (dropped 32bit support)
+* Boot options are the ones provided by new upstream rather than in old version
+* Graphical environment based on xorg-1.20.3 and xfce-4.12
+* Implemented "setkmap=xx" option on the boot command line to setup keyboard
+* Updated kernel to Long-Term-Supported linux-4.19.19
+* Updated filesystem tools: e2fsprogs-1.44.5, xfsprogs-4.19.0, btrfs-progs-4.19.1
+* Updated disk tools: gparted-0.33.0, lvm2-2.02.183
+
