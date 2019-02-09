@@ -1,0 +1,14 @@
+[Unit]
+Description=SystemRescueCd Autorun
+After=network.target
+After=systemd-user-sessions.service
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/etc/systemd/scripts/sysresccd-autorun
+RemainAfterExit=true
+StandardOutput=journal
+
+[Install]
+WantedBy=multi-user.target

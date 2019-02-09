@@ -2,6 +2,15 @@ SystemRescueCd ChangeLog
 ========================
 
 -------------------------------------------------------------------------------
+6.0.1 (2019-02-09):
+-------------------------------------------------------------------------------
+* Updated kernel to Long-Term-Supported linux-4.19.20
+* Reintroduced autorun service to run scripts automatically at boot time
+* Changed filesystem label so it fits in FAT filesystem labels for UEFI booting
+* Enabled sshd service and re-introduced support for option rootpass=xxxx
+* Added support for rootcryptpass=xxxx boot option to set encrypted root passwords
+
+-------------------------------------------------------------------------------
 6.0.0 (2019-02-02):
 -------------------------------------------------------------------------------
 * System is now based on ArchLinux and built using archiso and its dependencies
@@ -12,4 +21,3 @@ SystemRescueCd ChangeLog
 * Updated kernel to Long-Term-Supported linux-4.19.19
 * Updated filesystem tools: e2fsprogs-1.44.5, xfsprogs-4.19.0, btrfs-progs-4.19.1
 * Updated disk tools: gparted-0.33.0, lvm2-2.02.183
-

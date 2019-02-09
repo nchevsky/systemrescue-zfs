@@ -1,0 +1,46 @@
+#!/bin/sh
+echo "$0 Starting ..."
+errcnt=0
+
+# Process options passed on the boot command line
+for curopt in $(cat /proc/cmdline)
+do
+    case "${curopt}" in
+      # Configure keyboard layout if requested in the boot command line
+      setkmap\=*)
+          echo "Found option '${curopt}' on the boot command line"
+          SETKMAP=$(echo "${curopt}" | cut -f2 -d=)
+          /sbin/loadkeys ${SETKMAP}
+          mkdir -p /etc/sysconfig
+          echo "XKEYBOARD=${SETKMAP}" > /etc/sysconfig/keyboard
+          ;;
+      # Set the system root password from a clear password
+      rootpass\=*)
+          SSHPASS1=$(echo "${curopt}" | cut -f2 -d=)
+          echo "Found option 'rootpass=******' on the boot command line"
+          if echo "root:${SSHPASS1}" | chpasswd --crypt-method SHA512
+          then
+              echo "Password successfully changed"
+          else
+              echo "Failed to change password"
+              errcnt=$((errcnt + 1))
+          fi
+          ;;
+      # Set the system root password from an encrypted password
+      # A password can be encrypted using a one-line python3 command such as:
+      # python3 -c 'import crypt; print(crypt.crypt("MyPassWord123", crypt.mksalt(crypt.METHOD_SHA256)))'
+      rootcryptpass\=*)
+          SSHPASS2=$(echo "${curopt}" | cut -f2 -d=)
+          echo "Found option 'rootcryptpass=******' on the boot command line"
+          if echo "root:${SSHPASS2}" | chpasswd --encrypted
+          then
+              echo "Password successfully changed"
+          else
+              echo "Failed to change password"
+              errcnt=$((errcnt + 1))
+          fi
+          ;;
+    esac
+done
+
+exit ${errcnt}

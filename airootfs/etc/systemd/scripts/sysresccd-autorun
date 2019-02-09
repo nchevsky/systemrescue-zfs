@@ -1,0 +1,229 @@
+#!/sbin/python3
+# Distributed under the terms of the GNU General Public License v2
+# The original bash version of autorun was developed by Pierre Dorgueil in 2003
+# The current python implementation has been developed by Francois Dupoux in 2008
+# ----------------------- changeslog: -----------------------------------------
+# 2003-10-01: Pierre Dorgueil --> original bash version of autorun for sysresccd
+# 2008-01-26: Francois Dupoux --> rewrote autorun in python to support http
+# 2008-01-27: Francois Dupoux --> added 'ar_ignorefail', 'ar_nodel', 'ar_disable'
+# 2017-05-30: Gernot Fink --> ported the script from python2 to python3
+#
+# ----------------------- autorun exec rules: ---------------------------------
+# - pass 'ar_source=/dev/fd#' to request floppy device test
+# - CD is tested if no floppy requested or no autorun found on floppy
+# - if a file named 'autorun' is found on any media, it is always run, except if
+#   option 'ar_disable' is used
+# - if a file named 'autorun[0-9]' is found on any media, it is run if either
+#      - 'autoruns=...' arg did specify its number (ex. autoruns=1,3,5), or
+#      - no 'autoruns=...' arg was passed
+# - pass autoruns=no to prevent running any 'autorun[0-9A-F]' file
+# - defaults to allow all 'autorun[0-9A-F]' files
+# - if many autorun files are to be run,
+#      - always in alphab order: autorun, then autorun0, then autorun1 etc...
+#      - first non-zero exit code stops all (except if ar_ignorefail is used)
+# - if option 'ar_nodel' is used, the temp copy of the script will not be deleted
+# - if option 'ar_ignorefail' is used, do not stop autorun if a script failed
+# - if option 'ar_disable' is used, absolutely no autorun script will be run
+
+import sys, os, re, subprocess
+
+# ----------------------- autorun default parameters --------------------------
+pidfile='/run/autorun.pid'
+basedir='/var/autorun'
+autorunlog=basedir+'/log'
+autorunmnt=basedir+'/mnt'
+autoruntmp=basedir+'/tmp'
+defaultsrc=['/run/archiso/bootmnt','/var/autorun/cdrom','/root','/usr/share/sys.autorun']
+ar_autoruns=['']+list('0123456789ABCDEF')
+cmdline=open('/proc/cmdline').read()
+autorunfiles=[]
+ar_nowait='n'
+ar_nodel='n'
+ar_ignorefail='n'
+ar_source=''
+
+# ----------------------- functions definitions -------------------------------
+def processdostextfiles(curfile): # remove all '\r' in that file
+        txt=open(curfile).read().replace('\r','')
+        txtfile=open(curfile, 'wt')
+        txtfile.write(txt)
+        txtfile.close()
+
+def printtitle(title, padding):
+        totallen=80
+        startpos=int(totallen/2)-int(len(title)/2)
+        remain=totallen-startpos-len(title)
+        text=(padding*startpos)+title+(padding*remain)
+        print (text)
+
+def copyfilefct_basic(src, dest):
+        if os.path.isfile(src):
+                dstfile=open(dest, 'wb')
+                dstfile.write(open(src,'rb').read())
+                dstfile.close()
+                os.chmod(dest, 755)
+                return 0
+        else:
+                return -1
+
+def copyfilefct_http(src, dest):
+
+        cmd=('wget','-q',src,'-O',dest)
+        p = subprocess.Popen(cmd)
+        p.wait()
+        if p.returncode == 0:
+                os.chmod(dest, 755)
+                return 0
+        else:
+                os.unlink(dest)
+                return -1
+
+def search_autoruns(dirname, ar_autoruns, copyfilefct):
+        found=0
+        for ext in ar_autoruns:
+                curpath=os.path.join(dirname, 'autorun%s'%ext)
+                newpath=os.path.join(autoruntmp, 'autorun%s'%ext)
+                if copyfilefct(curpath, newpath)==0:
+                        autorunfiles.append(newpath)
+                        found+=1
+        return found
+
+def main():
+        global ar_nowait, ar_nodel, ar_ignorefail, ar_source, ar_autoruns
+        status=0 # in case no autorun executed
+        print ('Initializing autorun...\n')
+
+        # ---- brutal kernel args parsing ----
+        for opt in cmdline.split():
+                if re.match('^subdir=', opt):
+                        param=opt.replace('subdir=','')
+                        defaultsrc.insert(0, '/run/archiso/bootmnt/' + param)
+                if re.match('^ar_nowait$', opt):
+                        ar_nowait='y'
+                if re.match('^ar_nodel$', opt):
+                        ar_nodel='y'
+                if re.match('^ar_ignorefail$', opt):
+                        ar_ignorefail='y'
+                if re.match('^ar_disable$', opt):
+                        ar_autoruns=[]
+                if re.match('^ar_source=', opt):
+                        param=opt.replace('ar_source=','')
+                        ar_source=param
+                if re.match('^autoruns=', opt):
+                        param=opt.replace('autoruns=','')
+                        if param=='no':
+                                ar_autoruns=['']
+                        else:
+                                ar_autoruns=['']+param.split(',')
+
+        if len(ar_autoruns)==0: # nothing to do
+                sys.exit(0)
+
+        # ---- parse the autorun sources ----
+        if re.match('^http://', ar_source):
+                search_autoruns(ar_source, ar_autoruns, copyfilefct_http)
+        elif re.match('^/dev/', ar_source): # mount a partition/device
+                mnt1=('mount',ar_source,autorunmnt)
+                mnt2=('umount',autorunmnt)
+                p = subprocess.Popen(mnt1)
+                p.wait()
+                if p.returncode != 0:
+                        print ('fatal error: cannot mount', mnt1)
+                        sys.exit(1)
+                search_autoruns(autorunmnt, ar_autoruns, copyfilefct_basic)
+                subprocess.Popen(mnt2)
+        elif re.match('^nfs://', ar_source): # mount an nfs share
+                source=ar_source.replace('nfs://','')
+                mnt1=('mount','-t','nfs','-o','nolock',source,autorunmnt)
+                mnt2=('umount',autorunmnt)
+                p = subprocess.Popen(mnt1)
+                p.wait()
+                if p.returncode != 0:
+                        print ('fatal error: cannot mount', mnt1)
+                        sys.exit(1)
+                search_autoruns(autorunmnt, ar_autoruns, copyfilefct_basic)
+                subprocess.Popen(mnt2)
+        elif re.match('^smb://', ar_source): # mount a samba share
+                source=ar_source.replace('smb://','')
+                mnt1=('mount','-t','cifs','//%s'%source,autorunmnt)
+                mnt2=('umount',autorunmnt)
+                p = subprocess.Popen(mnt1)
+                p.wait()
+                if p.returncode != 0:
+                        print ('fatal error: cannot mount',mnt1)
+                        sys.exit(1)
+                search_autoruns(autorunmnt, ar_autoruns, copyfilefct_basic)
+                subprocess.Popen(mnt2)
+        else: # search in all the default directories
+                if ar_source!='':
+                        print ('cannot find a valid ar_source, searching scripts in the default directories')
+                found=0
+                for curdir in defaultsrc:
+                        if found==0:
+                                found+=search_autoruns(curdir, ar_autoruns, copyfilefct_basic)
+
+        # ---- remove user setable ar_nowait flag if set ----
+        if os.path.isfile('/etc/ar_nowait'):
+                os.unlink('/etc/ar_nowait')
+
+        # ---- execute the autorun scripts found ----
+        for curfile in autorunfiles:
+                try:
+                         processdostextfiles(curfile)
+                except:
+                         pass
+                filebase=os.path.basename(curfile)
+                redir=os.path.join(autorunlog, filebase)
+                cmd='sh %s 2>&1 | tee %s'%(curfile, redir)
+                print ('\n'); printtitle('executing %s'%filebase, '=')
+                status=os.system(cmd)
+                fileres=open(redir+'.return','wt')
+                fileres.write(str(status)+'\n')
+                fileres.close()
+                print ('\n'+'='*80+'\n')
+
+                # first non zero exit stops all
+                if status!=0 and ar_ignorefail=='n':
+                        print ('execution of %s returned %d: aborting autorun'%(filebase,status))
+                        ar_nowait='y'
+                        break;
+
+        # ---- delete the copies of the scripts ----
+        if ar_nodel=='n':
+                for curfile in autorunfiles:
+                        print ('removing %s'%curfile)
+                        os.unlink(curfile)
+
+        # ---- wait a keypress feature -----
+        if os.path.isfile('/etc/ar_nowait'):
+                ar_nowait='y'
+        if ar_nowait=='n' and len(autorunfiles)>0:
+                print('end of autorun scripts, press <Enter> to continue')
+                sys.stdin.read(1)
+
+        return status
+
+# ----------------------- autorun main ----------------------------------------
+# run autorun only one time (tty1)
+#(status, output) = commands.getstatusoutput('tty')
+#if status!=0: sys.exit(1)
+#if output not in ('/dev/tty1', '/dev/ttyS0', '/dev/ttyS1') : sys.exit(1)
+
+# mkdir /var/autorun, logdir
+for curdir in (basedir, autorunlog, autorunmnt, autoruntmp):
+        if not os.path.isdir(curdir):
+                os.mkdir(curdir)
+
+# exit if already done
+if os.path.isfile(pidfile): sys.exit(0)
+
+# create lockfile
+lockfile=open(pidfile, 'wt')
+lockfile.write(str(os.getpid()))
+
+
+try:
+        res=main()
+        sys.exit(res)
+finally:
+        os.unlink(pidfile)

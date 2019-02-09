@@ -9,19 +9,6 @@ export PATH=/sbin:/bin:/usr/sbin:/usr/bin
 export path="/sbin /bin /usr/sbin /usr/bin"
 export USER=root
 
-# Process setkmap option if it was passed on the boot command line
-for curopt in $(cat /proc/cmdline)
-do
-    case "${curopt}" in
-    setkmap\=*)
-        SETKMAP=$(echo "${curopt}" | cut -f2 -d=)
-        /sbin/loadkeys ${SETKMAP}
-        mkdir -p /etc/sysconfig
-        echo "XKEYBOARD=${SETKMAP}" > /etc/sysconfig/keyboard
-        ;;
-    esac
-done
-
 # Colors
 lc1='\e[01;31m' # light red
 dc1='\e[00;31m' # dark red

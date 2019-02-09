@@ -7,7 +7,8 @@ version_file="${script_path}/VERSION"
 
 iso_name=systemrescuecd
 iso_version="$(<${version_file})"
-iso_label="SYSRESCCD-${iso_version}"
+iso_mainver="${iso_version%-*}"
+iso_label="SYSRCD${iso_mainver//.}"
 iso_publisher="SystemRescueCd <http://www.system-rescue-cd.org>"
 iso_application="SystemRescueCd"
 install_dir=sysresccd

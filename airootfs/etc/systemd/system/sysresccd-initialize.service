@@ -1,0 +1,13 @@
+[Unit]
+Description=SystemRescueCd Initialization
+Before=sshd.service
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/etc/systemd/scripts/sysresccd-initialize
+RemainAfterExit=true
+StandardOutput=journal
+
+[Install]
+WantedBy=multi-user.target
