@@ -2,6 +2,13 @@ SystemRescueCd ChangeLog
 ========================
 
 -------------------------------------------------------------------------------
+6.0.2 (2019-02-21):
+-------------------------------------------------------------------------------
+* Updated kernel to Long-Term-Supported linux-4.19.24
+* Added packages: borg, nwipe, lshw, zerofree, joe, rkhunter, strace
+* Replaced Notepadqq graphical editor with FeatherPad to save space
+
+-------------------------------------------------------------------------------
 6.0.1 (2019-02-09):
 -------------------------------------------------------------------------------
 * Updated kernel to Long-Term-Supported linux-4.19.20

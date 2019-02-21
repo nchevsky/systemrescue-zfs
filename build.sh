@@ -92,6 +92,10 @@ make_setup_mkinitcpio() {
       gpg --export ${gpg_key} >${work_dir}/gpgkey
       exec 17<>${work_dir}/gpgkey
     fi
+
+    mkdir -p ${work_dir}/x86_64/airootfs/etc/modprobe.d
+    cp ${script_path}/airootfs/etc/modprobe.d/* ${work_dir}/x86_64/airootfs/etc/modprobe.d/
+
     ARCHISO_GNUPG_FD=${gpg_key:+17} mkarchiso ${verbose} -w "${work_dir}/x86_64" -C "${work_dir}/pacman.conf" -D "${install_dir}" -r 'mkinitcpio -c /etc/mkinitcpio-archiso.conf -k /boot/vmlinuz-linux-lts -g /boot/sysresccd.img' run
     if [[ ${gpg_key} ]]; then
       exec 17<&-

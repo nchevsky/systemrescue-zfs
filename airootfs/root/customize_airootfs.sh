@@ -12,8 +12,10 @@ cp -aT /etc/skel/ /root/
 # Permissions
 chmod 700 /root
 chown root:root /root -R
-chmod 755 /etc/systemd/scripts/sysresccd-*
-chown root:root /etc/systemd/scripts/sysresccd-*
+chmod 755 /etc/systemd/scripts/*
+chown root:root /etc/systemd -R
+chown root:root /etc/modprobe.d -R
+chown root:root /etc/{fstab,hostname}
 
 # Configuration
 sed -i 's/#\(PermitRootLogin \).\+/\1yes\nAllowUsers root/' /etc/ssh/sshd_config
@@ -37,12 +39,12 @@ systemctl set-default multi-user.target
 # Cleanup
 find /usr/lib -type f -name '*.py[co]' -delete -o -type d -name __pycache__ -delete
 
-# Fix desktop
-sed -i -e 's!Exec=notepadqq!Exec=notepadqq --allow-root!g' /usr/share/applications/notepadqq.desktop
+# Update pacman.conf
+sed -i -e '/# ==== BEGIN customrepos ====/,/# ==== END customrepos ====/d' /etc/pacman.conf
 
 # Customizations
 /usr/bin/updatedb
 
 # Packages
-pacman -Qe > /root/packages-list.txt
+pacman -Q > /root/packages-list.txt
 pacman -Qi | egrep '^(Name|Installed)' | cut -f2 -d':' | paste - - | column -t | sort -nrk 2 | grep MiB > /root/packages-size.txt

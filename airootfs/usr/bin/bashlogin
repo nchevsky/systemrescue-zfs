@@ -37,7 +37,7 @@ echo -e "   Type ${lc2}startx${dc2} to run the graphical environment"
 echo -e "   X.Org comes with the XFCE environment and several graphical tools:"
 echo -e "   ${dc1}-${dc2} Partition manager:..${lc2}gparted${dc2}"
 echo -e "   ${dc1}-${dc2} Web browser:........${lc2}firefox${dc2}"
-echo -e "   ${dc1}-${dc2} Text editor:........${lc2}notepadqq${dc2}"
+echo -e "   ${dc1}-${dc2} Text editor:........${lc2}featherpad${dc2}"
 echo
 fbecho
 

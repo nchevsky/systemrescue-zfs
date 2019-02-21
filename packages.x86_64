@@ -1,6 +1,7 @@
 arch-install-scripts
 atop
 b43-fwcutter
+borg
 btrfs-progs
 chntpw
 cifs-utils
@@ -20,6 +21,7 @@ elinks
 ethtool
 exfat-utils
 f2fs-tools
+featherpad
 firefox
 fsarchiver
 geany
@@ -37,11 +39,13 @@ iotop
 ipw2100-fw
 ipw2200-fw
 irssi
+joe
 keepassxc
 lftp
 lightdm
 linux-atm
 linux-lts-headers
+lshw
 lsof
 lsscsi
 lzip
@@ -58,10 +62,10 @@ networkmanager-vpnc
 nfs-utils
 nilfs-utils
 nmap
-notepadqq
 ntfs-3g
 ntp
 nvme-cli
+nwipe
 openconnect
 openssh
 openvpn
@@ -74,6 +78,7 @@ pptpclient
 pv
 rdesktop
 refind-efi
+rkhunter
 rp-pppoe
 rsync
 ruby
@@ -81,6 +86,7 @@ screen
 sdparm
 sg3_utils
 smartmontools
+strace
 sudo
 sysstat
 tcpdump
@@ -115,5 +121,6 @@ xorg-server
 xorg-xinit
 yubikey-manager-qt
 yubikey-personalization-gui
+zerofree
 zile
 zip
