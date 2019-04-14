@@ -16,4 +16,3 @@ X-XFCE-Source=file:///usr/share/applications/featherpad.desktop
 [Desktop Action new-window]
 Name=New Window
 Exec=featherpad --win
-

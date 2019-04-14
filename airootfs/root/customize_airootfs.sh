@@ -9,6 +9,8 @@ ln -sf /usr/share/zoneinfo/UTC /etc/localtime
 
 cp -aT /etc/skel/ /root/
 
+rm -f /usr/lib/modules-load.d/pkcs8.conf
+
 # Permissions
 chmod 700 /root
 chown root:root /root -R

@@ -22,7 +22,7 @@ ethtool
 exfat-utils
 f2fs-tools
 featherpad
-firefox
+firefox-esr-bin
 fsarchiver
 geany
 git
@@ -31,6 +31,8 @@ gparted
 gpm
 gptfdisk
 grml-zsh-config
+growpart
+grsync
 grub
 hdparm
 htop
@@ -39,6 +41,7 @@ iotop
 ipw2100-fw
 ipw2200-fw
 irssi
+iwd
 joe
 keepassxc
 lftp
@@ -96,7 +99,6 @@ tmux
 traceroute
 ttf-dejavu
 ttf-droid
-unrar
 unzip
 usb_modeswitch
 vim-minimal
@@ -105,7 +107,6 @@ wipe
 wget
 wireless-regdb
 wireless_tools
-wpa_actiond
 wvdial
 xarchiver
 xfce4
