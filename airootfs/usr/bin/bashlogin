@@ -26,18 +26,19 @@ fbecho()
 }
 
 fbecho
-echo -e "${lc1} =========== ${lc2}SystemRescue-Cd${lc1} ----- ${lc2}%ISO_VERSION%${lc1} =========== ${lc2}$(basename $(tty))${dc2}/6 ${lc1}=="
-echo -e "                     ${dc1}http://www.system-rescue-cd.org/"
+echo -e "${lc1}========== ${lc2}%ISO_APPLICATION%${lc1} --- ${lc2}v%ISO_VERSION%${lc1} --- ${lc2}$(basename $(tty))${dc2}/6 ${lc1}==========${dc2}"
+echo -e "                  ${dc1}http://www.system-rescue-cd.org/"
+echo -e "${dc2}      %ISO_PUBLISHER%"
 echo
-echo -e "${dc1}*${lc1} Console environment${dc2} : "
-echo -e "   Run ${lc2}setkmap${dc2} to choose the keyboard layout"
+echo -e "${dc1}*${lc1} Console environment:"
+echo -e "  Run ${lc2}setkmap${dc2} to choose the keyboard layout."
 echo
-echo -e "${dc1}*${lc1} Graphical environment${dc2} : "
-echo -e "   Type ${lc2}startx${dc2} to run the graphical environment"
-echo -e "   X.Org comes with the XFCE environment and several graphical tools:"
-echo -e "   ${dc1}-${dc2} Partition manager:..${lc2}gparted${dc2}"
-echo -e "   ${dc1}-${dc2} Web browser:........${lc2}firefox${dc2}"
-echo -e "   ${dc1}-${dc2} Text editor:........${lc2}featherpad${dc2}"
+echo -e "${dc1}*${lc1} Graphical environment:"
+echo -e "  Type ${lc2}startx${dc2} to run the graphical environment."
+echo -e "  X.Org comes with the XFCE environment and several graphical tools:"
+echo -e "  ${dc1}-${dc2} Partition manager:\t${lc2}gparted${dc2}"
+echo -e "  ${dc1}-${dc2} Web browser:\t${lc2}firefox${dc2}"
+echo -e "  ${dc1}-${dc2} Text editor:\t${lc2}featherpad${dc2}"
 echo
 fbecho
 

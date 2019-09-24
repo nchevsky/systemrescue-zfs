@@ -5,17 +5,17 @@ set -e -u
 script_path=$(readlink -f ${0%/*})
 version_file="${script_path}/VERSION"
 
-iso_name=systemrescuecd
+iso_application="SystemRescueCd+ZFS"
 iso_version="$(<${version_file})"
-iso_mainver="${iso_version%-*}"
-iso_label="SYSRCD${iso_mainver//.}"
-iso_publisher="SystemRescueCd <http://www.system-rescue-cd.org>"
-iso_application="SystemRescueCd"
+iso_name=$(echo "$iso_application" | tr '[:upper:]' '[:lower:]')
+iso_label="${iso_application}_${iso_version}"
+iso_publisher='Nick Chevsky <http://oss.blazis.com/systemrescuecd+zfs>'
 install_dir=sysresccd
 work_dir=work
 out_dir=out
 gpg_key=
 
+consoles='console=ttyS0,115200 console=tty0'
 verbose=""
 
 umask 0022
@@ -49,8 +49,14 @@ _usage ()
 # Helper function to run make_*() only one time per architecture.
 run_once() {
     if [[ ! -e ${work_dir}/build.${1} ]]; then
+        echo -e '\n================================================================================'
+        echo "$1"
+        echo '================================================================================'
         $1
         touch ${work_dir}/build.${1}
+        echo -e '\nDone.'
+    else
+        echo -e "\nSkipping $1."
     fi
 }
 
@@ -110,7 +116,8 @@ make_customize_airootfs() {
 
     cp ${version_file} ${work_dir}/x86_64/airootfs/root/version
 
-    sed "s|%ARCHISO_LABEL%|${iso_label}|g;
+    sed "s|%ISO_APPLICATION%|${iso_application}|g;
+         s|%ISO_PUBLISHER%|$(echo "$iso_publisher" | sed -r 's/<(.+)>/<${lc2}\1${dc2}>/')|g;
          s|%ISO_VERSION%|${iso_version}|g;
          s|%INSTALL_DIR%|${install_dir}|g" \
          ${script_path}/airootfs/usr/bin/bashlogin > ${work_dir}/x86_64/airootfs/usr/bin/bashlogin
@@ -144,6 +151,9 @@ make_syslinux() {
     mkdir -p ${work_dir}/iso/${install_dir}/boot/syslinux
     for _cfg in ${script_path}/syslinux/*.cfg; do
         sed "s|%ARCHISO_LABEL%|${iso_label}|g;
+             s|%CONSOLES%|${consoles}|g;
+             s|%ISO_APPLICATION%|${iso_application}|g;
+             s|%ISO_URL%|$(echo $iso_publisher | sed -r 's/.*<(.+)>.*/\1/')|g;
              s|%ISO_VERSION%|${iso_version}|g;
              s|%INSTALL_DIR%|${install_dir}|g" ${_cfg} > ${work_dir}/iso/${install_dir}/boot/syslinux/${_cfg##*/}
     done
@@ -171,8 +181,9 @@ make_efi() {
     mkdir -p ${work_dir}/iso/EFI/boot
     mkdir -p ${work_dir}/iso/boot/grub
     cp -a /usr/lib/grub/x86_64-efi ${work_dir}/iso/boot/grub/
-    cp ${script_path}/efiboot/grub/font.pf2 ${work_dir}/iso/boot/grub/
     sed "s|%ARCHISO_LABEL%|${iso_label}|g;
+         s|%CONSOLES%|${consoles}|g;
+         s|%ISO_APPLICATION%|${iso_application}|g;
          s|%ISO_VERSION%|${iso_version}|g;
          s|%INSTALL_DIR%|${install_dir}|g" \
          ${script_path}/efiboot/grub/grubsrcd.cfg > ${work_dir}/iso/boot/grub/grubsrcd.cfg
@@ -243,6 +254,14 @@ while getopts 'N:V:L:P:A:D:w:o:g:vh' arg; do
            ;;
     esac
 done
+
+if [ "$verbose" = '-v' ]; then
+    echo -e "\nVolume label:\t$iso_label"
+    echo -e "Publisher:\t$iso_publisher"
+    echo -e "ISO file:\t$out_dir/$iso_name-${iso_version}.iso"
+    echo -e "Install path:\t$install_dir"
+    echo -e "Work path:\t$work_dir"
+fi
 
 mkdir -p ${work_dir}
 

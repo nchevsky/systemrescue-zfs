@@ -123,5 +123,6 @@ xorg-xinit
 yubikey-manager-qt
 yubikey-personalization-gui
 zerofree
+zfs-dkms
 zile
 zip
