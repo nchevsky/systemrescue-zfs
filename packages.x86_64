@@ -21,6 +21,7 @@ dmraid
 dnsmasq
 dnsutils
 dosfstools
+dstat
 elinks
 ethtool
 exfat-utils
@@ -51,6 +52,7 @@ hdparm
 htop
 iftop
 iotop
+iperf3
 iproute2
 iputils
 ipw2100-fw
