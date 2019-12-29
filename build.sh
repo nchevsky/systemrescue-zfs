@@ -63,9 +63,7 @@ make_pacman_conf() {
 
 # Base installation, plus needed packages (airootfs)
 make_basefs() {
-    #mkarchiso ${verbose} -w "${work_dir}/x86_64" -C "${work_dir}/pacman.conf" -D "${install_dir}" init
-    mkdir -p ${work_dir}/x86_64/airootfs
-    pacstrap -C "/etc/pacman.conf" -c -G -M "${work_dir}/x86_64/airootfs" $(pacman -Sqg base | sed 's/^linux$/linux-lts/' | uniq ; echo syslinux)
+    mkarchiso ${verbose} -w "${work_dir}/x86_64" -C "${work_dir}/pacman.conf" -D "${install_dir}" init
     mkarchiso ${verbose} -w "${work_dir}/x86_64" -C "${work_dir}/pacman.conf" -D "${install_dir}" -p "haveged intel-ucode amd-ucode memtest86+ mkinitcpio-nfs-utils nbd zsh efitools" install
 }
 
