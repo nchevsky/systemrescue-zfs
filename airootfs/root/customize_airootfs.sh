@@ -42,6 +42,8 @@ systemctl set-default multi-user.target
 
 # Cleanup
 find /usr/lib -type f -name '*.py[co]' -delete -o -type d -name __pycache__ -delete
+rm -rf /usr/share/gtk-doc /usr/share/doc /usr/share/keepassxc/docs/*.pdf
+rm -rf /usr/share/gir*
 
 # Update pacman.conf
 sed -i -e '/# ==== BEGIN customrepos ====/,/# ==== END customrepos ====/d' /etc/pacman.conf
