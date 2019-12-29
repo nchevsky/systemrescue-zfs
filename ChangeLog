@@ -7,6 +7,8 @@ SystemRescueCd ChangeLog
 * Updated XFCE graphical environment to version 4.14
 * Updated parted to 3.3 and gparted to 1.0.0
 * Updated Grub boot loader to version 2.04
+* Enabled the iptables service to block incoming traffic by default
+* Added boot option "nofirewall" to disable the iptable service
 
 -------------------------------------------------------------------------------
 6.0.3 (2019-04-14):

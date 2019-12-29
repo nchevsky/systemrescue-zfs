@@ -31,6 +31,8 @@ sed -i 's/#\(HandleLidSwitch=\)suspend/\1ignore/' /etc/systemd/logind.conf
 
 # Services
 systemctl enable NetworkManager
+systemctl enable iptables.service
+systemctl enable ip6tables.service
 systemctl enable pacman-init.service
 systemctl enable choose-mirror.service
 systemctl enable sshd.service
