@@ -2,8 +2,10 @@ SystemRescueCd ChangeLog
 ========================
 
 -------------------------------------------------------------------------------
-6.0.5:
+6.0.5 (2020-01-12):
 -------------------------------------------------------------------------------
+* Updated kernel to Long-Term-Supported linux-4.19.94
+* Disk space optimisations to reduce the size of the ISO image
 * Added flashrom + par2cmdline + whdd
 
 -------------------------------------------------------------------------------
