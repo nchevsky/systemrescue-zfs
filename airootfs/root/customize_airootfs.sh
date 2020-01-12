@@ -45,6 +45,9 @@ find /usr/lib -type f -name '*.py[co]' -delete -o -type d -name __pycache__ -del
 rm -rf /usr/share/gtk-doc /usr/share/doc /usr/share/keepassxc/docs/*.pdf
 rm -rf /usr/share/gir*
 
+# Remove large/irrelevant firmwares
+rm -rf /usr/lib/firmware/{liquidio,netronome}
+
 # Update pacman.conf
 sed -i -e '/# ==== BEGIN customrepos ====/,/# ==== END customrepos ====/d' /etc/pacman.conf
 
