@@ -69,7 +69,6 @@ lightdm
 linux-atm
 linux-firmware
 linux-lts
-linux-lts-headers
 lshw
 lsof
 lsscsi
