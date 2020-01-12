@@ -31,6 +31,7 @@ file
 filesystem
 findutils
 firefox-esr-bin
+flashrom
 fsarchiver
 gawk
 gcc-libs
@@ -102,6 +103,7 @@ openssh
 openvpn
 p7zip
 pacman
+par2cmdline
 partclone
 parted
 partimage
@@ -145,6 +147,7 @@ vi
 vim-minimal
 vpnc
 wget
+whdd
 wipe
 wireless-regdb
 wireless_tools
