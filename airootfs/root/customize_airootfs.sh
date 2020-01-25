@@ -40,6 +40,10 @@ systemctl enable sysresccd-initialize.service
 systemctl enable sysresccd-autorun.service
 systemctl set-default multi-user.target
 
+# Provide additional commands (using busybox instead of binutils to save space)
+ln -s /usr/bin/busybox /usr/bin/ar
+ln -s /usr/bin/busybox /usr/bin/strings
+
 # Cleanup
 find /usr/lib -type f -name '*.py[co]' -delete -o -type d -name __pycache__ -delete
 rm -rf /usr/share/gtk-doc /usr/share/doc /usr/share/keepassxc/docs/*.pdf
