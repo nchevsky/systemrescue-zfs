@@ -50,6 +50,7 @@
     <property name="plugin-6" type="string" value="tasklist"/>
     <property name="plugin-7" type="string" value="separator">
       <property name="expand" type="bool" value="true"/>
+      <property name="style" type="uint" value="0"/>
     </property>
     <property name="plugin-8" type="string" value="systray">
       <property name="names-visible" type="array">
