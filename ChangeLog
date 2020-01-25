@@ -2,10 +2,12 @@ SystemRescueCd ChangeLog
 ========================
 
 -------------------------------------------------------------------------------
-6.0.6:
+6.0.6 (2020-01-25):
 -------------------------------------------------------------------------------
+* Updated kernel to Long-Term-Supported linux-4.19.98
 * Added strings and ar commands using busybox
 * Disk space optimisations to reduce the size of the ISO image
+* Updated gparted to 1.1.0
 
 -------------------------------------------------------------------------------
 6.0.5 (2020-01-12):
