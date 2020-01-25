@@ -48,6 +48,7 @@ ln -s /usr/bin/busybox /usr/bin/strings
 find /usr/lib -type f -name '*.py[co]' -delete -o -type d -name __pycache__ -delete
 rm -rf /usr/share/gtk-doc /usr/share/doc /usr/share/keepassxc/docs/*.pdf
 rm -rf /usr/share/gir*
+rm -rf /usr/include
 
 # Remove large/irrelevant firmwares
 rm -rf /usr/lib/firmware/{liquidio,netronome}
