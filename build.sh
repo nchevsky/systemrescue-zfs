@@ -15,6 +15,8 @@ install_dir=sysresccd
 work_dir=work
 out_dir=out
 gpg_key=
+sfs_comp="xz"
+sfs_opts="-Xbcj x86 -b 512k -Xdict-size 512k"
 
 verbose=""
 
@@ -206,7 +208,7 @@ make_efiboot() {
 make_prepare() {
     cp -a -l -f ${work_dir}/x86_64/airootfs ${work_dir}
     mkarchiso ${verbose} -w "${work_dir}" -D "${install_dir}" pkglist
-    mkarchiso ${verbose} -w "${work_dir}" -D "${install_dir}" ${gpg_key:+-g ${gpg_key}} prepare
+    mkarchiso ${verbose} -w "${work_dir}" -D "${install_dir}" ${gpg_key:+-g ${gpg_key}} -c ${sfs_comp} -t "${sfs_opts}" prepare
     rm -rf ${work_dir}/airootfs
     # rm -rf ${work_dir}/x86_64/airootfs (if low space, this helps)
 }
