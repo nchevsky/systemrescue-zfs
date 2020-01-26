@@ -70,6 +70,7 @@ lightdm
 linux-atm
 linux-firmware
 linux-lts
+localepurge
 lshw
 lsof
 lsscsi

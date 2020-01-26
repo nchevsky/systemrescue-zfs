@@ -54,6 +54,10 @@ rm -rf /usr/include
 # Remove large/irrelevant firmwares
 rm -rf /usr/lib/firmware/{liquidio,netronome}
 
+# Remove extra locales
+echo -e "MANDELETE\nDONTBOTHERNEWLOCALE\nSHOWFREEDSPACE\nen\nen_US\nen_US.UTF-8" > /etc/locale.nopurge
+/usr/bin/localepurge
+
 # Update pacman.conf
 sed -i -e '/# ==== BEGIN customrepos ====/,/# ==== END customrepos ====/d' /etc/pacman.conf
 
