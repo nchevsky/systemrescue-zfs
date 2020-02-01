@@ -26,7 +26,7 @@ fbecho()
 }
 
 fbecho
-echo -e "${lc1} =========== ${lc2}SystemRescue-Cd${lc1} ----- ${lc2}%ISO_VERSION%${lc1} =========== ${lc2}$(basename $(tty))${dc2}/6 ${lc1}=="
+echo -e "${lc1} ======== ${lc2}SystemRescueCd %ISO_ARCH%${lc1} ----- ${lc2}%ISO_VERSION%${lc1} ======== ${lc2}$(basename $(tty))${dc2}/6 ${lc1}=="
 echo -e "                     ${dc1}http://www.system-rescue-cd.org/"
 echo
 echo -e "${dc1}*${lc1} Console environment${dc2} : "
