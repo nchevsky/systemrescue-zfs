@@ -41,8 +41,8 @@ systemctl enable sysresccd-autorun.service
 systemctl set-default multi-user.target
 
 # Provide additional commands (using busybox instead of binutils to save space)
-ln -s /usr/bin/busybox /usr/bin/ar
-ln -s /usr/bin/busybox /usr/bin/strings
+ln -f -s /usr/bin/busybox /usr/bin/ar
+ln -f -s /usr/bin/busybox /usr/bin/strings
 
 # Cleanup
 find /usr/lib -type f -name '*.py[co]' -delete -o -type d -name __pycache__ -delete
@@ -55,8 +55,11 @@ rm -rf /usr/include
 rm -rf /usr/lib/firmware/{liquidio,netronome}
 
 # Remove extra locales
-echo -e "MANDELETE\nDONTBOTHERNEWLOCALE\nSHOWFREEDSPACE\nen\nen_US\nen_US.UTF-8" > /etc/locale.nopurge
-/usr/bin/localepurge
+if [ -x /usr/bin/localepurge ]
+then
+    echo -e "MANDELETE\nDONTBOTHERNEWLOCALE\nSHOWFREEDSPACE\nen\nen_US\nen_US.UTF-8" > /etc/locale.nopurge
+    /usr/bin/localepurge
+fi
 
 # Update pacman.conf
 sed -i -e '/# ==== BEGIN customrepos ====/,/# ==== END customrepos ====/d' /etc/pacman.conf
