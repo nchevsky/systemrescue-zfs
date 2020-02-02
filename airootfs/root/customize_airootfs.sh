@@ -48,6 +48,7 @@ ln -f -s /usr/bin/busybox /usr/bin/strings
 find /usr/lib -type f -name '*.py[co]' -delete -o -type d -name __pycache__ -delete
 find /usr/lib -type f,l -name '*.a' -delete
 rm -rf /usr/share/gtk-doc /usr/share/doc /usr/share/keepassxc/docs/*.pdf
+rm -rf /usr/share/keepassxc/translations
 rm -rf /usr/share/gir*
 rm -rf /usr/include
 
