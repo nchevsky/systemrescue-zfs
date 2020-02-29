@@ -150,6 +150,8 @@ vpnc
 wget
 whdd
 wipe
+wireguard-lts
+wireguard-tools
 wireless-regdb
 wireless_tools
 wpa_supplicant
