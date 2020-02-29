@@ -106,7 +106,7 @@ make_setup_mkinitcpio() {
 
 # Customize installation (airootfs)
 make_customize_airootfs() {
-    cp -af ${script_path}/airootfs ${work_dir}/${arch}
+    cp -af --no-preserve=ownership ${script_path}/airootfs ${work_dir}/${arch}
 
     cp ${script_path}/pacman.conf ${work_dir}/${arch}/airootfs/etc
 
