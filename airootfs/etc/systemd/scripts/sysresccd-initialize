@@ -10,9 +10,7 @@ do
       setkmap\=*)
           echo "Found option '${curopt}' on the boot command line"
           SETKMAP=$(echo "${curopt}" | cut -f2 -d=)
-          /sbin/loadkeys ${SETKMAP}
-          mkdir -p /etc/sysconfig
-          echo "XKEYBOARD=${SETKMAP}" > /etc/sysconfig/keyboard
+          localectl set-keymap ${SETKMAP}
           ;;
       # Set the system root password from a clear password
       rootpass\=*)
