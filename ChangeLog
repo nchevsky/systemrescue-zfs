@@ -2,6 +2,14 @@ SystemRescueCd ChangeLog
 ========================
 
 -------------------------------------------------------------------------------
+6.1.0 (2020-02-29):
+-------------------------------------------------------------------------------
+* Updated kernel to Long-Term-Supported linux-5.4.22
+* Updated filesystem tools: btrfs-progs 5.4.1, xfsprogs 5.4.0, xfsdump 3.1.9
+* Fixes for keyboard mapping configuration (contributions from Marcos Mello)
+* Added wireguard packages (kernel module and tools)
+
+-------------------------------------------------------------------------------
 6.0.7 (2020-01-26):
 -------------------------------------------------------------------------------
 * Optimized compression used to create the squashfs image (saves 47MB)
