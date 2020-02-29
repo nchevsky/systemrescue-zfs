@@ -44,10 +44,7 @@ do
       # Option to allow user to disable the firewall
       nofirewall)
           echo "Found option 'nofirewall' on the boot command line"
-          systemctl disable iptables.service
-          systemctl disable ip6tables.service
-          systemctl stop iptables.service
-          systemctl stop ip6tables.service
+          systemctl disable --now iptables.service ip6tables.service
           ;;
     esac
 done
