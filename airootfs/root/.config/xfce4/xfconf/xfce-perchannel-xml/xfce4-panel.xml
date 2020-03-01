@@ -53,6 +53,8 @@
       <property name="style" type="uint" value="0"/>
     </property>
     <property name="plugin-8" type="string" value="systray">
+      <property name="show-frame" type="bool" value="false"/>
+      <property name="size-max" type="uint" value="24"/>
       <property name="names-visible" type="array">
         <value type="string" value="networkmanager applet"/>
       </property>
