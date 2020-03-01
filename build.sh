@@ -221,7 +221,7 @@ make_prepare() {
 # Build ISO
 make_iso() {
     cp ${version_file} ${work_dir}/iso/${install_dir}/
-    setarch ${arch} mkarchiso ${verbose} -w "${work_dir}" -D "${install_dir}" -L "${iso_label}" -P "${iso_publisher}" -A "${iso_application}" -o "${out_dir}" iso "${iso_name}-${iso_version}.iso"
+    setarch ${arch} mkarchiso ${verbose} -w "${work_dir}" -D "${install_dir}" -L "${iso_label}" -P "${iso_publisher}" -A "${iso_application}" -o "${out_dir}" iso "${iso_name}-${arch}-${iso_version}.iso"
 }
 
 if [[ ${EUID} -ne 0 ]]; then
