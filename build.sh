@@ -116,7 +116,7 @@ make_customize_airootfs() {
          s|%ISO_VERSION%|${iso_version}|g;
          s|%ISO_ARCH%|${arch}|g;
          s|%INSTALL_DIR%|${install_dir}|g" \
-         ${script_path}/airootfs/usr/bin/bashlogin > ${work_dir}/${arch}/airootfs/usr/bin/bashlogin
+         ${script_path}/airootfs/etc/issue > ${work_dir}/${arch}/airootfs/etc/issue
 
     curl -o ${work_dir}/${arch}/airootfs/etc/pacman.d/mirrorlist 'https://www.archlinux.org/mirrorlist/?country=all&protocol=http&use_mirror_status=on'
 
