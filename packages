@@ -2,6 +2,7 @@ arch-install-scripts
 atop
 b43-fwcutter
 bash
+bash-completion
 borg
 btrfs-progs
 busybox
