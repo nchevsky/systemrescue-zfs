@@ -1,0 +1,13 @@
+\e[01;31m ======== \e[01;37mSystemRescueCd \m\e[01;31m ---- \e[01;37m%ISO_VERSION%\e[01;31m ======== \e[01;37m\l\e[00;37m/6\e[01;31m ========
+                  \e[00;31mhttp://www.system-rescue-cd.org/
+
+\e[00;31m*\e[01;31m Console environment\e[00;37m :
+   Run \e[01;37msetkmap\e[00;37m to choose the keyboard layout
+
+\e[00;31m*\e[01;31m Graphical environment\e[00;37m :
+   Type \e[01;37mstartx\e[00;37m to run the graphical environment
+   X.Org comes with the XFCE environment and several graphical tools:
+   \e[00;31m-\e[00;37m Partition manager: .. \e[01;37mgparted\e[00;37m
+   \e[00;31m-\e[00;37m Web browser: ........ \e[01;37mfirefox\e[00;37m
+   \e[00;31m-\e[00;37m Text editor: ........ \e[01;37mfeatherpad\e[00;37m
+
