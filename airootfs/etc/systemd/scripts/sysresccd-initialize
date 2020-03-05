@@ -12,6 +12,12 @@ do
           SETKMAP=$(echo "${curopt}" | cut -f2 -d=)
           localectl set-keymap ${SETKMAP}
           ;;
+      # Configure root login shell if requested in the boot command line
+      rootshell\=*)
+          echo "Found option '${curopt}' on the boot command line"
+          ROOTSHELL=$(echo "${curopt}" | cut -f2 -d=)
+          chsh --shell ${ROOTSHELL} root
+          ;;
       # Set the system root password from a clear password
       rootpass\=*)
           SSHPASS1=$(echo "${curopt}" | cut -f2 -d=)
