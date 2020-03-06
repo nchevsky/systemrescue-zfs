@@ -13,11 +13,7 @@ rm -f /usr/lib/modules-load.d/pkcs8.conf
 
 # Permissions
 chmod 700 /root
-chown root:root /root -R
 chmod 755 /etc/systemd/scripts/*
-chown root:root /etc/systemd -R
-chown root:root /etc/modprobe.d -R
-chown root:root /etc/{fstab,hostname}
 
 # Configuration
 sed -i 's/#\(PermitRootLogin \).\+/\1yes\nAllowUsers root/' /etc/ssh/sshd_config
