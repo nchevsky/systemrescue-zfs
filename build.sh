@@ -24,6 +24,21 @@ verbose=""
 
 umask 0022
 
+case ${arch} in
+    x86_64)
+        efiarch="x86_64-efi"
+        efiboot="bootx64.efi"
+        ;;
+    i686)
+        efiarch="i386-efi"
+        efiboot="bootia32.efi"
+        ;;
+    *)
+        echo "ERROR: Unsupported architecture: '${arch}'"
+        exit 1
+        ;;
+esac
+
 _usage ()
 {
     echo "usage ${0} [options]"
@@ -174,7 +189,7 @@ make_efi() {
     rm -rf ${work_dir}/iso/boot
     mkdir -p ${work_dir}/iso/EFI/boot
     mkdir -p ${work_dir}/iso/boot/grub
-    cp -a /usr/lib/grub/x86_64-efi ${work_dir}/iso/boot/grub/
+    cp -a /usr/lib/grub/${efiarch} ${work_dir}/iso/boot/grub/
     cp ${script_path}/efiboot/grub/font.pf2 ${work_dir}/iso/boot/grub/
     sed "s|%ARCHISO_LABEL%|${iso_label}|g;
          s|%ISO_VERSION%|${iso_version}|g;
@@ -195,13 +210,13 @@ make_efiboot() {
     rm -rf ${work_dir}/efitemp
     mkdir -p ${work_dir}/efitemp/efi/boot
 
-    grub-mkimage -m "${work_dir}/memdisk.img" -o "${work_dir}/iso/EFI/boot/bootx64.efi" \
-    	--prefix='(memdisk)/boot/grub' -d /usr/lib64/grub/x86_64-efi -C xz -O x86_64-efi \
+    grub-mkimage -m "${work_dir}/memdisk.img" -o "${work_dir}/iso/EFI/boot/${efiboot}" \
+    	--prefix='(memdisk)/boot/grub' -d /usr/lib/grub/${efiarch} -C xz -O ${efiarch} \
     	search iso9660 configfile normal memdisk tar boot linux part_msdos part_gpt \
     	part_apple configfile help loadenv ls reboot chain search_fs_uuid multiboot \
     	fat iso9660 udf ext2 btrfs ntfs reiserfs xfs lvm ata
 
-    cp -a "${work_dir}/iso/EFI/boot/bootx64.efi" "${work_dir}/efitemp/efi/boot/bootx64.efi"
+    cp -a "${work_dir}/iso/EFI/boot/${efiboot}" "${work_dir}/efitemp/efi/boot/${efiboot}"
 
     mkdir -p ${work_dir}/iso/EFI/archiso
     rm -f "${work_dir}/iso/EFI/archiso/efiboot.img"
