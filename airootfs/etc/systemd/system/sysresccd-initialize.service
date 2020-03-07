@@ -1,7 +1,6 @@
 [Unit]
 Description=SystemRescueCd Initialization
 Before=sshd.service getty-pre.target
-After=network.target
 Wants=getty-pre.target
 
 [Service]
