@@ -1,14 +1,15 @@
 [Unit]
 Description=SystemRescueCd Autorun
-After=network.target
-After=systemd-user-sessions.service
-After=network-online.target
+After=network.target network-online.target sysresccd-initialize.service
+Before=getty-pre.target
+Wants=getty-pre.target
 
 [Service]
 Type=oneshot
 ExecStart=/etc/systemd/scripts/sysresccd-autorun
 RemainAfterExit=true
-StandardOutput=journal
+StandardInput=tty
+StandardOutput=tty
 
 [Install]
 WantedBy=multi-user.target
