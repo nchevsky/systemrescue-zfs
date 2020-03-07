@@ -4,7 +4,6 @@ set -e -u
 
 script_path=$(readlink -f ${0%/*})
 version_file="${script_path}/VERSION"
-arch_file="${script_path}/ARCHITECTURE"
 
 iso_name=systemrescuecd
 iso_version="$(<${version_file})"
@@ -16,7 +15,7 @@ install_dir=sysresccd
 work_dir=work
 out_dir=out
 gpg_key=
-arch="$(<${arch_file})"
+arch="$(uname -m)"
 sfs_comp="xz"
 sfs_opts="-Xbcj x86 -b 512k -Xdict-size 512k"
 
@@ -77,7 +76,7 @@ run_once() {
 make_pacman_conf() {
     local _cache_dirs
     _cache_dirs=($(pacman -v 2>&1 | grep '^Cache Dirs:' | sed 's/Cache Dirs:\s*//g'))
-    sed -r "s|^#?\\s*CacheDir.+|CacheDir = $(echo -n ${_cache_dirs[@]})|g" ${script_path}/pacman.conf > ${work_dir}/pacman.conf
+    sed -r "s|^#?\\s*CacheDir.+|CacheDir = $(echo -n ${_cache_dirs[@]})|g; s|^Architecture\s*=.*$|Architecture = ${arch}|" ${script_path}/pacman.conf > ${work_dir}/pacman.conf
 }
 
 # Base installation, plus needed packages (airootfs)
