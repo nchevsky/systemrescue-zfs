@@ -26,7 +26,7 @@ sed -i 's/#\(HandleHibernateKey=\)hibernate/\1ignore/' /etc/systemd/logind.conf
 sed -i 's/#\(HandleLidSwitch=\)suspend/\1ignore/' /etc/systemd/logind.conf
 
 # Services
-systemctl enable NetworkManager
+systemctl enable NetworkManager.service
 systemctl enable iptables.service
 systemctl enable ip6tables.service
 systemctl enable pacman-init.service
@@ -35,6 +35,9 @@ systemctl enable sshd.service
 systemctl enable sysresccd-initialize.service
 systemctl enable sysresccd-autorun.service
 systemctl set-default multi-user.target
+
+systemctl mask atop-rotate.timer
+systemctl mask shadow.timer
 
 # Provide additional commands (using busybox instead of binutils to save space)
 ln -f -s /usr/bin/busybox /usr/bin/ar
