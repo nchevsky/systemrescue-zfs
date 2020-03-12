@@ -19,6 +19,7 @@
         <value type="int" value="7"/>
         <value type="int" value="8"/>
         <value type="int" value="9"/>
+        <value type="int" value="10"/>
       </property>
       <property name="position-locked" type="bool" value="true"/>
     </property>
@@ -52,13 +53,16 @@
       <property name="expand" type="bool" value="true"/>
       <property name="style" type="uint" value="0"/>
     </property>
-    <property name="plugin-8" type="string" value="systray">
+    <property name="plugin-8" type="string" value="pulseaudio">
+      <property name="enable-keyboard-shortcuts" type="bool" value="true"/>
+    </property>
+    <property name="plugin-9" type="string" value="systray">
       <property name="show-frame" type="bool" value="false"/>
       <property name="size-max" type="uint" value="24"/>
       <property name="names-visible" type="array">
         <value type="string" value="networkmanager applet"/>
       </property>
     </property>
-    <property name="plugin-9" type="string" value="clock"/>
+    <property name="plugin-10" type="string" value="clock"/>
   </property>
 </channel>

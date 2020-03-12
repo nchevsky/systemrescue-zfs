@@ -1,3 +1,4 @@
+alsa-utils
 arch-install-scripts
 atop
 b43-fwcutter
@@ -109,11 +110,13 @@ par2cmdline
 partclone
 parted
 partimage
+pavucontrol
 pciutils
 ppp
 pptpclient
 procps-ng
 psmisc
+pulseaudio-alsa
 pv
 rdesktop
 refind-efi
@@ -162,6 +165,7 @@ wvdial
 xarchiver
 xfce4
 xfce4-battery-plugin
+xfce4-pulseaudio-plugin
 xfce4-taskmanager
 xfsdump
 xfsprogs
