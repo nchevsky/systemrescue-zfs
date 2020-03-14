@@ -25,6 +25,9 @@ sed -i 's/#\(HandleSuspendKey=\)suspend/\1ignore/' /etc/systemd/logind.conf
 sed -i 's/#\(HandleHibernateKey=\)hibernate/\1ignore/' /etc/systemd/logind.conf
 sed -i 's/#\(HandleLidSwitch=\)suspend/\1ignore/' /etc/systemd/logind.conf
 
+# PulseAudio takes care of volume restore
+ln -sf /dev/null /etc/udev/rules.d/90-alsa-restore.rules
+
 # Services
 systemctl enable NetworkManager.service
 systemctl enable iptables.service
