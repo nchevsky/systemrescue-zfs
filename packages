@@ -131,6 +131,7 @@ sed
 sg3_utils
 shadow
 smartmontools
+squashfs-tools
 strace
 stress
 sudo
