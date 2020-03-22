@@ -132,6 +132,7 @@ sg3_utils
 shadow
 smartmontools
 strace
+stress
 sudo
 sysstat
 systemd
