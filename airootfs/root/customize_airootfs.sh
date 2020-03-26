@@ -39,6 +39,9 @@ systemctl enable sysresccd-initialize.service
 systemctl enable sysresccd-autorun.service
 systemctl set-default multi-user.target
 
+systemctl disable systemd-homed.service
+systemctl disable systemd-userdbd.socket
+systemctl disable systemd-repart.service
 systemctl mask atop-rotate.timer
 systemctl mask shadow.timer
 
