@@ -1,6 +1,5 @@
 #!/bin/bash
 
-[ -x /usr/bin/xset ] && /usr/bin/xset s off >/dev/null 2>&1 &
 [ -x /usr/bin/xset ] && /usr/bin/xset r >/dev/null 2>&1 &
 
 exec /usr/bin/startxfce4
