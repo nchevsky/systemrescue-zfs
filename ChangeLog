@@ -2,6 +2,14 @@ SystemRescueCd ChangeLog
 ========================
 
 -------------------------------------------------------------------------------
+6.1.2 (2020-03-29):
+-------------------------------------------------------------------------------
+* Updated kernel to Long-Term-Supported linux-5.4.28
+* Added sound support based on pulseaudio (Marcos Mello)
+* Added command line tools for burning CD/DVD medias
+* Disk space optimisations to reduce the size of the ISO image
+
+-------------------------------------------------------------------------------
 6.1.1 (2020-03-13):
 -------------------------------------------------------------------------------
 * Updated kernel to Long-Term-Supported linux-5.4.24
