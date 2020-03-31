@@ -8,6 +8,7 @@ borg
 btrfs-progs
 busybox
 bzip2
+cabextract
 chntpw
 cifs-utils
 clonezilla
@@ -157,6 +158,7 @@ vim-minimal
 vpnc
 wget
 whdd
+wimlib
 wipe
 wireguard-lts
 wireguard-tools
