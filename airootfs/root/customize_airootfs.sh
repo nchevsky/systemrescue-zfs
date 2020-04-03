@@ -43,8 +43,8 @@ systemctl mask atop-rotate.timer
 systemctl mask shadow.timer
 
 # Provide additional commands (using busybox instead of binutils to save space)
-ln -f -s /usr/bin/busybox /usr/bin/ar
-ln -f -s /usr/bin/busybox /usr/bin/strings
+ln -sf /usr/bin/busybox /usr/local/bin/ar
+ln -sf /usr/bin/busybox /usr/local/bin/strings
 
 # Cleanup
 find /usr/lib -type f -name '*.py[co]' -delete -o -type d -name __pycache__ -delete
