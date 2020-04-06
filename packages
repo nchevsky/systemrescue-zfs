@@ -1,4 +1,5 @@
 alsa-utils
+amd-ucode
 arch-install-scripts
 atop
 b43-fwcutter
@@ -24,6 +25,7 @@ dnsutils
 dosfstools
 dstat
 dvd+rw-tools
+efitools
 elinks
 ethtool
 exfat-utils
@@ -42,9 +44,11 @@ grml-zsh-config
 growpart
 grsync
 grub
+haveged
 hdparm
 htop
 iftop
+intel-ucode
 iotop
 iperf3
 ipw2100-fw
@@ -67,12 +71,15 @@ man-db
 man-pages
 mc
 mdadm
+memtest86+
 memtester
 mkinitcpio
+mkinitcpio-nfs-utils
 mlocate
 ms-sys
 mtools
 nano
+nbd
 ncdu
 ndisc6
 netctl
@@ -158,3 +165,4 @@ yubikey-personalization-gui
 zerofree
 zile
 zip
+zsh
