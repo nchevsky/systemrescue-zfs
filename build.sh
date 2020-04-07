@@ -134,7 +134,7 @@ make_customize_airootfs() {
     curl -o ${work_dir}/${arch}/airootfs/etc/pacman.d/mirrorlist 'https://www.archlinux.org/mirrorlist/?country=all&protocol=http&use_mirror_status=on'
 
     setarch ${arch} mkarchiso ${verbose} -w "${work_dir}/${arch}" -C "${work_dir}/pacman.conf" -D "${install_dir}" -r '/root/customize_airootfs.sh' run
-    rm ${work_dir}/${arch}/airootfs/root/customize_airootfs.sh
+    rm -f ${work_dir}/${arch}/airootfs/root/customize_airootfs.sh
 }
 
 # Prepare kernel/initramfs ${install_dir}/boot/
