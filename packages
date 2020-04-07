@@ -4,6 +4,7 @@ arch-install-scripts
 atop
 b43-fwcutter
 bash-completion
+bind-tools
 borg
 btrfs-progs
 busybox
@@ -21,7 +22,6 @@ diffutils
 dmidecode
 dmraid
 dnsmasq
-dnsutils
 dosfstools
 dstat
 dvd+rw-tools
