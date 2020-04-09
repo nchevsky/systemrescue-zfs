@@ -25,6 +25,7 @@ dnsmasq
 dosfstools
 dstat
 dvd+rw-tools
+e2fsprogs
 efitools
 elinks
 ethtool
