@@ -25,6 +25,7 @@ dnsmasq
 dosfstools
 dstat
 dvd+rw-tools
+e2fsprogs
 efitools
 elinks
 ethtool
@@ -137,7 +138,7 @@ unzip
 usb_modeswitch
 usbutils
 vi
-vim-minimal
+vim
 vpnc
 wget
 whdd
