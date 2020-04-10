@@ -61,6 +61,7 @@ jfsutils
 joe
 keepassxc
 lftp
+libvncserver
 linux-atm
 linux-firmware
 linux-lts
@@ -112,6 +113,7 @@ pv
 rdesktop
 refind-efi
 reiserfsprogs
+remmina
 rkhunter
 rp-pppoe
 rsync
@@ -127,7 +129,6 @@ sudo
 sysstat
 tcpdump
 testdisk
-tigervnc
 tmux
 traceroute
 tree
