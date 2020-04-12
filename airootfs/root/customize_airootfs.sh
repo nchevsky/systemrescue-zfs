@@ -53,6 +53,10 @@ rm -rf /usr/share/keepassxc/translations
 rm -rf /usr/share/gir*
 rm -rf /usr/include
 
+# Cleanup XFCE menu
+sed -i '2 i NoDisplay=true' /usr/share/applications/{exo-mail-reader,exo-web-browser,jmacs,jpico,jstar}.desktop
+sed -i "s/^\(Categories=\).*\$/Categories=TextEditor;Utility;/" /usr/share/applications/{geany,joe,jmacs,jpico,jstar}.desktop
+
 # Remove large/irrelevant firmwares
 rm -rf /usr/lib/firmware/{liquidio,netronome}
 
