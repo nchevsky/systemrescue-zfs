@@ -71,4 +71,4 @@ sed -i -e '/# ==== BEGIN customrepos ====/,/# ==== END customrepos ====/d' /etc/
 
 # Packages
 pacman -Q > /root/packages-list.txt
-pacman -Qi | egrep '^(Name|Installed)' | cut -f2 -d':' | paste - - | column -t | sort -nrk 2 | grep MiB > /root/packages-size.txt
+expac -H M -s "%-30n %m" | sort -rhk 2 > /root/packages-size.txt
