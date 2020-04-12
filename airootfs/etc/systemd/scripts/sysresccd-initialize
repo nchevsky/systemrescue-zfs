@@ -3,7 +3,7 @@ echo "$0 Starting ..."
 errcnt=0
 
 # Process options passed on the boot command line
-for curopt in $(cat /proc/cmdline)
+for curopt in $(< /proc/cmdline)
 do
     case "${curopt}" in
       # Configure keyboard layout if requested in the boot command line
