@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 echo "$0 Starting ..."
 errcnt=0
 
@@ -7,22 +7,21 @@ for curopt in $(cat /proc/cmdline)
 do
     case "${curopt}" in
       # Configure keyboard layout if requested in the boot command line
-      setkmap\=*)
+      setkmap=*)
           echo "Found option '${curopt}' on the boot command line"
-          SETKMAP=$(echo "${curopt}" | cut -f2 -d=)
-          localectl set-keymap ${SETKMAP}
+          localectl set-keymap ${curopt#*=}
           ;;
+
       # Configure root login shell if requested in the boot command line
-      rootshell\=*)
+      rootshell=*)
           echo "Found option '${curopt}' on the boot command line"
-          ROOTSHELL=$(echo "${curopt}" | cut -f2 -d=)
-          chsh --shell ${ROOTSHELL} root
+          chsh --shell ${curopt#*=} root
           ;;
+
       # Set the system root password from a clear password
-      rootpass\=*)
-          SSHPASS1=$(echo "${curopt}" | cut -f2 -d=)
+      rootpass=*)
           echo "Found option 'rootpass=******' on the boot command line"
-          if echo "root:${SSHPASS1}" | chpasswd --crypt-method SHA512
+          if echo "root:${curopt#*=}" | chpasswd --crypt-method SHA512
           then
               echo "Password successfully changed"
           else
@@ -30,13 +29,13 @@ do
               errcnt=$((errcnt + 1))
           fi
           ;;
+
       # Set the system root password from an encrypted password
       # A password can be encrypted using a one-line python3 command such as:
       # python3 -c 'import crypt; print(crypt.crypt("MyPassWord123", crypt.mksalt(crypt.METHOD_SHA256)))'
-      rootcryptpass\=*)
-          SSHPASS2=$(echo "${curopt}" | cut -f2 -d=)
+      rootcryptpass=*)
           echo "Found option 'rootcryptpass=******' on the boot command line"
-          if echo "root:${SSHPASS2}" | chpasswd --encrypted
+          if echo "root:${curopt#*=}" | chpasswd --encrypted
           then
               echo "Password successfully changed"
           else
