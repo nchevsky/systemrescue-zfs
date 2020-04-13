@@ -15,6 +15,7 @@
         <value type="int" value="3"/>
         <value type="int" value="4"/>
         <value type="int" value="5"/>
+        <value type="int" value="11"/>
         <value type="int" value="6"/>
         <value type="int" value="7"/>
         <value type="int" value="8"/>
@@ -46,6 +47,11 @@
     <property name="plugin-5" type="string" value="launcher">
       <property name="items" type="array">
         <value type="string" value="15552316104.desktop"/>
+      </property>
+    </property>
+    <property name="plugin-11" type="string" value="launcher">
+      <property name="items" type="array">
+        <value type="string" value="15867834691.desktop"/>
       </property>
     </property>
     <property name="plugin-6" type="string" value="tasklist"/>

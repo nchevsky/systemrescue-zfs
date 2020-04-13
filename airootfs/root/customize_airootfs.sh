@@ -76,3 +76,7 @@ sed -i -e '/# ==== BEGIN customrepos ====/,/# ==== END customrepos ====/d' /etc/
 # Packages
 pacman -Q > /root/packages-list.txt
 expac -H M -s "%-30n %m" | sort -rhk 2 > /root/packages-size.txt
+
+# Generate HTML version of the manual
+markdown -o usr/share/sysresccd/index.html usr/share/sysresccd/index.md
+
