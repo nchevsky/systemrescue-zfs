@@ -63,6 +63,8 @@
         <value type="string" value="networkmanager applet"/>
       </property>
     </property>
-    <property name="plugin-10" type="string" value="clock"/>
+    <property name="plugin-10" type="string" value="clock">
+      <property name="digital-format" type="string" value="%T">
+    </property>
   </property>
 </channel>
