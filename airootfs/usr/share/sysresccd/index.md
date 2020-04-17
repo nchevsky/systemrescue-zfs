@@ -96,7 +96,15 @@ terminal using the **mc** command. It is very convenient to manipulate files
 and folders.
 * **Thunar** is a graphical file manager provided as part of the XFCE environment.
 
-## Memory test
+## Hardware information
+
+* The **lspci** and **lsusb** commands are useful to list PCI and USB devices
+connected your your system, and they can display the exact hardware IDs of these
+devices that are used to find the right drivers.
+* The **hwinfo** command can be run from the terminal and will display a detail
+report about the hardware.
+
+## Hardware testing
 
 * You can run **memtest86** from the boot menu if you are booting in BIOS/Legacy
 mode. This is not available if you are booting in UEFI mode.
@@ -104,6 +112,8 @@ mode. This is not available if you are booting in UEFI mode.
 system memory. This command runs from the Linux system and hence is available if
 you run in UEFI mode. Make sure you run the 64bit version if your computer has
 more than 4GB of RAM so it can address all your memory.
+* The **stress** commmand can be used from a terminal in order to stress tests
+your system (CPU, memory, I/O, disks)
 
 ## Boot loader and UEFI
 
