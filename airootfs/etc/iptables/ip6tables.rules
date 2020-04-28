@@ -5,7 +5,7 @@
 -N LOGDROP
 -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
 -A INPUT -i lo -j ACCEPT
--A INPUT -p ipv6-icmp -m icmp6 --icmpv6-type 128 -m conntrack --ctstate NEW -j ACCEPT
+-A INPUT -p ipv6-icmp -j ACCEPT
 -A INPUT -j LOGDROP
 -A LOGDROP -m limit --limit 10/sec -j LOG --log-prefix "iptables-dropped: "
 -A LOGDROP -j DROP
