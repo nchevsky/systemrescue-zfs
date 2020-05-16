@@ -1,0 +1,43 @@
+run_hook() {
+    grep -q 'findroot' /proc/cmdline || return
+
+    local newroot="/new_root"
+    local rootdev=""
+    echo "Searching for block devices ..."
+    echo "====================================================================="
+    /usr/bin/lsblk --list --paths  --output=name,fssize,fstype,label,uuid
+    echo "====================================================================="
+    sleep 5
+
+    local devlist=$(/usr/bin/lsblk --list --noheadings --paths  --output=name)
+    for curdev in ${devlist}
+    do
+        echo "Checking for ${init} on device ${curdev} ..."
+        if mount -r ${curdev} ${newroot} 2>/dev/null
+        then
+            if test -x ${newroot}/${init}
+            then
+                echo "Found ${init} on device ${curdev}"
+                rootdev="${curdev}"
+                break
+            fi
+            umount ${newroot}
+        fi
+    done
+    if [ -z ${rootdev} ]
+    then
+        err "Failed to find ${init} on any block device, cannot continue"
+        launch_interactive_shell --exec
+    fi
+    echo "Remounting device ${rootdev} in read-write mode ..."
+    if ! mount -o remount,rw ${rootdev} ${newroot}
+    then
+        err "Failed to remount ${rootdev} in read-only mode"
+        launch_interactive_shell --exec
+    fi
+
+    echo "About to boot from ${rootdev} ..."
+    sleep 15
+    rdlogger_stop
+    exec env -i "TERM=$TERM" /usr/bin/switch_root ${newroot} ${init} "$@"
+}

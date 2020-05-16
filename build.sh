@@ -91,6 +91,7 @@ make_packages() {
 
 # Copy mkinitcpio archiso hooks and build initramfs (airootfs)
 make_setup_mkinitcpio() {
+    rsync -r ${script_path}/airootfs/etc/initcpio/ ${work_dir}/${arch}/airootfs/etc/initcpio/
     local _hook
     mkdir -p ${work_dir}/${arch}/airootfs/etc/initcpio/hooks
     mkdir -p ${work_dir}/${arch}/airootfs/etc/initcpio/install
