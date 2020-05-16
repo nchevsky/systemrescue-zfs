@@ -1,20 +1,15 @@
 run_hook() {
-    if ! grep -q 'findroot' /proc/cmdline
-    then
-        return
-    fi
+    grep -q 'findroot' /proc/cmdline || return
 
     local newroot="/new_root"
     local rootdev=""
     echo "Searching for block devices ..."
     echo "====================================================================="
-    /usr/bin/lsblk --list --noheadings --paths  --output=name,fssize,fstype,label,uuid
+    /usr/bin/lsblk --list --paths  --output=name,fssize,fstype,label,uuid
     echo "====================================================================="
     sleep 5
 
     local devlist=$(/usr/bin/lsblk --list --noheadings --paths  --output=name)
-    echo "====================================================================="
-    echo devlist=${devlist}
     for curdev in ${devlist}
     do
         echo "Checking for ${init} on device ${curdev} ..."
@@ -42,7 +37,7 @@ run_hook() {
     fi
 
     echo "About to boot from ${rootdev} ..."
-    sleep 10
+    sleep 15
     rdlogger_stop
     exec env -i "TERM=$TERM" /usr/bin/switch_root ${newroot} ${init} "$@"
 }
