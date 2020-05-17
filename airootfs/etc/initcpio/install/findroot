@@ -6,6 +6,7 @@ build() {
     add_all_modules "/crypto/"
 
     add_binary "lsblk"
+    add_binary "whiptail"
     add_binary "cryptsetup"
     add_binary "dmsetup"
 

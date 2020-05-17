@@ -4,6 +4,8 @@ run_hook() {
     # Initialisation
     local newroot="/new_root"
     local rootdev=""
+    local rootcount=0
+    local menuchoices=""
     modprobe -a -q dm-crypt >/dev/null 2>&1
     echo "Searching for block devices ..."
     sleep 2
@@ -32,12 +34,12 @@ run_hook() {
 
     # Show list of accessible block devices
     echo "====================================================================="
-    /usr/bin/lsblk --list --paths --output=name,fssize,fstype,label
+    lsblk --list --paths --output=name,size,fstype,label
     echo "====================================================================="
     sleep 5
 
     # Attempt to find a filesystem which contains /sbin/init
-    local devlist=$(/usr/bin/lsblk --list --noheadings --paths  --output=name)
+    local devlist=$(lsblk --list --noheadings --paths --output=name)
     for curdev in ${devlist}
     do
         echo "Checking for ${init} on device ${curdev} ..."
@@ -46,26 +48,41 @@ run_hook() {
             if test -x ${newroot}/${init}
             then
                 echo "Found ${init} on device ${curdev}"
-                rootdev="${curdev}"
-                break
+                rootcount=$((rootcount + 1))
+                menuchoices="${menuchoices} ${curdev} ${curdev}"
             fi
             umount ${newroot}
         fi
     done
-    if [ -z ${rootdev} ]
+
+    # Fail if no root filesystem has been found
+    if [ ${rootcount} -eq 0 ]
     then
         err "Failed to find ${init} on any block device, cannot continue"
         launch_interactive_shell --exec
     fi
-    echo "Remounting device ${rootdev} in read-write mode ..."
-    if ! mount -o remount,rw ${rootdev} ${newroot}
+
+    # Get the user to select the device from which to start
+    rootdev=$(whiptail --nocancel --title "Boot Linux OS from the disk" \
+                       --fb --menu "From which device do you want to boot ?" \
+                       --noitem 15 60 4 ${menuchoices} 3>&1 1>&2 2>&3)
+
+    # Make sure the choice is a valid block device
+    if ! lsblk --nodeps ${rootdev} >/dev/null 2>/dev/null
     then
-        err "Failed to remount ${rootdev} in read-only mode"
+        err "Choice ${rootdev} is not a valid block device"
         launch_interactive_shell --exec
     fi
 
-    echo "About to boot from ${rootdev} ..."
-    sleep 15
+    read -p "Press enter to boot from ${rootdev}"
+
+    echo "Mounting device ${rootdev} ..."
+    if ! mount ${rootdev} ${newroot}
+    then
+        err "Failed to mount ${rootdev} in read-write mode"
+        launch_interactive_shell --exec
+    fi
+
     rdlogger_stop
     exec env -i "TERM=$TERM" /usr/bin/switch_root ${newroot} ${init} "$@"
 }
