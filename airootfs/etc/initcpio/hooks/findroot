@@ -1,14 +1,42 @@
 run_hook() {
     grep -q 'findroot' /proc/cmdline || return
 
+    # Initialisation
     local newroot="/new_root"
     local rootdev=""
+    modprobe -a -q dm-crypt >/dev/null 2>&1
     echo "Searching for block devices ..."
+    sleep 2
+
+    # Prepare access to luks encrypted block devices
+    local cryptdev="$(blkid -t TYPE='crypto_LUKS' -o device)"
+    for curdev in ${cryptdev}
+    do
+        if cryptsetup isLuks ${curdev} >/dev/null 2>&1
+        then
+            echo "A passphrase is required to access device ${curdev}:"
+            local cryptname="${curdev##*/}"
+            local cryptargs=""
+            while ! eval cryptsetup open --type luks ${curdev} ${cryptname} ${cryptargs}
+            do
+                sleep 2;
+            done
+            if [ ! -e "/dev/mapper/${cryptname}" ]
+            then
+                err "Password succeeded but ${cryptname} creation failed, aborting..."
+                launch_interactive_shell --exec
+            fi
+            echo "Have successfully prepared access to encrypted device ${curdev}"
+        fi
+    done
+
+    # Show list of accessible block devices
     echo "====================================================================="
-    /usr/bin/lsblk --list --paths  --output=name,fssize,fstype,label,uuid
+    /usr/bin/lsblk --list --paths --output=name,fssize,fstype,label
     echo "====================================================================="
     sleep 5
 
+    # Attempt to find a filesystem which contains /sbin/init
     local devlist=$(/usr/bin/lsblk --list --noheadings --paths  --output=name)
     for curdev in ${devlist}
     do
