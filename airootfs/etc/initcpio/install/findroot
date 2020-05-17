@@ -1,7 +1,16 @@
 #!/bin/bash
 
 build() {
-    add_binary "/usr/bin/lsblk" "/usr/bin/lsblk"
+    add_module "dm-crypt"
+    add_module "dm-integrity"
+    add_all_modules "/crypto/"
+
+    add_binary "lsblk"
+    add_binary "cryptsetup"
+    add_binary "dmsetup"
+
+    # cryptsetup calls pthread_create(), which dlopen()s libgcc_s.so.1
+    add_binary "/usr/lib/libgcc_s.so.1"
 
     add_runscript
 }
