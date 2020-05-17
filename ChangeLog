@@ -4,7 +4,7 @@ SystemRescueCd ChangeLog
 -------------------------------------------------------------------------------
 6.1.4 (YYYY-MM-DD):
 -------------------------------------------------------------------------------
-* Added an option in the boot menu to start from a Linux OS installed on the disk
+* Added an entry in the boot menu to start from a Linux OS installed on the disk
 
 -------------------------------------------------------------------------------
 6.1.3 (2020-04-18):
