@@ -1,0 +1,13 @@
+#!/bin/bash
+
+build() {
+    add_binary "/usr/bin/lsblk" "/usr/bin/lsblk"
+
+    add_runscript
+}
+
+help() {
+    cat <<HELPEOF
+This hook finds an existing Linux root file system on any block device
+HELPEOF
+}
