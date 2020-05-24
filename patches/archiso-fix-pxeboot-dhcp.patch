@@ -1,0 +1,19 @@
+diff -urN archiso-43-a/archiso/initcpio/hooks/archiso_pxe_common archiso-43-b/archiso/initcpio/hooks/archiso_pxe_common
+--- archiso-43-a/archiso/initcpio/hooks/archiso_pxe_common	2019-10-16 12:10:09.000000000 +0100
++++ archiso-43-b/archiso/initcpio/hooks/archiso_pxe_common	2020-05-24 16:53:12.941000000 +0100
+@@ -61,10 +61,11 @@
+         [[ -z "${copy_resolvconf}" ]] && copy_resolvconf="y"
+ 
+         if [[ "${copytoram}" == "y" ]]; then
+-            if [[ -n "${bootif_dev}" ]]; then
+-                ip addr flush dev "${bootif_dev}"
+-                ip link set "${bootif_dev}" down
+-            fi
++            for curif in /sys/class/net/*; do
++                netdev=${curif#/sys/class/net/}
++                ip addr flush dev "${netdev}"
++                ip link set "${netdev}" down
++            done
+         elif [[ "${copy_resolvconf}" != "n" && -f /etc/resolv.conf ]]; then
+             cp /etc/resolv.conf /new_root/etc/resolv.conf
+         fi
