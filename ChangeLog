@@ -6,6 +6,7 @@ SystemRescueCd ChangeLog
 -------------------------------------------------------------------------------
 * Fixed issue causing DHCP not to be run after a PXE boot (#19)
 * Remove large unneeded firmware files from the initramfs (#109)
+* Added encrypt hook to allow to boot from an encrypted device (#108)
 
 -------------------------------------------------------------------------------
 6.1.4 (2020-05-22):
