@@ -91,7 +91,7 @@ make_packages() {
 
 # Copy mkinitcpio archiso hooks and build initramfs (airootfs)
 make_setup_mkinitcpio() {
-    rsync -r ${script_path}/airootfs/etc/initcpio/ ${work_dir}/${arch}/airootfs/etc/initcpio/
+    #rsync -r ${script_path}/airootfs/etc/initcpio/ ${work_dir}/${arch}/airootfs/etc/initcpio/
     local _hook
     mkdir -p ${work_dir}/${arch}/airootfs/etc/initcpio/hooks
     mkdir -p ${work_dir}/${arch}/airootfs/etc/initcpio/install
@@ -109,8 +109,8 @@ make_setup_mkinitcpio() {
       exec 17<>${work_dir}/gpgkey
     fi
 
-    mkdir -p ${work_dir}/${arch}/airootfs/etc/modprobe.d
-    cp ${script_path}/airootfs/etc/modprobe.d/* ${work_dir}/${arch}/airootfs/etc/modprobe.d/
+    #mkdir -p ${work_dir}/${arch}/airootfs/etc/modprobe.d
+    #cp ${script_path}/airootfs/etc/modprobe.d/* ${work_dir}/${arch}/airootfs/etc/modprobe.d/
 
     ARCHISO_GNUPG_FD=${gpg_key:+17} setarch ${arch} mkarchiso ${verbose} -w "${work_dir}/${arch}" -C "${work_dir}/pacman.conf" -D "${install_dir}" -r 'mkinitcpio -c /etc/mkinitcpio-archiso.conf -k /boot/vmlinuz-linux-lts -g /boot/sysresccd.img' run
     if [[ ${gpg_key} ]]; then
@@ -268,8 +268,8 @@ mkdir -p ${work_dir}
 run_once make_pacman_conf
 run_once make_basefs
 run_once make_packages
-run_once make_setup_mkinitcpio
 run_once make_customize_airootfs
+run_once make_setup_mkinitcpio
 run_once make_boot
 run_once make_boot_extra
 run_once make_syslinux
