@@ -2,11 +2,13 @@ SystemRescueCd ChangeLog
 ========================
 
 -------------------------------------------------------------------------------
-6.1.5 (YYYY-MM-DD):
+6.1.5 (2020-06-07):
 -------------------------------------------------------------------------------
+* Updated kernel to Long-Term-Supported linux-5.4.44
 * Fixed issue causing DHCP not to be run after a PXE boot (#19)
 * Remove large unneeded firmware files from the initramfs (#109)
 * Added encrypt hook to allow to boot from an encrypted device (#108)
+* Enable serial console autologin (Marcos Mello) (#113)
 
 -------------------------------------------------------------------------------
 6.1.4 (2020-05-22):
