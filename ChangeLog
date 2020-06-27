@@ -5,6 +5,7 @@ SystemRescueCd ChangeLog
 6.1.6 (YYYY-MM-DD):
 -------------------------------------------------------------------------------
 * Improved PXE boot when multiple network interfaces are available
+* Added minicom and picocom serial communication programs
 
 -------------------------------------------------------------------------------
 6.1.5 (2020-06-07):

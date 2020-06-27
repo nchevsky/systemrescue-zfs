@@ -81,6 +81,7 @@ mc
 mdadm
 memtest86+
 memtester
+minicom
 mkinitcpio
 mkinitcpio-nfs-utils
 mlocate
@@ -110,6 +111,7 @@ partclone
 parted
 partimage
 pavucontrol
+picocom
 ppp
 pptpclient
 pulseaudio-alsa

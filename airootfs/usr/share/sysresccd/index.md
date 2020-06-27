@@ -65,6 +65,8 @@ and update firewall rules to be able to connect.
 * You can run **Remmina** from the menu if you need to connect to another
 machine via VNC or NX, and you can run **rdekstop** from a terminal in order to
 connect to remote Windows machines over RDP.
+* You can use **screen**, **minicom** or **picocom** in order to connect to a
+serial console.
 
 ## Security
 
