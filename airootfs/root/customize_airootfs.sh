@@ -52,6 +52,7 @@ rm -rf /usr/share/gtk-doc /usr/share/doc /usr/share/keepassxc/docs/*.pdf
 rm -rf /usr/share/keepassxc/translations
 rm -rf /usr/share/gir*
 rm -rf /usr/include
+rm -rf /usr/share/man/man3
 
 # Cleanup XFCE menu
 sed -i '2 i NoDisplay=true' /usr/share/applications/{exo-mail-reader,exo-web-browser,jmacs,jpico,jstar}.desktop
@@ -79,4 +80,3 @@ expac -H M -s "%-30n %m" | sort -rhk 2 > /root/packages-size.txt
 
 # Generate HTML version of the manual
 markdown -o usr/share/sysresccd/index.html usr/share/sysresccd/index.md
-
