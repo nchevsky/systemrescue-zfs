@@ -19,8 +19,8 @@ from the **parted** command in the terminal.
 * **fsarchiver** and **partclone** allows you to save and restore the contents
 of file systems to/from a compressed archive file. It needs to be run using the
 command line from the terminal.
-* You can use **fdisk** and **gdisk** to edit MBR and GPT partition tables from
-the terminal
+* You can use **fdisk**, **gdisk** and **cfdisk** to edit MBR and GPT partition
+tables from the terminal
 * **sfdisk** is a tool to save and restore partition tables to/from a file.
 * You can use **growpart** in order to grow a partition so it uses all the space
 available on the block storage. You normally need this command after you have
@@ -88,8 +88,8 @@ video, photos, documents and archives.
 
 ## Secure deletion
 
-Both **wipe** and **nwipe** are available if you need to make sure data are
-securelty deleted from a disk. Be careful as these tools are destructive.
+Both **wipe**, **nwipe** and **shred** are available if you need to securely
+delete data. Be careful as these tools are destructive.
 
 ## File managers
 
@@ -103,6 +103,7 @@ and folders.
 * The **lspci** and **lsusb** commands are useful to list PCI and USB devices
 connected your your system, and they can display the exact hardware IDs of these
 devices that are used to find the right drivers.
+* The **lscpu** command displays information about the CPU.
 * The **hwinfo** command can be run from the terminal and will display a detail
 report about the hardware.
 
