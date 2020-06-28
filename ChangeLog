@@ -5,6 +5,7 @@ SystemRescueCd ChangeLog
 6.1.6 (YYYY-MM-DD):
 -------------------------------------------------------------------------------
 * Improved PXE boot when multiple network interfaces are available
+* Autorun will only run after the network is fully configured (#120)
 * Added minicom and picocom serial communication programs
 
 -------------------------------------------------------------------------------
