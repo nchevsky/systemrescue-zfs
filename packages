@@ -18,8 +18,8 @@ darkhttpd
 ddrescue
 dhclient
 dialog
-discount
 diffutils
+discount
 dmidecode
 dmraid
 dnsmasq
@@ -30,8 +30,8 @@ e2fsprogs
 efitools
 elinks
 ethtool
-expac
 exfat-utils
+expac
 f2fs-tools
 featherpad
 firefox-esr-bin
@@ -91,7 +91,6 @@ nano
 nbd
 ncdu
 ndisc6
-netctl
 network-manager-applet
 networkmanager-openvpn
 networkmanager-vpnc
