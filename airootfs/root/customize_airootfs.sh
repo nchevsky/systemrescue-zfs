@@ -23,6 +23,9 @@ sed -i 's/#\(HandleSuspendKey=\)suspend/\1ignore/' /etc/systemd/logind.conf
 sed -i 's/#\(HandleHibernateKey=\)hibernate/\1ignore/' /etc/systemd/logind.conf
 sed -i 's/#\(HandleLidSwitch=\)suspend/\1ignore/' /etc/systemd/logind.conf
 
+# NetworkManager is enabled by default
+ln -sf /run/NetworkManager/resolv.conf /etc/resolv.conf
+
 # PulseAudio takes care of volume restore
 ln -sf /dev/null /etc/udev/rules.d/90-alsa-restore.rules
 
