@@ -1,0 +1,74 @@
+diff --git a/archiso/initcpio/hooks/archiso b/archiso/initcpio/hooks/archiso
+index 5c56561..ecfba70 100644
+--- a/archiso/initcpio/hooks/archiso
++++ b/archiso/initcpio/hooks/archiso
+@@ -72,6 +72,44 @@ _mnt_sfs() {
+     _mnt_dev "${sfs_dev}" "${mnt}" "-r" "defaults"
+ }
+ 
++# arg: /path/to/archisobasedir
++_mnt_srm() {
++    local srm_path="${1}"
++    local srm_img
++    local srm_fullname
++    local srm_dev
++    local srm_c=1
++
++    for srm_img in "${srm_path}"/*.srm ; do
++        [[ -e "${srm_img}" ]] || continue
++        srm_fullname="${srm_img##*/}"
++        if [[ "${copytoram}" == "y" ]]; then
++            msg -n ":: Copying ${srm_fullname} to RAM..."
++            if cp "${srm_img}" "/run/archiso/copytoram/${srm_fullname}" ; then
++                srm_img="/run/archiso/copytoram/${srm_fullname}"
++                msg "done."
++            else
++                err "while copy '${srm_fullname}' to '/run/archiso/copytoram/${srm_fullname}', ignoring."
++                continue
++            fi
++        fi
++        srm_dev=$(losetup --find --show --read-only "${srm_img}")
++        # _mnt_dev() will launch shell in case of error
++        # SRM is optional, hence call mount directly
++        msg ":: Mounting '${srm_dev}' to '/run/archiso/sfs/srm${srm_c}'"
++        if mount -o defaults,X-mount.mkdir -r "${srm_dev}" "/run/archiso/sfs/srm${srm_c}" ; then
++            overlay_src_extra="${overlay_src_extra}:/run/archiso/sfs/srm${srm_c}"
++            echo ${srm_dev} >> /run/archiso/used_block_devices
++            srm_c=$(( srm_c + 1 ))
++            msg ":: Device '${srm_dev}' mounted successfully."
++        else
++            losetup -d ${srm_dev}
++            [[ "${copytoram}" == "y" ]] && rm -f "${srm_img}"
++            err "failed to mount '${srm_dev}', ignoring."
++        fi
++    done
++}
++
+ # args: device, mountpoint, flags, opts
+ _mnt_dev() {
+     local dev="${1}"
+@@ -139,6 +177,9 @@ run_hook() {
+     [[ -z "${cow_directory}" ]] && cow_directory="persistent_${archisolabel}/${arch}"
+     [[ -z "${cow_chunksize}" ]] && cow_chunksize="8"
+ 
++    # additional overlayfs lowerdirs, set by _mnt_srm()
++    overlay_src_extra=""
++
+     # set mount handler for archiso
+     mount_handler="archiso_mount_handler"
+ }
+@@ -205,10 +246,13 @@ archiso_mount_handler() {
+     mkdir -p -m 0700 "/run/archiso/cowspace/${cow_directory}"
+ 
+     _mnt_sfs "/run/archiso/bootmnt/${archisobasedir}/${arch}/airootfs.sfs" "/run/archiso/sfs/airootfs"
++
++    [[ "${loadsrm}" == "y" ]] && _mnt_srm "/run/archiso/bootmnt/${archisobasedir}"
++
+     if [[ -f "/run/archiso/sfs/airootfs/airootfs.img" ]]; then
+         _mnt_dmsnapshot "/run/archiso/sfs/airootfs/airootfs.img" "${newroot}" "/"
+     else
+-        _mnt_overlayfs "/run/archiso/sfs/airootfs" "${newroot}" "/"
++        _mnt_overlayfs "/run/archiso/sfs/airootfs${overlay_src_extra}" "${newroot}" "/"
+     fi
+ 
+     if [[ "${copytoram}" == "y" ]]; then
