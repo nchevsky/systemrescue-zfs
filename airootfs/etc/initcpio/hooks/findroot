@@ -1,5 +1,5 @@
 run_hook() {
-    grep -q 'findroot' /proc/cmdline || return
+    [[ "${findroot}" == "y" ]] || return
 
     # Initialisation
     local newroot="/new_root"
