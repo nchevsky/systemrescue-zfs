@@ -1,5 +1,5 @@
 diff --git a/archiso/initcpio/hooks/archiso b/archiso/initcpio/hooks/archiso
-index 5c56561..ecfba70 100644
+index 5c56561..69546d7 100644
 --- a/archiso/initcpio/hooks/archiso
 +++ b/archiso/initcpio/hooks/archiso
 @@ -72,6 +72,44 @@ _mnt_sfs() {
@@ -18,7 +18,7 @@ index 5c56561..ecfba70 100644
 +        [[ -e "${srm_img}" ]] || continue
 +        srm_fullname="${srm_img##*/}"
 +        if [[ "${copytoram}" == "y" ]]; then
-+            msg -n ":: Copying ${srm_fullname} to RAM..."
++            msg -n ":: Copying '${srm_fullname}' to RAM..."
 +            if cp "${srm_img}" "/run/archiso/copytoram/${srm_fullname}" ; then
 +                srm_img="/run/archiso/copytoram/${srm_fullname}"
 +                msg "done."
