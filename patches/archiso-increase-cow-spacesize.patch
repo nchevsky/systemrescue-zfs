@@ -1,0 +1,24 @@
+diff -urN archiso-43-a/archiso/initcpio/hooks/archiso archiso-43-b/archiso/initcpio/hooks/archiso
+--- archiso-43-a/archiso/initcpio/hooks/archiso	2019-10-16 12:10:09.000000000 +0100
++++ archiso-43-b/archiso/initcpio/hooks/archiso	2020-07-12 09:07:19.715000000 +0100
+@@ -124,7 +124,7 @@
+     [[ -z "${archisobasedir}" ]] && archisobasedir="arch"
+     [[ -z "${dm_snap_prefix}" ]] && dm_snap_prefix="arch"
+     [[ -z "${archisodevice}" ]] && archisodevice="/dev/disk/by-label/${archisolabel}"
+-    [[ -z "${cow_spacesize}" ]] && cow_spacesize="256M"
++    [[ -z "${cow_spacesize}" ]] && cow_spacesize="25%"
+ 
+     if [[ -n "${cow_label}" ]]; then
+         cow_device="/dev/disk/by-label/${cow_label}"
+diff -urN archiso-43-a/docs/README.bootparams archiso-43-b/docs/README.bootparams
+--- archiso-43-a/docs/README.bootparams	2019-10-16 12:10:09.000000000 +0100
++++ archiso-43-b/docs/README.bootparams	2020-07-12 09:06:37.766000000 +0100
+@@ -46,7 +46,7 @@
+                     dm-snapshot and overlayfs mode.
+                     The argument is an integer and optional unit.
+                     Units are M,G (powers of 1024).
+-                    Default: "256M"
++                    Default: "25%"
+ * cow_chunksize=    Set chunksize used for dm-snapshot. This is number
+                     of 512 byte blocks to write at once.
+                     Default: "8"
