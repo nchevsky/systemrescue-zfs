@@ -89,6 +89,7 @@ mkinitcpio-nfs-utils
 mlocate
 ms-sys
 mtools
+mtr
 nano
 nbd
 ncdu
