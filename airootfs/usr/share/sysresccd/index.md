@@ -76,6 +76,8 @@ files. It can be executed via the **gpg** command from a terminal.
 file which is encrypted using a master password.
 * The **cryptsetup** command is available if you need to access Linux encrypted
 disks.
+* The **chntpw** command can be used to reset Windows passwords by accessing the
+disk where Windows is installed.
 
 ## Recovery tools
 
