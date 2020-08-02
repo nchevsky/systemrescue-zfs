@@ -6,7 +6,7 @@ index 3eb7ac7..e4585af 100644
  
      _mnt_sfs "/run/archiso/bootmnt/${archisobasedir}/${arch}/airootfs.sfs" "/run/archiso/sfs/airootfs"
  
-+    if [[ "${copytoram}" == "y" ]] && ls -lh /run/archiso/bootmnt/autorun* >/dev/null; then
++    if [[ "${copytoram}" == "y" ]] && ls -lh /run/archiso/bootmnt/autorun* >/dev/null 2>/dev/null; then
 +        msg -n ":: Copying autorun scripts to RAM..."
 +        if ! cp /run/archiso/bootmnt/autorun* /run/archiso/copytoram/ ; then
 +            echo "ERROR: while copy '/run/archiso/bootmnt/autorun*' to '/run/archiso/copytoram/'"
