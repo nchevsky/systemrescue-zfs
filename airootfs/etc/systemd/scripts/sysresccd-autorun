@@ -120,7 +120,7 @@ def main():
                 sys.exit(0)
 
         # ---- parse the autorun sources ----
-        if re.match('^http://', ar_source):
+        if re.match('^https?://', ar_source):
                 search_autoruns(ar_source, ar_autoruns, copyfilefct_http)
         elif re.match('^/dev/', ar_source): # mount a partition/device
                 mnt1=('mount',ar_source,autorunmnt)
