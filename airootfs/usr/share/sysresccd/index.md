@@ -2,7 +2,7 @@
 
 This page tells you more about the important programs which comes with this
 system rescue distribution, and which tools can be used for common tasks. Please
-use the **man** command in a termainal to get more details about these programs.
+use the **man** command in a terminal to get more details about these programs.
 
 ## Packages
 As SystemRescueCd is based on ArchLinux you can use the **pacman** command to
