@@ -10,7 +10,7 @@ ln -sf /usr/share/zoneinfo/UTC /etc/localtime
 cp -aT /etc/skel/ /root/
 
 # Permissions
-chmod 700 /root
+chmod 750 /root
 chmod 755 /etc/systemd/scripts/*
 
 # Configuration
