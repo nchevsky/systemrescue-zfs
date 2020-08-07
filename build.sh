@@ -223,7 +223,7 @@ make_efiboot() {
 make_prepare() {
     cp -a -l -f ${work_dir}/${arch}/airootfs ${work_dir}
     setarch ${arch} mkarchiso ${verbose} -w "${work_dir}" -D "${install_dir}" pkglist
-    setarch ${arch} mkarchiso ${verbose} -w "${work_dir}" -D "${install_dir}" ${gpg_key:+-g ${gpg_key}} -c ${sfs_comp} -t "${sfs_opts}" prepare
+    setarch ${arch} mkarchiso ${verbose} -w "${work_dir}" -D "${install_dir}" ${gpg_key:+-g ${gpg_key}} -c ${sfs_comp} prepare
     rm -rf ${work_dir}/airootfs
     # rm -rf ${work_dir}/${arch}/airootfs (if low space, this helps)
 }
