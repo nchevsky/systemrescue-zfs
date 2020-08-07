@@ -1,19 +1,20 @@
 # SystemRescueCd
 
 ## Project website
-Homepage: http://www.system-rescue-cd.org/
+Homepage: https://www.system-rescue-cd.org/
 
 ## Project sources
 This git repository contains SystemRescueCd sources files. This is based on
-https://git.archlinux.org/archiso.git
+https://gitlab.archlinux.org/archlinux/archiso/
 
 ## Building SystemRescueCd
 SystemRescueCd can be built for x86_64 or i686 architectures. It must be built
 on archlinux if you want to build a 64bit edition, or archlinux32 if you want
 to create a 32bit edition. The following packages must be installed on the
-build system: archiso, grub, mtools. The archiso package must be modified to
-add support for an option which allows to optimize the squashfs compression.
-The patch can be found in the "patches" folder in this git repository.
+build system: archiso, grub, mtools. You need to use a modified version of
+archiso for the build to work and for additional fixes and features to be
+present. You can find the required archiso version and patches in the "patches"
+folder in this git repository.
 
 The package list contains packages which are not part of the official binary
 package repositories. These packages need to be built from sources from the AUR
