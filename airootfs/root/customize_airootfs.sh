@@ -70,7 +70,7 @@ then
 fi
 
 # Update pacman.conf
-sed -i -e '/# ==== BEGIN customrepos ====/,/# ==== END customrepos ====/d' /etc/pacman.conf
+sed -i -e '/# ==== BEGIN sysrescuerepo ====/,/# ==== END sysrescuerepo ====/d' /etc/pacman.conf
 
 # Check for issues with binaries
 /usr/bin/check-binaries.sh
