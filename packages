@@ -41,6 +41,7 @@ foremost
 fsarchiver
 galculator
 geany
+ghex
 git
 gnu-netcat
 gpart
@@ -53,6 +54,7 @@ grsync
 grub
 haveged
 hdparm
+hexedit
 htop
 hwinfo
 iftop
