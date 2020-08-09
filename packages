@@ -103,6 +103,7 @@ nfs-utils
 nilfs-utils
 nmap
 ntfs-3g
+ntfs-3g-system-compression
 ntp
 nvme-cli
 nwipe
