@@ -132,6 +132,8 @@ order of the UEFI boot entries on your computer.
 * You can use graphical text editors such as **featherpad** and **geany**
 * You can use text editors such as **vim**, **nano** and **joe** from the
 terminal
+* If you need an hexadecimal editor then you can use either **ghex** which has
+a graphical user interface or **hexedit** from the terminal
 
 ## Archival and file transfer
 
