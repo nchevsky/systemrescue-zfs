@@ -1,5 +1,5 @@
 diff --git a/archiso/initcpio/hooks/archiso b/archiso/initcpio/hooks/archiso
-index 5c56561..f99a617 100644
+index 5c56561..ed3c1fa 100644
 --- a/archiso/initcpio/hooks/archiso
 +++ b/archiso/initcpio/hooks/archiso
 @@ -72,6 +72,44 @@ _mnt_sfs() {
@@ -32,7 +32,7 @@ index 5c56561..f99a617 100644
 +        # SRM is optional, hence call mount directly
 +        msg ":: Mounting '${srm_dev}' to '/run/archiso/sfs/srm${srm_c}'"
 +        if mount -o ro,X-mount.mkdir "${srm_dev}" "/run/archiso/sfs/srm${srm_c}" ; then
-+            overlay_src_extra="${overlay_src_extra}:/run/archiso/sfs/srm${srm_c}"
++            overlay_src_extra="${overlay_src_extra}/run/archiso/sfs/srm${srm_c}:"
 +            echo ${srm_dev} >> /run/archiso/used_block_devices
 +            srm_c=$(( srm_c + 1 ))
 +            msg ":: Device '${srm_dev}' mounted successfully."
@@ -68,7 +68,7 @@ index 5c56561..f99a617 100644
          _mnt_dmsnapshot "/run/archiso/sfs/airootfs/airootfs.img" "${newroot}" "/"
      else
 -        _mnt_overlayfs "/run/archiso/sfs/airootfs" "${newroot}" "/"
-+        _mnt_overlayfs "/run/archiso/sfs/airootfs${overlay_src_extra}" "${newroot}" "/"
++        _mnt_overlayfs "${overlay_src_extra}/run/archiso/sfs/airootfs" "${newroot}" "/"
      fi
  
      if [[ "${copytoram}" == "y" ]]; then
