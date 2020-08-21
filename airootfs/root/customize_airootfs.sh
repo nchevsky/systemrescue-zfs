@@ -37,8 +37,11 @@ systemctl enable sysresccd-initialize.service
 systemctl enable sysresccd-autorun.service
 systemctl set-default multi-user.target
 
+# Mask irrelevant timer units (#140)
 systemctl mask atop-rotate.timer
 systemctl mask shadow.timer
+systemctl mask man-db.timer
+systemctl mask updatedb.timer
 
 # Provide additional commands (using busybox instead of binutils to save space)
 ln -sf /usr/bin/busybox /usr/local/bin/ar
