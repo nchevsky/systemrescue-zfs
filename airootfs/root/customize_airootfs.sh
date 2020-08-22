@@ -63,7 +63,7 @@ sed -i '2 i NoDisplay=true' /usr/share/applications/{exo-mail-reader,exo-web-bro
 sed -i "s/^\(Categories=\).*\$/Categories=TextEditor;Utility;/" /usr/share/applications/{geany,joe,jmacs,jpico,jstar,*GHex*}.desktop
 
 # Remove large/irrelevant firmwares
-rm -rf /usr/lib/firmware/{liquidio,netronome,mrvl/prestera}
+rm -rf /usr/lib/firmware/{liquidio,netronome,mellanox,mrvl/prestera}
 
 # Remove extra locales
 if [ -x /usr/bin/localepurge ]
