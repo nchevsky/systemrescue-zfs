@@ -1,30 +1,55 @@
-# SystemRescueCd
+# SystemRescueCd+ZFS
 
-## Project website
-Homepage: http://www.system-rescue-cd.org/
+**SystemRescueCd+ZFS** is a fork of the [SystemRescueCd](http://www.system-rescue-cd.org/) Linux distribution by [Francois Dupoux](https://gitlab.com/fdupoux) (based on [Arch Linux](https://www.archlinux.org)) with improvements such as:
 
-## Project sources
-This git repository contains SystemRescueCd sources files. This is based on
-https://git.archlinux.org/archiso.git
+* [ZFS](https://github.com/archzfs/archzfs/) support built-in
+* [Serial console](#serial-console) enabled at the bootloader stage
+* Shortened automatic boot timeout of 30 seconds
+* Build process improvements
+* Extra polish
 
-## Building SystemRescueCd
-SystemRescueCd can be built for x86_64 or i686 architectures. It must be built
-on archlinux if you want to build a 64bit edition, or archlinux32 if you want
-to create a 32bit edition. The following packages must be installed on the
-build system: archiso, grub, mtools. The archiso package must be modified to
-add support for an option which allows to optimize the squashfs compression.
-The patch can be found in the "patches" folder in this git repository.
+## Serial Console
 
-The package list contains packages which are not part of the official binary
-package repositories. These packages need to be built from sources from the AUR
-website. These sources are made of at least a PKGBUILD file and quite often
-other related files, such as patches. These can be built using the makepkg
-command which generates binary packages. These binary packages must be copied to
-a custom package repository which can be hosted locally using httpd or nginx.
-The repo-add command must be used to generate the repository package index.
-The pacman.conf file must be updated with the address of this repository so
-custom packages can be accessed.
+Serial I/O is enabled by default on `COM1`/`ttyS0` at 115,200 baud. If your serial console is on another port or requires a different speed, make adjustments in the following places and [rebuild](#build) the image.
 
-The build process can be started by running the build.sh script. It will create
-a large "work" sub-directory and the ISO file will be written in the "out"
-sub-directory.
+1. [GRUB](https://www.gnu.org/software/grub/manual/grub/grub.html) (**UEFI boot**): `serial --speed=115200 efi0` in `./efiboot/grub/grubsrcd.cfg`
+2. [SYSLINUX](https://wiki.syslinux.org/wiki/index.php?title=SYSLINUX) (**BIOS boot**): `SERIAL 0 115200` in `./syslinux/sysresccd_head.cfg`
+3. [Kernel](https://www.kernel.org/doc/html/latest/admin-guide/serial-console.html) (**post-boot**): `console=ttyS0,115200` in `./build.sh`
+
+## Building
+
+`$ sudo ./build.sh -v`
+
+### Dependencies
+
+* [Arch Linux](https://www.archlinux.org) with the following packages installed:
+  * `arch-install-scripts`
+  * `archiso`
+  * `base-devel`
+  * `grub`
+  * `mkinitcpio-archiso`
+  * `mtools`
+* Manually import [this key](https://github.com/archzfs/archzfs/wiki#using-the-archzfs-repository) to avoid an _"unknown trust"_ error during building of the `archzfs` package.
+
+### Rebuilds
+
+The state of successfully completed [build steps](#steps) is persisted in `./work/build.make_*` files. If such a file is present for a given build step, `./build.sh` will skip that step indefinitely going forward. Before a rebuild, you must remove these state files to ensure that the appropriate build steps are re-executed and any customizations actually take effect.
+
+* **Full rebuild (recommended):** `# rm ./work/build.make_*`
+* **Partial rebuild:** Delete the state file for the **earliest** affected step and **all steps that come after it**. For example, if you have customized the GRUB (UEFI boot) configuration, you must remove `build.make_efi` and its successors `build.make_efiboot`, `build.make_prepare` and `build.make_iso`.
+
+### Steps
+
+1. `make_pacman_conf`
+2. `make_basefs`
+3. `make_packages`
+4. `make_setup_mkinitcpio`
+5. `make_customize_airootfs`
+6. `make_boot`
+7. `make_boot_extra`
+8. `make_syslinux`
+9. `make_isolinux`
+10. `make_efi`
+11. `make_efiboot`
+12. `make_prepare`
+13. `make_iso`
