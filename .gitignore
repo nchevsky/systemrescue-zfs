@@ -1,2 +1,5 @@
+edit-*.sh
 out
+rebuild-*.sh
+transfer-*.sh
 work
