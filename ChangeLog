@@ -6,6 +6,7 @@ SystemRescueCd ChangeLog
 -------------------------------------------------------------------------------
 * Added support for getting autorun scripts from HTTPS sources (Richard Dumais)
 * Added an entry in the boot menus to use the nomodeset option (#131)
+* Make BIOS and UEFI boot menus consistent (descriptions, resolution, colors)
 * Added hexedit and ghex hexadecimal text editors (#135)
 
 -------------------------------------------------------------------------------
