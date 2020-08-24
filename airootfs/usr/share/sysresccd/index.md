@@ -16,6 +16,8 @@ if you want to install new packages.
 copies, moves, creates, formats, deletes, and modifies disk partitions.
 * **GNU Parted** can also be used to manipulate partitions and it can be run
 from the **parted** command in the terminal.
+* **GNU ddrescue** can copy data from and to block devices just like the
+standard **dd** program and it is optimized to deal with disks with bad blocks.
 * **fsarchiver** and **partclone** allows you to save and restore the contents
 of file systems to/from a compressed archive file. It needs to be run using the
 command line from the terminal.
