@@ -35,6 +35,7 @@ systemctl enable choose-mirror.service
 systemctl enable sshd.service
 systemctl enable sysresccd-initialize.service
 systemctl enable sysresccd-autorun.service
+systemctl enable qemu-ga.service
 systemctl set-default multi-user.target
 
 # Mask irrelevant timer units (#140)

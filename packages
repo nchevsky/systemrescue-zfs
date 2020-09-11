@@ -122,6 +122,7 @@ ppp
 pptpclient
 pulseaudio-alsa
 pv
+qemu-guest-agent
 rdesktop
 refind
 reiserfsprogs
