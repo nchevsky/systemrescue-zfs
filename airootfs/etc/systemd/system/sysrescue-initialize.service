@@ -1,11 +1,11 @@
 [Unit]
-Description=SystemRescueCd Initialization
+Description=SystemRescue Initialization
 Before=sshd.service getty-pre.target
 Wants=getty-pre.target
 
 [Service]
 Type=oneshot
-ExecStart=/etc/systemd/scripts/sysresccd-initialize
+ExecStart=/etc/systemd/scripts/sysrescue-initialize
 RemainAfterExit=true
 
 [Install]

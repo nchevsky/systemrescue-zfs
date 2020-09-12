@@ -3,7 +3,7 @@
 # The original bash version of autorun was developed by Pierre Dorgueil in 2003
 # The current python implementation has been developed by Francois Dupoux in 2008
 # ----------------------- changeslog: -----------------------------------------
-# 2003-10-01: Pierre Dorgueil --> original bash version of autorun for sysresccd
+# 2003-10-01: Pierre Dorgueil --> original bash version of autorun for sysrescue
 # 2008-01-26: Francois Dupoux --> rewrote autorun in python to support http
 # 2008-01-27: Francois Dupoux --> added 'ar_ignorefail', 'ar_nodel', 'ar_disable'
 # 2017-05-30: Gernot Fink --> ported the script from python2 to python3

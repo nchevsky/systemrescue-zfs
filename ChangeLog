@@ -1,5 +1,5 @@
-SystemRescueCd ChangeLog
-========================
+SystemRescue ChangeLog
+======================
 
 -------------------------------------------------------------------------------
 6.1.8 (2020-09-12):
@@ -16,7 +16,7 @@ SystemRescueCd ChangeLog
 * Updated kernel to Long-Term-Supported linux-5.4.54
 * Copy autorun scripts on boot device to memory when copytoram is used (#128)
 * Increase default value for cow_spacesize from 256M to 25% of the RAM
-* Reintroduced SystemRescueCd Modules (SRM) support (Marcos Mello)
+* Reintroduced SystemRescue Modules (SRM) support (Marcos Mello)
 
 -------------------------------------------------------------------------------
 6.1.6 (2020-07-04):

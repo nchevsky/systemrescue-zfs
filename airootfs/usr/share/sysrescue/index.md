@@ -1,11 +1,11 @@
-# SystemRescueCd offline manual
+# SystemRescue offline manual
 
 This page tells you more about the important programs which comes with this
 system rescue distribution, and which tools can be used for common tasks. Please
 use the **man** command in a terminal to get more details about these programs.
 
 ## Packages
-As SystemRescueCd is based on ArchLinux you can use the **pacman** command to
+As SystemRescue is based on ArchLinux you can use the **pacman** command to
 install additional packages. The most common command is **pacman -Sy package**
 if you want to install new packages.
 
@@ -52,7 +52,7 @@ reisize, ...). You can use **e2fsprogs**, **xfsprogs**, **btrfs-progs**, ...
 ## Web Browsers and Internet
 
 * **Firefox** is available via an icon in the taskbar if you need to search for
-additional information from internet while you are using SystemRescueCd.
+additional information from internet while you are using SystemRescue.
 * You can also use **elinks** from a terminal if you prefer a text mode browser
 * Both **curl** and **wget** allow you to download files from the command line
 * The **lftp** program can be run from a terminal if you need an FTP client
@@ -62,7 +62,7 @@ additional information from internet while you are using SystemRescueCd.
 * You can run an **OpenSSH client** by using the **ssh** or **sftp** commands
 from a terminal
 * You can also connect from another machine to the **OpenSSH server** running
-on SystemRescueCd via the **sshd** service. You will need to set a root password
+on SystemRescue via the **sshd** service. You will need to set a root password
 and update firewall rules to be able to connect.
 * You can run **Remmina** from the menu if you need to connect to another
 machine via VNC or NX, and you can run **rdekstop** from a terminal in order to

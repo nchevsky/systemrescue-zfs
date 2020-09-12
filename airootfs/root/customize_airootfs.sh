@@ -33,8 +33,8 @@ systemctl enable ip6tables.service
 systemctl enable pacman-init.service
 systemctl enable choose-mirror.service
 systemctl enable sshd.service
-systemctl enable sysresccd-initialize.service
-systemctl enable sysresccd-autorun.service
+systemctl enable sysrescue-initialize.service
+systemctl enable sysrescue-autorun.service
 systemctl enable qemu-ga.service
 systemctl set-default multi-user.target
 
@@ -87,4 +87,4 @@ pacman -Q > /root/packages-list.txt
 expac -H M -s "%-30n %m" | sort -rhk 2 > /root/packages-size.txt
 
 # Generate HTML version of the manual
-markdown -o usr/share/sysresccd/index.html usr/share/sysresccd/index.md
+markdown -o usr/share/sysrescue/index.html usr/share/sysrescue/index.md
