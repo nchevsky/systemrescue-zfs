@@ -1,7 +1,7 @@
 # SystemRescue
 
 ## Project website
-Homepage: https://www.system-rescue-cd.org/
+Homepage: https://www.system-rescue.org/
 
 ## Project sources
 This git repository contains SystemRescue sources files. This is based on
