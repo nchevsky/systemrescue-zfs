@@ -11,7 +11,7 @@ iso_mainver="${iso_version%-*}"
 iso_label="SYSRES${iso_mainver//.}"
 iso_publisher="SystemRescue <http://www.system-rescue.org>"
 iso_application="SystemRescue"
-install_dir=sysrescue
+install_dir=sysresccd
 work_dir=work
 out_dir=out
 gpg_key=
@@ -128,7 +128,7 @@ make_setup_mkinitcpio() {
       exec 17<>${work_dir}/gpgkey
     fi
 
-    ARCHISO_GNUPG_FD=${gpg_key:+17} setarch ${arch} mkarchiso ${verbose} -w "${work_dir}/${arch}" -C "${work_dir}/pacman.conf" -D "${install_dir}" -r 'mkinitcpio -c /etc/mkinitcpio-archiso.conf -k /boot/vmlinuz-linux-lts -g /boot/sysrescue.img' run
+    ARCHISO_GNUPG_FD=${gpg_key:+17} setarch ${arch} mkarchiso ${verbose} -w "${work_dir}/${arch}" -C "${work_dir}/pacman.conf" -D "${install_dir}" -r 'mkinitcpio -c /etc/mkinitcpio-archiso.conf -k /boot/vmlinuz-linux-lts -g /boot/sysresccd.img' run
     if [[ ${gpg_key} ]]; then
       exec 17<&-
     fi
@@ -137,7 +137,7 @@ make_setup_mkinitcpio() {
 # Prepare kernel/initramfs ${install_dir}/boot/
 make_boot() {
     mkdir -p ${work_dir}/iso/${install_dir}/boot/${arch}
-    cp ${work_dir}/${arch}/airootfs/boot/sysrescue.img ${work_dir}/iso/${install_dir}/boot/${arch}/sysrescue.img
+    cp ${work_dir}/${arch}/airootfs/boot/sysresccd.img ${work_dir}/iso/${install_dir}/boot/${arch}/sysresccd.img
     cp ${work_dir}/${arch}/airootfs/boot/vmlinuz-linux-lts ${work_dir}/iso/${install_dir}/boot/${arch}/vmlinuz
 }
 
