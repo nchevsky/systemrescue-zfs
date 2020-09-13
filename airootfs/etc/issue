@@ -1,4 +1,4 @@
-\e[01;31m ======== \e[01;37mSystemRescueCd \m\e[01;31m ---- \e[01;37m%ISO_VERSION%\e[01;31m ======== \e[01;37m\l\e[00;37m/6\e[01;31m ========
+\e[01;31m ======== \e[01;37mSystemRescue \m\e[01;31m ---- \e[01;37m%ISO_VERSION%\e[01;31m ======== \e[01;37m\l\e[00;37m/6\e[01;31m ========
                   \e[00;31mhttp://www.system-rescue-cd.org/
 
 \e[00;31m*\e[01;31m Console environment\e[00;37m :
@@ -10,4 +10,3 @@
    \e[00;31m-\e[00;37m Partition manager: .. \e[01;37mgparted\e[00;37m
    \e[00;31m-\e[00;37m Web browser: ........ \e[01;37mfirefox\e[00;37m
    \e[00;31m-\e[00;37m Text editor: ........ \e[01;37mfeatherpad\e[00;37m
-

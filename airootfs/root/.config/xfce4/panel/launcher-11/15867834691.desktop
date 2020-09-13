@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=Manual
-Comment=SystemRescueCd manual
-Exec=firefox-esr file:///usr/share/sysresccd/index.html
+Comment=SystemRescue manual
+Exec=firefox-esr file:///usr/share/sysrescue/index.html
 Icon=help-browser
 Terminal=false
 Type=Application

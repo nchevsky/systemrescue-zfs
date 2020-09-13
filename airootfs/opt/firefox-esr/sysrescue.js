@@ -8,6 +8,6 @@ defaultPref("spellchecker.dictionary_path", "/usr/share/myspell");
 defaultPref("browser.shell.checkDefaultBrowser", false);
 // Preferences that should be reset every session
 pref("browser.EULA.override", true);
-// SystemRescueCd settings
+// SystemRescue settings
 pref("browser.startup.homepage_override.mstone", "ignore");
 pref("browser.startup.homepage", "http://www.system-rescue-cd.org/");

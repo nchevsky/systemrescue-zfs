@@ -1,12 +1,12 @@
 [Unit]
-Description=SystemRescueCd Autorun
-After=network.target network-online.target sysresccd-initialize.service
+Description=SystemRescue Autorun
+After=network.target network-online.target sysrescue-initialize.service
 Before=getty-pre.target
 Wants=getty-pre.target network-online.target
 
 [Service]
 Type=oneshot
-ExecStart=/etc/systemd/scripts/sysresccd-autorun
+ExecStart=/etc/systemd/scripts/sysrescue-autorun
 RemainAfterExit=true
 StandardInput=tty
 StandardOutput=tty

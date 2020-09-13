@@ -5,13 +5,13 @@ set -e -u
 script_path=$(readlink -f ${0%/*})
 version_file="${script_path}/VERSION"
 
-iso_name=systemrescuecd
+iso_name=systemrescue
 iso_version="$(<${version_file})"
 iso_mainver="${iso_version%-*}"
-iso_label="SYSRCD${iso_mainver//.}"
-iso_publisher="SystemRescueCd <http://www.system-rescue-cd.org>"
-iso_application="SystemRescueCd"
-install_dir=sysresccd
+iso_label="SYSRES${iso_mainver//.}"
+iso_publisher="SystemRescue <http://www.system-rescue-cd.org>"
+iso_application="SystemRescue"
+install_dir=sysrescue
 work_dir=work
 out_dir=out
 gpg_key=
@@ -128,7 +128,7 @@ make_setup_mkinitcpio() {
       exec 17<>${work_dir}/gpgkey
     fi
 
-    ARCHISO_GNUPG_FD=${gpg_key:+17} setarch ${arch} mkarchiso ${verbose} -w "${work_dir}/${arch}" -C "${work_dir}/pacman.conf" -D "${install_dir}" -r 'mkinitcpio -c /etc/mkinitcpio-archiso.conf -k /boot/vmlinuz-linux-lts -g /boot/sysresccd.img' run
+    ARCHISO_GNUPG_FD=${gpg_key:+17} setarch ${arch} mkarchiso ${verbose} -w "${work_dir}/${arch}" -C "${work_dir}/pacman.conf" -D "${install_dir}" -r 'mkinitcpio -c /etc/mkinitcpio-archiso.conf -k /boot/vmlinuz-linux-lts -g /boot/sysrescue.img' run
     if [[ ${gpg_key} ]]; then
       exec 17<&-
     fi
@@ -137,7 +137,7 @@ make_setup_mkinitcpio() {
 # Prepare kernel/initramfs ${install_dir}/boot/
 make_boot() {
     mkdir -p ${work_dir}/iso/${install_dir}/boot/${arch}
-    cp ${work_dir}/${arch}/airootfs/boot/sysresccd.img ${work_dir}/iso/${install_dir}/boot/${arch}/sysresccd.img
+    cp ${work_dir}/${arch}/airootfs/boot/sysrescue.img ${work_dir}/iso/${install_dir}/boot/${arch}/sysrescue.img
     cp ${work_dir}/${arch}/airootfs/boot/vmlinuz-linux-lts ${work_dir}/iso/${install_dir}/boot/${arch}/vmlinuz
 }
 
@@ -231,7 +231,7 @@ make_prepare() {
 # Build ISO
 make_iso() {
     cp ${version_file} ${work_dir}/iso/${install_dir}/
-    setarch ${arch} mkarchiso ${verbose} -w "${work_dir}" -D "${install_dir}" -L "${iso_label}" -P "${iso_publisher}" -A "${iso_application}" -o "${out_dir}" iso "${iso_name}-${arch/x86_64/amd64}-${iso_version}.iso"
+    setarch ${arch} mkarchiso ${verbose} -w "${work_dir}" -D "${install_dir}" -L "${iso_label}" -P "${iso_publisher}" -A "${iso_application}" -o "${out_dir}" iso "${iso_name}-${iso_version}-${arch/x86_64/amd64}.iso"
 }
 
 if [[ ${EUID} -ne 0 ]]; then
