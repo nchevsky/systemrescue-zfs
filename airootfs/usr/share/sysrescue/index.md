@@ -6,8 +6,12 @@ use the **man** command in a terminal to get more details about these programs.
 
 ## Packages
 As SystemRescue is based on ArchLinux you can use the **pacman** command to
-install additional packages. The most common command is **pacman -Sy package**
-if you want to install new packages.
+install additional packages using a command such as **pacman -Syu package**.
+Keep in mind it may require a lot of space in the writable layer (stored in
+memory by default) to download and install these packages. So it can fail if too
+many packages are required. It is recommended to use a very recent SystemRescue
+version in order to minimize the number of packages which need to be updated or
+installed if you plan to install packages at run time.
 
 ## Storage and disk partitioning
 
@@ -28,11 +32,11 @@ tables from the terminal
 available on the block storage. You normally need this command after you have
 extended the disk of a virtual machine and need to make the additional space
 usable.
-* The **lvm** package provide all tools required to access linux logical volumes
+* The **lvm** package provide all tools required to access Linux logical volumes
 
 ## Network tools
 
-* You can configure the network (ethernet or wifi) very easily using the
+* You can configure the network (Ethernet or wifi) very easily using the
 **Network-Manager** icon located next to the clock at the bottom of the screen.
 * You can also configure the network using traditional Linux commands from a
 terminal. The following commands are available: **nmcli**, **ifconfig**, **ip**,
@@ -162,7 +166,7 @@ filesystems.
 * You can use **bash** for running scripts as well as **Perl**, **Python** and
 **Ruby** dynamic languages which are all available.
 
-## Miscellanous
+## Miscellaneous
 
 * **flashrom** is an utility for reading, writing, erasing and verifying flash ROM chips
 * **nvme** is a tool for manipulating NVM-Express disks.
