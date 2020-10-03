@@ -1,5 +1,5 @@
-\e[01;31m ======== \e[01;37mSystemRescue \m\e[01;31m ---- \e[01;37m%ISO_VERSION%\e[01;31m ======== \e[01;37m\l\e[00;37m/6\e[01;31m ========
-                  \e[00;31mhttp://www.system-rescue.org/
+\e[01;31m ========= \e[01;37mSystemRescue %ISO_VERSION% (%ISO_ARCH%)\e[01;31m ======== \e[01;37m\l\e[00;37m/6\e[01;31m =========
+                    \e[00;31mhttps://www.system-rescue.org/
 
 \e[00;31m*\e[01;31m Console environment\e[00;37m :
    Run \e[01;37msetkmap\e[00;37m to choose the keyboard layout
