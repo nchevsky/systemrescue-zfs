@@ -1,7 +1,10 @@
 #!/bin/bash
 errcnt=0
 
-for curfile in /usr/bin/{*btrfs*,*xfs*,featherpad,ms-sys,nwipe,udp*,whdd,zerofree} /opt/firefox*/firefox* /usr/lib/ntfs-3g/ntfs-plugin*.so
+for curfile in /usr/bin/{*btrfs*,*xfs*,dislocker*,udp*} \
+               /usr/bin/{featherpad,ms-sys,nwipe,whdd,zerofree} \
+               /opt/firefox*/firefox* /usr/lib/ntfs-3g/ntfs-plugin*.so \
+               /usr/lib/libdislocker.so*
 do
     test -x ${curfile} || continue
     file --mime ${curfile} | grep -q -E "x-pie-executable|x-sharedlib" || continue
