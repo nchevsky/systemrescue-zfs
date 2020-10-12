@@ -33,6 +33,8 @@ available on the block storage. You normally need this command after you have
 extended the disk of a virtual machine and need to make the additional space
 usable.
 * The **lvm** package provide all tools required to access Linux logical volumes
+* The **dislocker** package provides commands to access disks encrypted using
+bitlocker
 
 ## Network tools
 
