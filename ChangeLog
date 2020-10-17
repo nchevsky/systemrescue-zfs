@@ -2,8 +2,11 @@ SystemRescue ChangeLog
 ======================
 
 -------------------------------------------------------------------------------
-7.00 (YYYY-MM-DD):
+7.00 (2020-10-17):
 -------------------------------------------------------------------------------
+* Renamed project: SystemRescueCd => SystemRescue
+* New website address: https://www.system-rescue.org/
+* Updated kernel to Long-Term-Supported linux-5.4.71
 * Added dislocker to access disks encrypted using bitlocker (#46)
 
 -------------------------------------------------------------------------------
