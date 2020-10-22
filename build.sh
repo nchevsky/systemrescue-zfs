@@ -27,10 +27,12 @@ case ${arch} in
     x86_64)
         efiarch="x86_64-efi"
         efiboot="bootx64.efi"
+        edk2arch="x64"
         ;;
     i686)
         efiarch="i386-efi"
         efiboot="bootia32.efi"
+        edk2arch="ia32"
         ;;
     *)
         echo "ERROR: Unsupported architecture: '${arch}'"
@@ -191,6 +193,7 @@ make_efi() {
          s|%ISO_ARCH%|${arch}|g;
          s|%INSTALL_DIR%|${install_dir}|g" \
          ${script_path}/efiboot/grub/grubsrcd.cfg > ${work_dir}/iso/boot/grub/grubsrcd.cfg
+    cp -a /usr/share/edk2-shell/${edk2arch}/Shell_Full.efi ${work_dir}/iso/EFI/shell.efi
 }
 
 # Prepare efiboot.img::/EFI for "El Torito" EFI boot mode
