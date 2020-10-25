@@ -4,6 +4,7 @@ arch-install-scripts
 atop
 b43-fwcutter
 bash-completion
+beep
 bind-tools
 borg
 btrfs-progs
