@@ -1,0 +1,184 @@
+#!/bin/sh
+#
+# cowpacman2srm - Create SystemRescueModules (SRM) from pacman packages installed into the COW space
+#
+# Author: Gerd v. Egidy
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# This script is meant to help creating SystemRescueModules (SRM) for SystemRescue.
+# More info about SRMs and this script can be found at:
+# https://www.system-rescue.org/Modules/
+#
+# To use first install all packages you want to have in your SRM with pacman.
+# Default COW (Copy-On-Write) space is a ramdisk, so you usually don't have to do anything 
+# special except provide enough RAM.
+# You can also enable any systemd services that are in these packages.
+#
+# Then call:
+# cowpacman2srm [-c compalg] [-l complevel] targetfile.srm
+#
+# Copy the .srm file to archisobasedir (default: "sysresccd") on your boot disk 
+# and add the "loadsrm" boot parameter to SystemRescue.
+#
+# There is no mechanism to check if a SRM is compatible with the version of SystemRescue
+# you are trying to run it with. So it is higly recommended to only use this script on
+# the exact version of SystemRescue you plan to use the SRM with.
+#
+
+# default paths for temp files
+TMP_TARGET=/tmp/srm_content/
+PKG_FILELIST=${TMP_TARGET}filelist
+
+# default compression options
+COMPRESS=zstd
+COMPLEVEL=""
+
+function usage()
+{
+    echo
+    echo "Usage: cowpacman2srm [-c compalg] [-l complevel] targetfile.srm"
+    echo
+    echo "compalg is any of the compression algorithms supported by mksquashfs (default: zstd)"
+    echo "complevel is the compression level for the given algorithm (if supported with -Xcompression-level)"
+    echo
+    exit 1
+}
+
+while getopts "c:l:" opt; do
+    case "${opt}" in
+        c)
+            COMPRESS="${OPTARG}"
+            ;;
+        l)
+            COMPLEVEL="-Xcompression-level ${OPTARG}"
+            ;;
+        *)
+            usage
+            ;;
+    esac
+done
+
+shift $((OPTIND-1))
+TARGETFILE="$1"
+
+if [ -z "$TARGETFILE" ]; then
+    echo "ERROR: no target file specified"
+    usage
+fi
+
+if [ -e "$TARGETFILE" ]; then
+    echo "ERROR: target file already existing. Please delete."
+    exit 1
+fi
+
+if [ -e "$TMP_TARGET" ]; then
+    echo "ERROR: temporary directory $TMP_TARGET already existing. Please delete."
+    exit 1
+fi
+
+# determine the COW target upperdir, read it out from the mount options of /
+UPPERDIR=$(findmnt --mountpoint / --noheadings --output FS-OPTIONS | sed -e "s/.*upperdir=\([^,]*\),*.*/\1/")
+
+if [ -z "$UPPERDIR" ] || ! [ -d "$UPPERDIR" ]; then
+    echo "ERROR: can't determine upperdir"
+    exit 2
+fi
+
+if ! [ -d "${UPPERDIR}/var/lib/pacman/local/" ]; then
+    echo "ERROR: no packages installed in the COW space"
+    echo "(${UPPERDIR}/var/lib/pacman/local/ not existing)"
+    exit 3
+fi
+
+# read the names of the packages in the COW space
+# package names are in the desc file in the line after the marker %NAME%
+PACKAGENAMES=$(find ${UPPERDIR}/var/lib/pacman/local/ -name desc -exec grep -A1 --no-filename "%NAME%" \{\} \; | grep -v -E "(--|%NAME%)")
+
+if [ -z "$PACKAGENAMES" ]; then
+    echo "ERROR: no packages installed in the COW space"
+    echo "(${UPPERDIR}/var/lib/pacman/local/ empty)"
+    exit 3
+fi
+
+# create temp dir used to store the package list and later the files to put into the SRM
+mkdir -p $TMP_TARGET
+
+# read all filenames installed by the packages in COW space
+# sort to make sure dir names come before files in the dir
+pacman -Q --list --quiet $PACKAGENAMES | sort >$PKG_FILELIST
+
+if cat $PKG_FILELIST | wc -l | grep -q "^0$"; then
+    echo "ERROR: empty file list for the installed packages"
+    
+    # clean up
+    rm -rf ${TMP_TARGET}
+
+    exit 3
+fi
+
+echo -n "Found Packages: "
+echo "$PACKAGENAMES" | wc -w
+echo -n "Found Files: "
+cat $PKG_FILELIST | wc -l
+echo
+echo "Copying to temp dir..."
+
+# newline separator for for loops, necessary for filenames with spaces in them
+IFS_SAVE=$IFS
+IFS=$'\n'
+
+# iterate over all files and dirs installed by the packages
+for FILE in `cat $PKG_FILELIST`; do
+    if [ -d "${FILE}" ] && ! [ -L "${FILE}" ]; then
+        # we have a real dir (not a symlink to a dir)
+        # create it below $TMP_TARGET, copy attributes
+        mkdir -p "${TMP_TARGET}${FILE}"
+        chmod "--reference=${FILE}" "${TMP_TARGET}${FILE}"
+        chown "--reference=${FILE}" "${TMP_TARGET}${FILE}"
+    else
+        # we have a file or symlink, copy it, preserving symlinks as such
+        cp "--target-directory=${TMP_TARGET}" --preserve=all --parents --no-dereference "${FILE}"
+    fi
+done
+
+# copy the pacman package database too
+
+# first create the directories in the tmp space
+for DIR in `find ${UPPERDIR}/var/lib/pacman/local/ -type d -printf "%P\n"`; do
+    mkdir -p "${TMP_TARGET}var/lib/pacman/local/${DIR}"
+done
+
+# then copy all package database files
+for FILE in `find ${UPPERDIR}/var/lib/pacman/local/ -type f -printf "%P\n"`; do
+    cp --no-dereference "${UPPERDIR}/var/lib/pacman/local/${FILE}" "${TMP_TARGET}var/lib/pacman/local/${FILE}"
+done
+
+# the user may have enabled systemd units provided by the packages in COW space
+# we want to copy these too
+
+# read all systemd symlinks in the cow-dir
+for SYMLINK in `find "${UPPERDIR}/etc/systemd/system/" -type l -printf "%P\n"`; do
+    TARGET=$(readlink "${UPPERDIR}/etc/systemd/system/${SYMLINK}")
+
+    # targets the symlink something that is in our packages?
+    if grep -q "${TARGET}" $PKG_FILELIST; then
+        echo "Copying systemd link /etc/systemd/system/${SYMLINK}"
+        # copy the symlink to our target dir
+        LINKDIR=$(dirname "${TMP_TARGET}/etc/systemd/system/${SYMLINK}")
+        mkdir -p "${LINKDIR}"
+        cp --no-dereference "${UPPERDIR}/etc/systemd/system/${SYMLINK}" "${TMP_TARGET}/etc/systemd/system/${SYMLINK}"
+    fi
+done
+
+# restore line separator
+IFS=$IFS_SAVE
+
+rm -f $PKG_FILELIST
+
+echo
+echo "Creating squashfs..."
+
+mksquashfs ${TMP_TARGET} $TARGETFILE -info -comp "$COMPRESS" $COMPLEVEL
+
+# clean up
+rm -rf ${TMP_TARGET}
