@@ -2,6 +2,13 @@ SystemRescue ChangeLog
 ======================
 
 -------------------------------------------------------------------------------
+7.01 (YYYY-MM-DD):
+-------------------------------------------------------------------------------
+* Added edk2-shell and a corresponding boot entry in UEFI boot menu (#159)
+* Added entries to enter firmware setup, reboot, shutdown in the UEFI boot menu
+* Added cowpacman2srm to create modules with additional packages (Gerd v. Egidy)
+
+-------------------------------------------------------------------------------
 7.00 (2020-10-17):
 -------------------------------------------------------------------------------
 * Renamed project: SystemRescueCd => SystemRescue
