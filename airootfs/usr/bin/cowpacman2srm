@@ -15,7 +15,7 @@
 # You can also enable any systemd services that are in these packages.
 #
 # Then call:
-# cowpacman2srm [-c compalg] [-l complevel] targetfile.srm
+# cowpacman2srm [-c compalg] [-l complevel] [-p] [targetfile.srm]
 #
 # Copy the .srm file to archisobasedir (default: "sysresccd") on your boot disk 
 # and add the "loadsrm" boot parameter to SystemRescue.
@@ -29,28 +29,37 @@
 TMP_TARGET=/tmp/srm_content/
 PKG_FILELIST=${TMP_TARGET}filelist
 
-# default compression options
+# default options
 COMPRESS=zstd
 COMPLEVEL=""
+PREPARE_MODE=0
 
 function usage()
 {
     echo
-    echo "Usage: cowpacman2srm [-c compalg] [-l complevel] targetfile.srm"
+    echo "Usage: cowpacman2srm [-c compalg] [-l complevel] [-p] [targetfile.srm]"
     echo
     echo "compalg is any of the compression algorithms supported by mksquashfs (default: zstd)"
+    echo
     echo "complevel is the compression level for the given algorithm (if supported with -Xcompression-level)"
+    echo
+    echo "-p: prepare mode. Only prepares a directory with all files that would go into the SRM,"
+    echo "    but does not run mksquashfs. This allows further modifications by the user."
+    echo "    In prepare mode the target file parameter is ignored."
     echo
     exit 1
 }
 
-while getopts "c:l:" opt; do
+while getopts "c:l:p" opt; do
     case "${opt}" in
         c)
             COMPRESS="${OPTARG}"
             ;;
         l)
             COMPLEVEL="-Xcompression-level ${OPTARG}"
+            ;;
+        p)
+            PREPARE_MODE=1
             ;;
         *)
             usage
@@ -61,12 +70,12 @@ done
 shift $((OPTIND-1))
 TARGETFILE="$1"
 
-if [ -z "$TARGETFILE" ]; then
+if [ -z "$TARGETFILE" ] && [ "$PREPARE_MODE" -eq 0 ]; then
     echo "ERROR: no target file specified"
     usage
 fi
 
-if [ -e "$TARGETFILE" ]; then
+if [ -e "$TARGETFILE" ] && [ "$PREPARE_MODE" -eq 0 ]; then
     echo "ERROR: target file already existing. Please delete."
     exit 1
 fi
@@ -105,7 +114,7 @@ mkdir -p $TMP_TARGET
 
 # read all filenames installed by the packages in COW space
 # sort to make sure dir names come before files in the dir
-pacman -Q --list --quiet $PACKAGENAMES | sort >$PKG_FILELIST
+pacman -Q --list --quiet $PACKAGENAMES | sort -u >$PKG_FILELIST
 
 if cat $PKG_FILELIST | wc -l | grep -q "^0$"; then
     echo "ERROR: empty file list for the installed packages"
@@ -175,10 +184,18 @@ IFS=$IFS_SAVE
 
 rm -f $PKG_FILELIST
 
-echo
-echo "Creating squashfs..."
+if [ "$PREPARE_MODE" -eq 1 ]; then
+    echo
+    echo "SRM content prepared in ${TMP_TARGET}"
+    echo
+    echo "Do any wanted modifications and then run:"
+    echo "mksquashfs ${TMP_TARGET} targetfile.srm -info -comp $COMPRESS $COMPLEVEL"
+else
+    echo
+    echo "Creating squashfs..."
 
-mksquashfs ${TMP_TARGET} $TARGETFILE -info -comp "$COMPRESS" $COMPLEVEL
+    mksquashfs ${TMP_TARGET} $TARGETFILE -info -comp "$COMPRESS" $COMPLEVEL
 
-# clean up
-rm -rf ${TMP_TARGET}
+    # clean up
+    rm -rf ${TMP_TARGET}
+fi
