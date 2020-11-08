@@ -105,7 +105,7 @@ mkdir -p $TMP_TARGET
 
 # read all filenames installed by the packages in COW space
 # sort to make sure dir names come before files in the dir
-pacman -Q --list --quiet $PACKAGENAMES | sort >$PKG_FILELIST
+pacman -Q --list --quiet $PACKAGENAMES | sort -u >$PKG_FILELIST
 
 if cat $PKG_FILELIST | wc -l | grep -q "^0$"; then
     echo "ERROR: empty file list for the installed packages"
