@@ -1,0 +1,363 @@
+#! /usr/bin/env python3
+#
+# reverse_ssh - Open a outbound SSH server connection (reverse SSH), primarily for remote support
+#
+# Author: Gerd v. Egidy
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# Usually ssh connections are built using tcp from the ssh client to the server.
+# This can be difficult if the server is behind a NAT router or firewall.
+# reverse_ssh is run on the server system and creates an outbound tcp connection
+# to the ssh client. This outgoing tcp connection has a much better chance to pass 
+# through the NAT router or firewall.
+#
+# Reversing the connection direction on client and server is done using socat
+# http://www.dest-unreach.org/socat/
+#
+# Usage:
+# reverse_ssh [-h] [-d] [-b] [-t TRIES] hostname port
+#
+# positional arguments:
+#  hostname              hostname (or IP) to connect to
+#  port                  TCP port number to connect to
+#
+# optional arguments:
+#  -h, --help               show this help message and exit
+#  -d, --debug              enable debug output
+#  -b, --background         fork to background once the connection is established
+#  -t TRIES, --tries TRIES  connection tries (0: endless, this is the default)
+#
+# Receiving reverse_ssh connections on the ssh client:
+# (the system with the ssh client must be accessible from the internet on $RECEIVEPORT)
+# export RECEIVEPORT=2222
+# ssh -l root -o "ProxyCommand socat - TCP4-LISTEN:${RECEIVEPORT},reuseaddr" -o StrictHostKeyChecking=no none
+#
+# Receiving reverse_ssh connections with a bounce host:
+# (if the system with the ssh client is not directly reachable, a bounce host can be used)
+# (requires "GatewayPorts yes" in /etc/ssh/sshd_config on the bounce host)
+# export RECEIVEPORT=2222
+# ssh -R ${RECEIVEPORT}:/tmp/reverse_ssh -N -f bouncehost.example.com
+# ssh -l root -o "ProxyCommand socat - UNIX-LISTEN:/tmp/reverse_ssh" -o StrictHostKeyChecking=no none
+#
+# For more information see
+# https://www.system-rescue.org/scripts/reverse_ssh/
+#
+
+import argparse
+import os
+import sys
+import socket
+import re
+import subprocess
+import time
+import signal
+import syslog
+
+min_retry_seconds = 3
+
+# raise an exception on SIGTERM, so that we can kill a running socat process
+def sigterm_handler(signum, frame):
+    raise OSError("SIGTERM")
+
+signal.signal(signal.SIGTERM, sigterm_handler)
+
+def createDaemon():
+    """Detach a process from the controlling terminal and run it in the
+    background as a daemon.
+    taken from https://code.activestate.com/recipes/278731-creating-a-daemon-the-python-way/
+    Copyright Chad J. Schroeder, licensed under the Python Software Foundation License (PSF)
+    """
+
+    # Fork a child process so the parent can exit.  This returns control to
+    # the command-line or shell.  It also guarantees that the child will not
+    # be a process group leader, since the child receives a new process ID
+    # and inherits the parent's process group ID.  This step is required
+    # to insure that the next call to os.setsid is successful.
+    pid = os.fork()
+
+    if (pid == 0):   # The first child.
+        # To become the session leader of this new session and the process group
+        # leader of the new process group, we call os.setsid().  The process is
+        # also guaranteed not to have a controlling terminal.
+        os.setsid()
+
+        # Fork a second child and exit immediately to prevent zombies.  This
+        # causes the second child process to be orphaned, making the init
+        # process responsible for its cleanup.  And, since the first child is
+        # a session leader without a controlling terminal, it's possible for
+        # it to acquire one by opening a terminal in the future (System V-
+        # based systems).  This second fork guarantees that the child is no
+        # longer a session leader, preventing the daemon from ever acquiring
+        # a controlling terminal.
+        pid = os.fork()    # Fork a second child.
+
+        if (pid == 0):    # The second child.
+            # Since the current working directory may be a mounted filesystem, we
+            # avoid the issue of not being able to unmount the filesystem at
+            # shutdown time by changing it to the root directory.
+            os.chdir("/")
+
+            # redirect stdin, stdout, stderr to /dev/null
+            os.close(0)
+            os.close(1)
+            os.close(2)
+            # This call to open is guaranteed to return the lowest file descriptor,
+            # which will be 0 (stdin), since it was closed above.
+            os.open("/dev/null", os.O_RDWR)	  # standard input (0)
+
+            # Duplicate standard input to standard output and standard error.
+            os.dup2(0, 1)			# standard output (1)
+            os.dup2(0, 2)			# standard error (2)
+
+            return(0)
+
+        else:
+            # exit() or _exit()?  See below.
+            os._exit(0)    # Exit parent (the first child) of the second child.
+    else:
+        # exit() or _exit()?
+        # _exit is like exit(), but it doesn't call any functions registered
+        # with atexit (and on_exit) or any registered signal handlers.  It also
+        # closes any open file descriptors.  Using exit() may cause all stdio
+        # streams to be flushed twice and any temporary files may be unexpectedly
+        # removed.  It's therefore recommended that child branches of a fork()
+        # and the parent branch(es) of a daemon use _exit().
+        os._exit(0)   # Exit parent of the first child.
+
+def check_portno(value):
+    ivalue = int(value)
+    if ivalue <= 0 or ivalue > 65535:
+        raise argparse.ArgumentTypeError("port number must be between 1 and 65535")
+    return ivalue
+
+def check_unsigned(value):
+    ivalue = int(value)
+    if ivalue < 0:
+        raise argparse.ArgumentTypeError("only positive integers allowed")
+    return ivalue
+
+def check_hostname_or_ip(value):
+    # check if it is a valid IPv6
+    try:
+        socket.inet_pton(socket.AF_INET6, value)
+        return value
+    except Exception:
+        # no IPv6, continue
+        pass
+
+    # check if it is a valid IPv4
+    try:
+        socket.inet_pton(socket.AF_INET, value)
+        return value
+    except Exception:
+        # no IPv4, continue
+        pass
+
+    # check if it is a valid dns hostname
+    if value[-1] == ".":
+        # strip exactly one dot from the right, if present
+        value = value[:-1]
+    if len(value) > 253:
+        raise argparse.ArgumentTypeError("invalid hostname, too long")
+        
+    labels = value.split(".")
+
+    # the TLD must be not all-numeric
+    if re.match(r"[0-9]+$", labels[-1]):
+        raise argparse.ArgumentTypeError("invalid hostname")
+
+    allowed = re.compile(r"(?!-)[a-z0-9-]{1,63}(?<!-)$", re.IGNORECASE)
+    if all(allowed.match(label) for label in labels):
+        return value
+    raise argparse.ArgumentTypeError("invalid hostname")
+
+# automatically output full help in case of argument error
+class ArgParserWithHelp(argparse.ArgumentParser): 
+    def error(self, message):
+        sys.stderr.write('ERROR: %s\n' % message)
+        print()
+        self.print_help()
+        sys.exit(1)
+    
+cliarg_parser = ArgParserWithHelp(description='Open a outbound SSH server connection (reverse SSH), primarily for remote support')
+
+cliarg_parser.add_argument('-d',
+                       '--debug',
+                       action='store_true',
+                       help='enable debug output')
+                       
+cliarg_parser.add_argument('-b',
+                       '--background',
+                       action='store_true',
+                       help='fork to background once the connection is established')
+
+cliarg_parser.add_argument('-t',
+                       '--tries',
+                       type=check_unsigned,
+                       default=0,
+                       help='connection tries (0: endless, this is the default)')
+
+cliarg_parser.add_argument('hostname',
+                       metavar='hostname',
+                       type=check_hostname_or_ip,
+                       nargs=1,
+                       help='hostname (or IP) to connect to')
+                       
+cliarg_parser.add_argument('port',
+                       metavar='port',
+                       type=check_portno,
+                       nargs=1,
+                       help='TCP port number to connect to')
+
+args = cliarg_parser.parse_args()
+
+hostname = args.hostname[0]
+port = args.port[0]
+
+# make sure that the remote can log in at all
+
+# first method: root password is set
+root_pwd_set = False
+root_pwd_re = re.compile(r"^root:\$[^:]+:")
+
+with open("/etc/shadow") as shadow_file:
+    for line in shadow_file:
+        if (root_pwd_re.match(line)):
+            root_pwd_set = True
+            break
+
+# second method: authorized_keys existing and not empty
+auth_keys_path = "/root/.ssh/authorized_keys"
+if not root_pwd_set and not ( os.path.exists(auth_keys_path) and os.path.getsize(auth_keys_path) > 0 ):
+    print("ERROR: neither a root password nor public key has been configured", file=sys.stderr)
+    print("", file=sys.stderr)
+    print("hint: use the \"passwd\" command to set a password", file=sys.stderr)
+    sys.exit(2)
+
+# make sure that ssh is running
+
+s = socket.socket()
+s.settimeout(2)
+s.setblocking(True)
+result = s.connect_ex(("localhost", 22))
+s.close()
+
+if result:
+    print("ERROR: can't connect to ssh daemon on localhost", file=sys.stderr)
+    print("", file=sys.stderr)
+    print("hint: start sshd with the command \"systemctl start sshd.service\"", file=sys.stderr)
+    sys.exit(3)
+
+# make sure that socat is installed
+
+if not os.path.exists("/usr/bin/socat") or not os.path.getsize("/usr/bin/socat") > 0:
+    print("ERROR: socat not installed", file=sys.stderr)
+    print("", file=sys.stderr)
+    print("hint: install socat with the command \"pacman -Sy socat\"", file=sys.stderr)
+    sys.exit(4)
+
+# parameter and system checks ok, proceed to connect
+
+syslog.openlog(logoption=syslog.LOG_PID, facility=syslog.LOG_USER)
+syslog.syslog(f"initiating connection to ssh client at {hostname}:{port}")
+
+socat_out_re = re.compile(r"^.+? socat\[[0-9]+\] ([A-Z]) (.+)")
+eof_msg_re = re.compile(r"^socket .* is at EOF")
+connected_msg_re = re.compile(r"^transferred [0-9]+ bytes from [0-9]+ to [0-9]+")
+
+# prepare retry variables
+if args.tries == 0:
+    endless = True
+    retry = 0
+else:
+    endless = False
+    retry = args.tries
+
+once_connected = False
+
+try:
+    # main retry loop
+    while retry > 0 or endless:
+        connected = False
+        starttime = time.monotonic()
+
+        # connect to the locally running ssh on port 22 first
+        # then try the outbound connection to the given host and port
+        # in case of success, the sockets are connected and the remote end can use a ssh client
+        # in case of error, the socat process is terminated
+        # (the retry of socat doesn't work predictable enough, depends very much on type of error)
+
+        # always run it in high debug output mode because status info can only be extracted that way
+        socat_process = subprocess.Popen(['/usr/bin/socat', '-d', '-d', '-d', 'TCP:localhost:22', 
+                                        f"TCP:{hostname}:{port},connect-timeout=15" ],
+                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+        # loop through the lines written to stdout+stderr while socat is running
+        while True:
+            outline = socat_process.stdout.readline()
+            if len(outline) == 0 and socat_process.poll() is not None:
+                # process ended and we got all output
+                break
+            if len(outline) > 0:
+                outline = outline.decode('utf-8')
+                if args.debug:
+                    print(outline.strip())
+                splitline = socat_out_re.match(outline)
+                if splitline:
+                    # we could split the debug output into date, process, severity and actual message
+                    severity = splitline.group(1)
+                    message = splitline.group(2)
+
+                    if severity == "E" or severity == "W":
+                        # some error or warning occured, show it
+                        print(message)
+                        syslog.syslog(message)
+                    if severity == "I" and connected_msg_re.match(message) and not connected:
+                        # the first "transferred nn bytes..." message denotes that we really have
+                        # a connection. But these messages are repeated, so just the first counts
+                        print("Connected")
+                        syslog.syslog(f"connected to {hostname}:{port}")
+                        connected = True
+                        once_connected = True
+
+                        # we have a connection, don't retry to establish one when this one is terminated
+                        retry = 0
+                        endless = False
+
+                        if args.background:
+                            createDaemon()
+
+                    if severity == "N" and eof_msg_re.match(message) and connected:
+                        # the first "socket .* is at EOF" message denotes that the connection 
+                        # was terminated. But these messages are repeated, so just the first counts
+                        print("Connection terminated")
+                        syslog.syslog("connection terminated")
+                        connected = False
+
+        if retry > 0:
+            retry -= 1
+        if retry > 0 or endless:
+            # we will retry
+            if time.monotonic() - starttime < min_retry_seconds:
+                # don't hammer the remote in case of errors
+                time.sleep(min_retry_seconds)
+
+except (KeyboardInterrupt, OSError):
+    # we want a nicer message for Ctrl-c
+    # also the SIGTERM call flow ends up here
+    print()
+    print("Aborted")
+    syslog.syslog("Aborted")
+    try:
+        socat_process.kill()
+    except Exception:
+        # ignore if killing doesn't work, it could be that no process is running
+        pass
+    sys.exit(5)
+
+if once_connected:
+    # everything ok
+    sys.exit(0)
+else:
+    # some error while trying to establish a connection
+    sys.exit(6)

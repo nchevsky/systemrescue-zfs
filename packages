@@ -138,6 +138,7 @@ screen
 sdparm
 sg3_utils
 smartmontools
+socat
 squashfs-tools
 strace
 stress
