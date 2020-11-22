@@ -2,11 +2,13 @@ SystemRescue ChangeLog
 ======================
 
 -------------------------------------------------------------------------------
-7.01 (YYYY-MM-DD):
+7.01 (2020-11-22):
 -------------------------------------------------------------------------------
+* Updated kernel to Long-Term-Supported linux-5.4.78
 * Added edk2-shell and a corresponding boot entry in UEFI boot menu (#159)
 * Added entries to enter firmware setup, reboot, shutdown in the UEFI boot menu
 * Added cowpacman2srm to create modules with additional packages (Gerd v. Egidy)
+* Added reverse_ssh to get a remote ssh access behind a firewall (Gerd v. Egidy)
 
 -------------------------------------------------------------------------------
 7.00 (2020-10-17):
