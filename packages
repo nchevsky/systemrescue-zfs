@@ -76,6 +76,7 @@ libvncserver
 linux-atm
 linux-firmware
 linux-lts
+linux-lts-headers
 localepurge
 lshw
 lsof
@@ -186,6 +187,7 @@ xorg-xinit
 yubikey-manager
 yubikey-personalization-gui
 zerofree
+zfs-dkms-rc
 zile
 zip
 zsh
