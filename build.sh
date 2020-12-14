@@ -109,6 +109,9 @@ make_customize_airootfs() {
 
     setarch ${arch} mkarchiso ${verbose} -w "${work_dir}/${arch}" -C "${work_dir}/pacman.conf" -D "${install_dir}" -r '/root/customize_airootfs.sh' run
     rm -f ${work_dir}/${arch}/airootfs/root/customize_airootfs.sh
+
+    # strip large binaries
+    find ${work_dir}/${arch}/airootfs/usr/lib -type f -name "lib*.so.*" -exec strip --strip-all {} \;
 }
 
 # Copy mkinitcpio archiso hooks and build initramfs (airootfs)
