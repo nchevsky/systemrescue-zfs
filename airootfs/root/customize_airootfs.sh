@@ -82,6 +82,11 @@ sed -i -e '/# ==== BEGIN sysrescuerepo ====/,/# ==== END sysrescuerepo ====/d' /
 # Customizations
 /usr/bin/updatedb
 
+# Trust archzfs key
+pacman-key --init
+pacman-key -r DDF7DB817396A49B2A2723F7403BD972F75D9D76
+pacman-key --lsign-key DDF7DB817396A49B2A2723F7403BD972F75D9D76
+
 # Packages
 pacman -Q > /root/packages-list.txt
 expac -H M -s "%-30n %m" | sort -rhk 2 > /root/packages-size.txt
