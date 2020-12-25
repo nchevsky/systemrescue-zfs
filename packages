@@ -124,6 +124,7 @@ ppp
 pptpclient
 pulseaudio-alsa
 pv
+python-pip
 qemu-guest-agent
 rdesktop
 refind
