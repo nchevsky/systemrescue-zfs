@@ -60,7 +60,7 @@ rm -rf /usr/include
 rm -rf /usr/share/man/man3
 
 # Cleanup XFCE menu
-sed -i '2 i NoDisplay=true' /usr/share/applications/{exo-mail-reader,exo-web-browser,jmacs,jpico,jstar}.desktop
+sed -i '2 i NoDisplay=true' /usr/share/applications/{xfce4-mail-reader,xfce4-web-browser,jmacs,jpico,jstar}.desktop
 sed -i "s/^\(Categories=\).*\$/Categories=Utility;/" /usr/share/applications/{geany,joe,jmacs,jpico,jstar,ristretto,*GHex*}.desktop
 
 # Remove large/irrelevant firmwares
