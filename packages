@@ -114,6 +114,7 @@ openconnect
 openssh
 openvpn
 p7zip
+pam-u2f
 par2cmdline
 partclone
 parted
