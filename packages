@@ -33,7 +33,7 @@ e2fsprogs
 efitools
 elinks
 ethtool
-exfat-utils
+exfatprogs
 expac
 f2fs-tools
 featherpad
@@ -165,7 +165,6 @@ wget
 whdd
 wimlib
 wipe
-wireguard-lts
 wireguard-tools
 wireless-regdb
 wireless_tools
