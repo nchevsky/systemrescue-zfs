@@ -10,4 +10,4 @@ defaultPref("browser.shell.checkDefaultBrowser", false);
 pref("browser.EULA.override", true);
 // SystemRescue settings
 pref("browser.startup.homepage_override.mstone", "ignore");
-pref("browser.startup.homepage", "http://www.system-rescue.org/");
+pref("browser.startup.homepage", "https://duckduckgo.com/");
