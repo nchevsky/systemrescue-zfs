@@ -2,6 +2,18 @@ SystemRescue ChangeLog
 ======================
 
 -------------------------------------------------------------------------------
+8.00 (2021-03-06):
+-------------------------------------------------------------------------------
+* Updated kernel to the Long-Term-Supported linux-5.10.20
+* Updated partitioning tools: parted-3.4, gparted-1.2.0
+* Updated file systems: btrfs-progs 5.10.1, xfsprogs 5.10.0, e2fsprogs 1.46.2
+* Updated utilities: nwipe-0.30, dislocker-0.7.3, fsarchiver-0.8.6
+* Updated XFCE graphical environment to version 4.16
+* Updated Python to version 3.9.2 and added python-pip
+* Added paperkey (to print private keys on paper)
+* Replaced exfat-utils with exfatprogs
+
+-------------------------------------------------------------------------------
 7.01 (2020-11-22):
 -------------------------------------------------------------------------------
 * Updated kernel to Long-Term-Supported linux-5.4.78
