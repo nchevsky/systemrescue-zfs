@@ -55,6 +55,7 @@ grml-zsh-config
 growpart
 grsync
 grub
+gsmartcontrol
 hardinfo
 hdparm
 hexedit
