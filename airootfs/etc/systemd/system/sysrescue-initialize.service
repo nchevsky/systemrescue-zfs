@@ -1,6 +1,6 @@
 [Unit]
 Description=SystemRescue Initialization
-Before=sshd.service getty-pre.target
+Before=sshd.service getty-pre.target iptables.service ip6tables.service
 Wants=getty-pre.target
 
 [Service]

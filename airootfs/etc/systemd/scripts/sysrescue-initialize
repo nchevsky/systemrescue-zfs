@@ -47,6 +47,7 @@ do
       # Option to allow user to disable the firewall
       nofirewall)
           echo "Found option 'nofirewall' on the boot command line"
+          # the firewall service(s) must be in the Before-section of sysrescue-initialize.service
           systemctl disable --now iptables.service ip6tables.service
           ;;
     esac
