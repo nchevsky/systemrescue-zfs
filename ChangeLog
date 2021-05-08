@@ -2,6 +2,18 @@ SystemRescue ChangeLog
 ======================
 
 -------------------------------------------------------------------------------
+8.03 (2021-05-08):
+-------------------------------------------------------------------------------
+* Updated kernel to the Long-Term-Supported linux-5.10.34
+* Fixed boot from NTFS file systems (#194) (Marcos Mello)
+* Fixed package repositories configuration on i686 (#188) (Marcos Mello)
+* Fixed services order to make option "nofirewall" reliable (Gerd v. Egidy)
+* Added gsmartcontrol (hard disk drive and SSD health inspection tool)
+* Added xfburn (a simple CD, DVD and Blu-ray burning utility)
+* Dropped joe (package removed upstream)
+* Updated gparted to version 1.3.0
+
+-------------------------------------------------------------------------------
 8.02 (2021-04-17):
 -------------------------------------------------------------------------------
 * Updated kernel to the Long-Term-Supported linux-5.10.31
