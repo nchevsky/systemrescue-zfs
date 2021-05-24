@@ -239,6 +239,13 @@ make_prepare() {
 # Build ISO
 make_iso() {
     cp ${version_file} ${work_dir}/iso/${install_dir}/
+    (
+        shopt -s nullglob
+        rm -vf ${work_dir}/iso/${install_dir}/*.srm
+        for srm in srm/*.srm; do
+            cp -vf "$srm" ${work_dir}/iso/${install_dir}/
+        done
+    )
     setarch ${arch} mkarchiso ${verbose} -w "${work_dir}" -D "${install_dir}" -L "${iso_label}" -P "${iso_publisher}" -A "${iso_application}" -o "${out_dir}" iso "${iso_name}-${iso_version}-${arch/x86_64/amd64}.iso"
 }
 
