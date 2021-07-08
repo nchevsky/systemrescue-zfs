@@ -7,6 +7,7 @@
 # 2008-01-26: Francois Dupoux --> rewrote autorun in python to support http
 # 2008-01-27: Francois Dupoux --> added 'ar_ignorefail', 'ar_nodel', 'ar_disable'
 # 2017-05-30: Gernot Fink --> ported the script from python2 to python3
+# 2021-07-07: Alexander Mahr --> added 'ar_attempts'
 #
 # ----------------------- autorun exec rules: ---------------------------------
 # - pass 'ar_source=/dev/fd#' to request floppy device test
@@ -25,7 +26,7 @@
 # - if option 'ar_ignorefail' is used, do not stop autorun if a script failed
 # - if option 'ar_disable' is used, absolutely no autorun script will be run
 
-import sys, os, re, subprocess
+import sys, os, re, subprocess, time
 
 # ----------------------- autorun default parameters --------------------------
 pidfile='/run/autorun.pid'
@@ -40,6 +41,7 @@ autorunfiles=[]
 ar_nowait='n'
 ar_nodel='n'
 ar_ignorefail='n'
+ar_attempts=1
 ar_source=''
 
 # ----------------------- functions definitions -------------------------------
@@ -89,7 +91,7 @@ def search_autoruns(dirname, ar_autoruns, copyfilefct):
         return found
 
 def main():
-        global ar_nowait, ar_nodel, ar_ignorefail, ar_source, ar_autoruns
+        global ar_nowait, ar_nodel, ar_ignorefail, ar_source, ar_attempts, ar_autoruns
         status=0 # in case no autorun executed
         print ('Initializing autorun...\n')
 
@@ -109,6 +111,9 @@ def main():
                 if re.match('^ar_source=', opt):
                         param=opt.replace('ar_source=','')
                         ar_source=param
+                if re.match(r'^ar_attempts=\d+$', opt):
+                        param=opt.replace('ar_attempts=','')
+                        ar_attempts=int(param)
                 if re.match('^autoruns=', opt):
                         param=opt.replace('autoruns=','')
                         if param=='no':
@@ -121,7 +126,10 @@ def main():
 
         # ---- parse the autorun sources ----
         if re.match('^https?://', ar_source):
-                search_autoruns(ar_source, ar_autoruns, copyfilefct_http)
+                while ar_attempts > 0 and not autorunfiles:
+                        time.sleep(1)
+                        ar_attempts -= 1
+                        search_autoruns(ar_source, ar_autoruns, copyfilefct_http)
         elif re.match('^/dev/', ar_source): # mount a partition/device
                 mnt1=('mount',ar_source,autorunmnt)
                 mnt2=('umount',autorunmnt)
