@@ -52,7 +52,7 @@ gparted
 gpm
 gptfdisk
 grml-zsh-config
-growpart
+growpartfs
 grsync
 grub
 gsmartcontrol
