@@ -32,7 +32,7 @@ do
 
       # Set the system root password from an encrypted password
       # A password can be encrypted using a one-line python3 command such as:
-      # python3 -c 'import crypt; print(crypt.crypt("MyPassWord123", crypt.mksalt(crypt.METHOD_SHA256)))'
+      # python3 -c 'import crypt; print(crypt.crypt("MyPassWord123", crypt.mksalt(crypt.METHOD_SHA512)))'
       rootcryptpass=*)
           echo "Found option 'rootcryptpass=******' on the boot command line"
           if echo "root:${curopt#*=}" | chpasswd --encrypted
