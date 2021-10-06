@@ -46,9 +46,16 @@ do
 
       # Option to allow user to disable the firewall
       nofirewall)
-          echo "Found option 'nofirewall' on the boot command line"
+          echo "Found option '${curopt}' on the boot command line"
           # the firewall service(s) must be in the Before-section of sysrescue-initialize.service
           systemctl disable --now iptables.service ip6tables.service
+          ;;
+
+      # Auto-start the graphical environment (tty1 only)
+      dostartx)
+          echo "Found option '${curopt}' on the boot command line"
+          echo '[[ ! $DISPLAY ]] && [[ ! $SSH_TTY ]] && [[ $XDG_VTNR == 1 ]] && startx' | \
+              tee -a /root/.bash_profile > /root/.zlogin
           ;;
     esac
 done
