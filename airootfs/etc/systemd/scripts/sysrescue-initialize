@@ -57,6 +57,12 @@ do
           echo '[[ ! $DISPLAY ]] && [[ ! $SSH_TTY ]] && [[ $XDG_VTNR == 1 ]] && startx' | \
               tee -a /root/.bash_profile > /root/.zlogin
           ;;
+
+      # Require authenticated console access
+      noautologin)
+          echo "Found option '${curopt}' on the boot command line"
+          systemctl revert getty@.service serial-getty@.service
+          ;;
     esac
 done
 
