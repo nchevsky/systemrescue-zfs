@@ -65,7 +65,7 @@ sed -i '2 i NoDisplay=true' /usr/share/applications/{xfce4-mail-reader,xfce4-web
 sed -i "s/^\(Categories=\).*\$/Categories=Utility;/" /usr/share/applications/{geany,ristretto,*GHex*}.desktop
 
 # Remove large/irrelevant firmwares
-rm -rf /usr/lib/firmware/{liquidio,netronome,mellanox,mrvl/prestera}
+rm -rf /usr/lib/firmware/{liquidio,netronome,mellanox,mrvl/prestera,qcom}
 
 # Remove extra locales
 if [ -x /usr/bin/localepurge ]
