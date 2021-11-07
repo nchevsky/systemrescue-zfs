@@ -6,6 +6,8 @@ SystemRescue ChangeLog
 -------------------------------------------------------------------------------
 * Added noautologin boot option to restrict access to the console (Marcos Mello)
 * Added dostartx boot option to start the graphical environment (Marcos Mello)
+* Added dovnc and vncpass boot options to start a the VNC server (Marcos Mello)
+* Added dump/restore utilities for ext2/ext3/ext4 file systems
 
 -------------------------------------------------------------------------------
 8.05 (2021-10-02):
