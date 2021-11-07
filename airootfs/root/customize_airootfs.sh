@@ -62,7 +62,7 @@ rm -rf /usr/share/man/man3
 
 # Cleanup XFCE menu
 sed -i '2 i NoDisplay=true' /usr/share/applications/{xfce4-mail-reader,xfce4-web-browser}.desktop
-sed -i "s/^\(Categories=\).*\$/Categories=Utility;/" /usr/share/applications/{geany,ristretto,*GHex*}.desktop
+sed -i "s/^\(Categories=\).*\$/Categories=Utility;/" /usr/share/applications/{geany,*ristretto*,*GHex*}.desktop
 
 # Remove large/irrelevant firmwares
 rm -rf /usr/lib/firmware/{liquidio,netronome,mellanox,mrvl/prestera,qcom}
