@@ -20,7 +20,7 @@ do
 
       # Set the system root password from a clear password
       rootpass=*)
-          echo "Found option 'rootpass=******' on the boot command line"
+          echo "Found option '${curopt%%=*}=******' on the boot command line"
           if echo "root:${curopt#*=}" | chpasswd --crypt-method SHA512
           then
               echo "Password successfully changed"
@@ -34,7 +34,7 @@ do
       # A password can be encrypted using a one-line python3 command such as:
       # python3 -c 'import crypt; print(crypt.crypt("MyPassWord123", crypt.mksalt(crypt.METHOD_SHA512)))'
       rootcryptpass=*)
-          echo "Found option 'rootcryptpass=******' on the boot command line"
+          echo "Found option '${curopt%%=*}=******' on the boot command line"
           if echo "root:${curopt#*=}" | chpasswd --encrypted
           then
               echo "Password successfully changed"
@@ -62,6 +62,25 @@ do
       noautologin)
           echo "Found option '${curopt}' on the boot command line"
           systemctl revert getty@.service serial-getty@.service
+          ;;
+
+      # Set the VNC password from a clear password
+      vncpass=*)
+          echo "Found option '${curopt%%=*}=******' on the boot command line"
+          mkdir -p /root/.vnc
+          if x11vnc -storepasswd ${curopt#*=} /root/.vnc/passwd
+          then
+              echo "VNC password successfully changed"
+          else
+              echo "Failed to change VNC password"
+              errcnt=$((errcnt + 1))
+          fi
+          ;;
+
+      # Auto-start x11vnc with the graphical environment
+      dovnc)
+          echo "Found option '${curopt}' on the boot command line"
+          echo 'x11vnc -nevershared -forever -logfile /var/log/x11vnc.log &' > /root/.xprofile
           ;;
     esac
 done
