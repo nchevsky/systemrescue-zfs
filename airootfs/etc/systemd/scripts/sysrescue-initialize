@@ -80,7 +80,10 @@ do
       # Auto-start x11vnc with the graphical environment
       dovnc)
           echo "Found option '${curopt}' on the boot command line"
-          echo 'x11vnc -nevershared -forever -logfile /var/log/x11vnc.log &' > /root/.xprofile
+          {
+              echo '[ -f ~/.vnc/passwd ] && pwopt="-usepw" || pwopt="-nopw"'
+              echo 'x11vnc $pwopt -nevershared -forever -logfile /var/log/x11vnc.log &'
+          } > /root/.xprofile
           ;;
     esac
 done
