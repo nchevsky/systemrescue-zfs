@@ -47,7 +47,7 @@ do
       # Option to allow user to disable the firewall
       nofirewall)
           echo "Found option '${curopt}' on the boot command line"
-          # the firewall service(s) must be in the Before-section of sysrescue-initialize.service
+          # The firewall service(s) must be in the Before-section of sysrescue-initialize.service
           systemctl disable --now iptables.service ip6tables.service
           ;;
 
@@ -58,7 +58,7 @@ do
           str='[[ ! $DISPLAY ]] && [[ ! $SSH_TTY ]] && [[ $XDG_VTNR == 1 ]] && startx'
           grep -qF "$str" /root/.bash_profile || echo "$str" >> /root/.bash_profile
           echo "$str" > /root/.zlogin
-          # Must not break the case block because there is another dovnc pattern to match below
+          # Must not break out of the case block because there is another dovnc pattern to match below
           ;;&
 
       # Require authenticated console access
