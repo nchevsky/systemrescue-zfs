@@ -52,11 +52,14 @@ do
           ;;
 
       # Auto-start the graphical environment (tty1 only)
-      dostartx)
+      # dovnc implies dostartx
+      dostartx|dovnc)
           echo "Found option '${curopt}' on the boot command line"
-          echo '[[ ! $DISPLAY ]] && [[ ! $SSH_TTY ]] && [[ $XDG_VTNR == 1 ]] && startx' | \
-              tee -a /root/.bash_profile > /root/.zlogin
-          ;;
+          str='[[ ! $DISPLAY ]] && [[ ! $SSH_TTY ]] && [[ $XDG_VTNR == 1 ]] && startx'
+          grep -qF "$str" /root/.bash_profile || echo "$str" >> /root/.bash_profile
+          echo "$str" > /root/.zlogin
+          # Must not break the case block because there is another dovnc pattern to match below
+          ;;&
 
       # Require authenticated console access
       noautologin)
@@ -79,7 +82,7 @@ do
 
       # Auto-start x11vnc with the graphical environment
       dovnc)
-          echo "Found option '${curopt}' on the boot command line"
+          # The "Found option..." message was already shown above in the dostartx pattern
           {
               echo '[ -f ~/.vnc/passwd ] && pwopt="-usepw" || pwopt="-nopw"'
               echo 'x11vnc $pwopt -nevershared -forever -logfile /var/log/x11vnc.log &'
