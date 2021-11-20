@@ -2,11 +2,12 @@ SystemRescue ChangeLog
 ======================
 
 -------------------------------------------------------------------------------
-8.06 (YYYY-MM-DD):
+8.06 (2021-11-20):
 -------------------------------------------------------------------------------
+* Updated kernel to the Long-Term-Supported linux-5.10.79
 * Added noautologin boot option to restrict access to the console (Marcos Mello)
 * Added dostartx boot option to start the graphical environment (Marcos Mello)
-* Added dovnc and vncpass boot options to start a the VNC server (Marcos Mello)
+* Added dovnc and vncpass boot options to start the VNC server (Marcos Mello)
 * Added dump/restore utilities for ext2/ext3/ext4 file systems
 
 -------------------------------------------------------------------------------
