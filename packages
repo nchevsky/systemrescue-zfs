@@ -56,6 +56,7 @@ grml-zsh-config
 growpartfs
 grsync
 grub
+gsettings-desktop-schemas-dummy
 gsmartcontrol
 hardinfo
 hdparm
