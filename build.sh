@@ -106,6 +106,14 @@ make_customize_airootfs() {
          s|%ISO_ARCH%|${arch}|g;
          s|%INSTALL_DIR%|${install_dir}|g" \
          ${script_path}/airootfs/etc/issue > ${work_dir}/${arch}/airootfs/etc/issue
+         
+    # delete the target file first because it is a symlink
+    rm -f ${work_dir}/${arch}/airootfs/etc/os-release
+    sed "s|%ARCHISO_LABEL%|${iso_label}|g;
+         s|%ISO_VERSION%|${iso_version}|g;
+         s|%ISO_ARCH%|${arch}|g;
+         s|%INSTALL_DIR%|${install_dir}|g" \
+         ${script_path}/airootfs/etc/os-release > ${work_dir}/${arch}/airootfs/etc/os-release
 
     curl -o ${work_dir}/${arch}/airootfs/etc/pacman.d/mirrorlist "$mirrorlist_url"
 
