@@ -1,0 +1,9 @@
+#
+# Mirrors for archive.archlinux.org
+# list taken from https://gitlab.archlinux.org/archlinux/infrastructure/-/blob/master/docs/servers.md#archive-mirrors
+#
+Server = https://archive.archlinux.org/repos/%SNAPSHOT_DATE%/$repo/os/$arch
+Server = https://europe.archive.pkgbuild.com/repos/%SNAPSHOT_DATE%/$repo/os/$arch
+Server = https://america.archive.pkgbuild.com/repos/%SNAPSHOT_DATE%/$repo/os/$arch
+Server = https://asia.archive.pkgbuild.com/repos/%SNAPSHOT_DATE%/$repo/os/$arch
+
