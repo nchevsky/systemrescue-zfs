@@ -1,0 +1,12 @@
+[Unit]
+Description=Bind mount /var/lib/pacman-rolling/local to allow easy switching between snapshot/rolling repos
+# See /etc/pacman-rolling.conf for details
+
+[Mount]
+What=/var/lib/pacman/local
+Where=/var/lib/pacman-rolling/local
+Type=none
+Options=bind
+
+[Install]
+WantedBy=multi-user.target

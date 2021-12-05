@@ -4,6 +4,7 @@ ID_LIKE=arch
 PRETTY_NAME="SystemRescue %ISO_VERSION%"
 VERSION="%ISO_VERSION%"
 VERSION_ID="%ISO_VERSION%"
+BUILD_ID="%SNAPSHOT_DATE%"
 ANSI_COLOR="0;31"
 HOME_URL="https://www.system-rescue.org/"
 DOCUMENTATION_URL="https://www.system-rescue.org/manual/"

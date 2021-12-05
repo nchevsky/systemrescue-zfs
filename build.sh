@@ -158,20 +158,32 @@ make_customize_airootfs() {
          s|%ISO_ARCH%|${arch}|g;
          s|%INSTALL_DIR%|${install_dir}|g" \
          ${script_path}/airootfs/etc/issue > ${work_dir}/${arch}/airootfs/etc/issue
-         
+    
     # delete the target file first because it is a symlink
     rm -f ${work_dir}/${arch}/airootfs/etc/os-release
     sed "s|%ARCHISO_LABEL%|${iso_label}|g;
          s|%ISO_VERSION%|${iso_version}|g;
          s|%ISO_ARCH%|${arch}|g;
-         s|%INSTALL_DIR%|${install_dir}|g" \
+         s|%INSTALL_DIR%|${install_dir}|g;
+         s|%SNAPSHOT_DATE%|${snapshot_date//\//-}|g;" \
          ${script_path}/airootfs/etc/os-release > ${work_dir}/${arch}/airootfs/etc/os-release
 
     curl -o ${work_dir}/${arch}/airootfs/etc/pacman.d/mirrorlist "$mirrorlist_url"
 
+    sed "s|%SNAPSHOT_DATE%|${snapshot_date}|g;" \
+        ${script_path}/${archive_mirrorlist_file} > ${work_dir}/${arch}/airootfs/etc/pacman.d/mirrorlist-snapshot
+        
+    mkdir -p ${work_dir}/${arch}/airootfs/var/lib/pacman-rolling/local
+    
     setarch ${arch} mkarchiso ${verbose} -w "${work_dir}/${arch}" -C "${work_dir}/pacman.conf" -D "${install_dir}" -r '/root/customize_airootfs.sh' run
+    
     rm -f ${work_dir}/${arch}/airootfs/root/customize_airootfs.sh
 
+    # change pacman config in airootfs to use snapshot repo by default
+    # we can just do this after the mkarchiso run, it would flatten the symlink otherwise
+    rm -f ${work_dir}/${arch}/airootfs/etc/pacman.conf
+    ln -s pacman-snapshot.conf ${work_dir}/${arch}/airootfs/etc/pacman.conf
+    
     # strip large binaries
     find ${work_dir}/${arch}/airootfs/usr/lib -type f -name "lib*.so.*" -exec strip --strip-all {} \;
 }
