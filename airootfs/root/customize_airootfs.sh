@@ -45,6 +45,9 @@ systemctl mask shadow.timer
 systemctl mask man-db.timer
 systemctl mask updatedb.timer
 
+# ldconfig ("Rebuild Dynamic Linker Cache") unnecessarily slows down boot some time after the release
+systemctl mask ldconfig.service
+
 # Provide additional commands (using busybox instead of binutils to save space)
 ln -sf /usr/bin/busybox /usr/local/bin/ar
 ln -sf /usr/bin/busybox /usr/local/bin/strings
