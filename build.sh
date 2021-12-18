@@ -19,7 +19,7 @@ arch="$(uname -m)"
 sfs_comp="xz"
 sfs_opts="-Xbcj x86 -b 512k -Xdict-size 512k"
 snapshot_date=""
-default_kernel_param=""
+default_kernel_param="iomem=relaxed"
 
 verbose=""
 
