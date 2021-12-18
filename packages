@@ -1,6 +1,7 @@
 alsa-utils
 amd-ucode
 arch-install-scripts
+at
 atop
 b43-fwcutter
 bash-completion
@@ -15,6 +16,7 @@ cifs-utils
 clonezilla
 cpio
 crda
+cronie
 darkhttpd
 dd_rescue
 ddrescue
