@@ -37,6 +37,7 @@ systemctl enable sshd.service
 systemctl enable sysrescue-initialize.service
 systemctl enable sysrescue-autorun.service
 systemctl enable qemu-guest-agent.service
+systemctl enable var-lib-pacman\\x2drolling-local.mount
 systemctl set-default multi-user.target
 
 # Mask irrelevant timer units (#140)

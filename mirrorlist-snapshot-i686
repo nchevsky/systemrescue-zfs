@@ -1,0 +1,6 @@
+#
+# Mirrors for archive.archlinux32.org
+# Currently just one stable mirror known, see https://bbs.archlinux32.org/viewforum.php?id=10
+#
+Server = https://archive.archlinux32.org/repos/%SNAPSHOT_DATE%/$arch/$repo
+

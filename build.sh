@@ -18,6 +18,7 @@ gpg_key=
 arch="$(uname -m)"
 sfs_comp="xz"
 sfs_opts="-Xbcj x86 -b 512k -Xdict-size 512k"
+snapshot_date=""
 
 verbose=""
 
@@ -29,12 +30,16 @@ case ${arch} in
         efiboot="bootx64.efi"
         edk2arch="x64"
         mirrorlist_url='https://archlinux.org/mirrorlist/?country=all&protocol=http&use_mirror_status=on'
+        archive_prefix='https://archive.archlinux.org/repos/'
+        archive_mirrorlist_file='mirrorlist-snapshot-x86_64'
         ;;
     i686)
         efiarch="i386-efi"
         efiboot="bootia32.efi"
         edk2arch="ia32"
         mirrorlist_url='https://archlinux32.org/mirrorlist/?country=all&protocol=http&use_mirror_status=on'
+        archive_prefix='https://archive.archlinux32.org/repos/'
+        archive_mirrorlist_file='mirrorlist-snapshot-i686'
         ;;
     *)
         echo "ERROR: Unsupported architecture: '${arch}'"
@@ -63,10 +68,51 @@ _usage ()
     echo "                        Default: ${work_dir}"
     echo "    -o <out_dir>       Set the output directory"
     echo "                        Default: ${out_dir}"
+    echo "    -s <YYYY/MM/DD>    Set the snapshot date to use the repository from"
     echo "    -v                 Enable verbose output"
     echo "    -h                 This help message"
     exit ${1}
 }
+
+# Determine the latest repository snapshot available at the Arch Linux Archive
+determine_snapshot_date() {
+    # store the snapshot date in build.snapshot_date and read it out on later runs
+    # so don't run this function with run_once
+    if [[ -e ${work_dir}/build.snapshot_date ]]; then
+        snapshot_date=`cat ${work_dir}/build.snapshot_date`
+        return
+    fi
+    
+    if [[ -z "$snapshot_date" ]]; then
+        # while archive.archlinux.org offers lastsync files we could read out, archive.archlinux32.org doesn't
+        # so use the current date (UTC), check if it's dir exists on the mirror, use the day before if not
+        local now=`date +%s`
+        local yesterday=$[$[now]-86400]
+        local today_ymd=`date --utc "+%Y/%m/%d" --date="@${now}"`
+        local yesterday_ymd=`date --utc "+%Y/%m/%d" --date="@${yesterday}"`
+
+        if curl --silent --show-error --fail --max-time 15 -o /dev/null "${archive_prefix}${today_ymd}/"; then
+            snapshot_date="${today_ymd}"
+        else
+            if curl --silent --show-error --fail --max-time 15 -o /dev/null "${archive_prefix}${yesterday_ymd}/"; then
+                snapshot_date="${yesterday_ymd}"
+            else
+                echo "can't determine latest snapshot date available at the archive, specify one with -s"
+                exit 1
+            fi
+        fi
+    else
+        # -s commandline option given
+        if [[ ! "$snapshot_date" =~ ^[0-9]{4}/(0[1-9]|1[0-2])/(0[1-9]|[1-2][0-9]|3[0-1])$ ]]; then
+            echo "illegal snapshot date, format must be YYYY/MM/DD"
+            exit 1
+        fi
+        # we got a snapshot date that looks valid, use it without further network tests
+    fi
+    
+    echo "$snapshot_date" >${work_dir}/build.snapshot_date
+}
+
 
 # Helper function to run make_*() only one time per architecture.
 run_once() {
@@ -76,11 +122,17 @@ run_once() {
     fi
 }
 
-# Setup custom pacman.conf with current cache directories.
+# Setup custom pacman.conf with current cache directories, insert the snapshot date into the URLs
 make_pacman_conf() {
     local _cache_dirs
     _cache_dirs=($(pacman -v 2>&1 | grep '^Cache Dirs:' | sed 's/Cache Dirs:\s*//g'))
-    sed -r "s|^#?\\s*CacheDir.+|CacheDir = $(echo -n ${_cache_dirs[@]})|g; s|^Architecture\s*=.*$|Architecture = ${arch}|" ${script_path}/pacman.conf > ${work_dir}/pacman.conf
+    sed -r "s|^#?\\s*CacheDir.+|CacheDir = $(echo -n ${_cache_dirs[@]})|g;
+            s|^Architecture\s*=.*$|Architecture = ${arch}|;
+            s|^Include =.*$|Include = ${work_dir}/mirrorlist|g" \
+            ${script_path}/pacman.conf > ${work_dir}/pacman.conf
+    
+    sed "s|%SNAPSHOT_DATE%|${snapshot_date}|g;" \
+        ${script_path}/${archive_mirrorlist_file} > ${work_dir}/mirrorlist
 }
 
 # Base installation: base metapackage + syslinux (airootfs)
@@ -106,20 +158,32 @@ make_customize_airootfs() {
          s|%ISO_ARCH%|${arch}|g;
          s|%INSTALL_DIR%|${install_dir}|g" \
          ${script_path}/airootfs/etc/issue > ${work_dir}/${arch}/airootfs/etc/issue
-         
+    
     # delete the target file first because it is a symlink
     rm -f ${work_dir}/${arch}/airootfs/etc/os-release
     sed "s|%ARCHISO_LABEL%|${iso_label}|g;
          s|%ISO_VERSION%|${iso_version}|g;
          s|%ISO_ARCH%|${arch}|g;
-         s|%INSTALL_DIR%|${install_dir}|g" \
+         s|%INSTALL_DIR%|${install_dir}|g;
+         s|%SNAPSHOT_DATE%|${snapshot_date//\//-}|g;" \
          ${script_path}/airootfs/etc/os-release > ${work_dir}/${arch}/airootfs/etc/os-release
 
     curl -o ${work_dir}/${arch}/airootfs/etc/pacman.d/mirrorlist "$mirrorlist_url"
 
+    sed "s|%SNAPSHOT_DATE%|${snapshot_date}|g;" \
+        ${script_path}/${archive_mirrorlist_file} > ${work_dir}/${arch}/airootfs/etc/pacman.d/mirrorlist-snapshot
+        
+    mkdir -p ${work_dir}/${arch}/airootfs/var/lib/pacman-rolling/local
+    
     setarch ${arch} mkarchiso ${verbose} -w "${work_dir}/${arch}" -C "${work_dir}/pacman.conf" -D "${install_dir}" -r '/root/customize_airootfs.sh' run
+    
     rm -f ${work_dir}/${arch}/airootfs/root/customize_airootfs.sh
 
+    # change pacman config in airootfs to use snapshot repo by default
+    # we can just do this after the mkarchiso run, it would flatten the symlink otherwise
+    rm -f ${work_dir}/${arch}/airootfs/etc/pacman.conf
+    ln -s pacman-snapshot.conf ${work_dir}/${arch}/airootfs/etc/pacman.conf
+    
     # strip large binaries
     find ${work_dir}/${arch}/airootfs/usr/lib -type f -name "lib*.so.*" -exec strip --strip-all {} \;
 }
@@ -260,7 +324,7 @@ if [[ ${EUID} -ne 0 ]]; then
     _usage 1
 fi
 
-while getopts 'N:V:L:P:A:D:w:o:g:vh' arg; do
+while getopts 'N:V:L:P:A:D:w:o:g:s:vh' arg; do
     case "${arg}" in
         N) iso_name="${OPTARG}" ;;
         V) iso_version="${OPTARG}" ;;
@@ -271,6 +335,7 @@ while getopts 'N:V:L:P:A:D:w:o:g:vh' arg; do
         w) work_dir="${OPTARG}" ;;
         o) out_dir="${OPTARG}" ;;
         g) gpg_key="${OPTARG}" ;;
+        s) snapshot_date="${OPTARG}" ;;
         v) verbose="-v" ;;
         h) _usage 0 ;;
         *)
@@ -282,6 +347,7 @@ done
 
 mkdir -p ${work_dir}
 
+determine_snapshot_date
 run_once make_pacman_conf
 run_once make_basefs
 run_once make_packages
