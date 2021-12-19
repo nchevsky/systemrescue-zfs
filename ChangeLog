@@ -2,8 +2,9 @@ SystemRescue ChangeLog
 ======================
 
 -------------------------------------------------------------------------------
-8.07 (YYYY-MM-DD):
+8.07 (2021-12-19):
 -------------------------------------------------------------------------------
+* Updated kernel to the Long-Term-Supported linux-5.10.87
 * Pacman uses snapshot repository to ease installation of packages (Gerd v. Egidy)
 * Boot with "iomem=relaxed" by default as flashrom requires it (Gerd v. Egidy)
 * Added packages: net-tools, cronie, at, archinstall, wqy-microhei
