@@ -5,6 +5,8 @@ SystemRescue ChangeLog
 8.07 (YYYY-MM-DD):
 -------------------------------------------------------------------------------
 * Pacman uses snapshot repository to ease installation of packages (Gerd v. Egidy)
+* Boot with "iomem=relaxed" by default as flashrom requires it (Gerd v. Egidy)
+* Added packages: net-tools, cronie, at, archinstall, wqy-microhei
 
 -------------------------------------------------------------------------------
 8.06 (2021-11-20):
