@@ -237,7 +237,7 @@ make_syslinux() {
         sed "s|%ARCHISO_LABEL%|${iso_label}|g;
              s|%ISO_VERSION%|${iso_version}|g;
              s|%ISO_ARCH%|${arch}|g;
-             s|%DEFAULTKERNELPARAM%|${default_kernel_param}|g;
+             s|%DEFAULT_KERNEL_PARAM%|${default_kernel_param}|g;
              s|%INSTALL_DIR%|${install_dir}|g" ${_cfg} > ${work_dir}/iso/${install_dir}/boot/syslinux/${_cfg##*/}
     done
     cp ${work_dir}/${arch}/airootfs/usr/lib/syslinux/bios/*.c32 ${work_dir}/iso/${install_dir}/boot/syslinux
@@ -268,7 +268,7 @@ make_efi() {
     sed "s|%ARCHISO_LABEL%|${iso_label}|g;
          s|%ISO_VERSION%|${iso_version}|g;
          s|%ISO_ARCH%|${arch}|g;
-         s|%DEFAULTKERNELPARAM%|${default_kernel_param}|g;
+         s|%DEFAULT_KERNEL_PARAM%|${default_kernel_param}|g;
          s|%INSTALL_DIR%|${install_dir}|g" \
          ${script_path}/efiboot/grub/grubsrcd.cfg > ${work_dir}/iso/boot/grub/grubsrcd.cfg
     cp -a /usr/share/edk2-shell/${edk2arch}/Shell_Full.efi ${work_dir}/iso/EFI/shell.efi
