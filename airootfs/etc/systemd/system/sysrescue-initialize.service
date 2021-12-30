@@ -5,7 +5,7 @@ Wants=getty-pre.target
 
 [Service]
 Type=oneshot
-ExecStart=/etc/systemd/scripts/sysrescue-initialize
+ExecStart=/etc/systemd/scripts/sysrescue-initialize.py
 RemainAfterExit=true
 
 [Install]
