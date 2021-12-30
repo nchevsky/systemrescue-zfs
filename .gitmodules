@@ -1,0 +1,3 @@
+[submodule "website"]
+	path = website
+	url = https://gitlab.com/systemrescue/systemrescue-website.git

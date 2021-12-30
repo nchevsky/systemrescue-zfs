@@ -1,0 +1,3 @@
+#!/bin/bash
+
+elinks /usr/share/sysrescue/html/manual/index.html
