@@ -11,7 +11,7 @@ https://gitlab.archlinux.org/archlinux/archiso/
 SystemRescue can be built for x86_64 or i686 architectures. It must be built
 on archlinux if you want to build a 64bit edition, or archlinux32 if you want
 to create a 32bit edition. The following packages must be installed on the
-build system: archiso, grub, mtools, edk2-shell. You need to use a modified
+build system: archiso, grub, mtools, edk2-shell, hugo. You need to use a modified
 version of archiso for the build to work and for additional fixes and features
 to be present. You can find the required archiso version and patches in the
 "patches" folder in this git repository.
@@ -25,6 +25,11 @@ a custom package repository which can be hosted locally using httpd or nginx.
 The repo-add command must be used to generate the repository package index.
 The pacman.conf file must be updated with the address of this repository so
 custom packages can be accessed.
+
+The build process requires the systemrescue-website repository which is included
+as git submodule. So when checking out this repository, make sure to check out
+the submodule too. This can be done for example with
+`git clone --recurse-submodules https://gitlab.com/systemrescue/systemrescue-sources.git`
 
 The build process can be started by running the build.sh script. It will create
 a large "work" sub-directory and the ISO file will be written in the "out"

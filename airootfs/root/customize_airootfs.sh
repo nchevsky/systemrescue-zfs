@@ -90,6 +90,3 @@ sed -i -e '/# ==== BEGIN sysrescuerepo ====/,/# ==== END sysrescuerepo ====/d' /
 # Packages
 pacman -Q > /root/packages-list.txt
 expac -H M -s "%-30n %m" | sort -rhk 2 > /root/packages-size.txt
-
-# Generate HTML version of the manual
-markdown -o usr/share/sysrescue/index.html usr/share/sysrescue/index.md

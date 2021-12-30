@@ -20,6 +20,7 @@ sfs_comp="xz"
 sfs_opts="-Xbcj x86 -b 512k -Xdict-size 512k"
 snapshot_date=""
 default_kernel_param="iomem=relaxed"
+documentation_dir="/usr/share/sysrescue/html"
 
 verbose=""
 
@@ -139,6 +140,38 @@ make_pacman_conf() {
 # Base installation: base metapackage + syslinux (airootfs)
 make_basefs() {
     setarch ${arch} mkarchiso ${verbose} -w "${work_dir}/${arch}" -C "${work_dir}/pacman.conf" -D "${install_dir}" init
+}
+
+# offline documentation
+make_documentation() {
+    if ! [ -f "website/config-offline.toml" ]; then
+        echo "ERROR: website content missing. Did you forget to check out with git submodules?"
+        exit 1
+    fi
+
+    # is the documentation up to date? ignore for beta versions
+    if ! echo "${iso_version}" | grep -i -q "beta" && \
+       ! grep -q "${iso_version}" website/content/Changes-x86/_index.md; then
+        echo "ERROR: current version not in changelog. Did you update the website submodule?"
+        exit 1
+    fi
+    
+    mkdir -p "${work_dir}/${arch}/airootfs/${documentation_dir}"
+
+    # parameters are all relative to --source dir
+    /usr/bin/hugo --source "website/" --config "config-offline.toml" --gc --verbose \
+        --destination "../${work_dir}/${arch}/airootfs/${documentation_dir}"
+    RET=$?
+    
+    if ! [ "$RET" -eq 0 ]; then
+        echo "error generating offline documentation (returned $RET), aborting"
+        exit 1
+    fi
+    
+    # post-process hugo output and add index.hmtl to all directory links
+    # required until https://github.com/gohugoio/hugo/issues/4428 is implemented
+    find "${work_dir}/${arch}/airootfs/${documentation_dir}" -name "*.html" \
+        -exec sed -i -e 's#<a href="\.\(.*\)/"#<a href=".\1/index.html"#g' \{} \;
 }
 
 # Additional packages (airootfs)
@@ -353,6 +386,7 @@ mkdir -p ${work_dir}
 determine_snapshot_date
 run_once make_pacman_conf
 run_once make_basefs
+run_once make_documentation
 run_once make_packages
 run_once make_customize_airootfs
 run_once make_setup_mkinitcpio
