@@ -175,9 +175,11 @@ psmisc
 pulseaudio-alsa
 pv
 python
+python-llfuse
 python-pip
 qemu-guest-agent
 rdesktop
+rdiff-backup
 readline
 refind
 reiserfsprogs
