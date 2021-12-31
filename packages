@@ -120,6 +120,7 @@ mc
 mdadm
 memtest86+
 memtester
+mesa-minimal
 minicom
 mkinitcpio
 mkinitcpio-nfs-utils
