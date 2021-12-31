@@ -2,8 +2,10 @@
 errcnt=0
 
 for curfile in /usr/bin/{*btrfs*,*xfs*,dislocker*,udp*,dump,restore} \
-               /usr/bin/{featherpad,ms-sys,nwipe,whdd,zerofree} \
-               /opt/firefox*/firefox* /usr/lib/ntfs-3g/ntfs-plugin*.so \
+               /usr/bin/{ms-sys,nwipe,whdd,zerofree} \
+               /opt/firefox*/firefox* \
+               /usr/lib/ntfs-3g/ntfs-plugin*.so \
+               /usr/lib/libgbm.so* \
                /usr/lib/libdislocker.so*
 do
     test -x ${curfile} || continue
