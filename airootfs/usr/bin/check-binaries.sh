@@ -6,6 +6,7 @@ for curfile in /usr/bin/{*btrfs*,*xfs*,dislocker*,udp*,dump,restore} \
                /opt/firefox*/firefox* \
                /usr/lib/ntfs-3g/ntfs-plugin*.so \
                /usr/lib/libgbm.so* \
+               /usr/lib/xorg/modules/drivers/modesetting_drv.so \
                /usr/lib/libdislocker.so*
 do
     test -x ${curfile} || continue
