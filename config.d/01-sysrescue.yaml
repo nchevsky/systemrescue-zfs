@@ -1,4 +1,7 @@
 ---
 global:
+    copytoram: false
+    checksum: false
+    loadsrm: false
     dostartx: false
     nofirewall: false
