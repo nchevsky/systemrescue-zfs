@@ -1,0 +1,43 @@
+diff --git a/archiso/initcpio/hooks/archiso b/archiso/initcpio/hooks/archiso
+index 51dfcc1..fe709cf 100644
+--- a/archiso/initcpio/hooks/archiso
++++ b/archiso/initcpio/hooks/archiso
+@@ -197,6 +197,38 @@ archiso_mount_handler() {
+         fi
+     fi
+ 
++    echo ":: Attempt to read configuration from yaml files ..."
++
++    if ls -l /run/archiso/bootmnt/config.d/*.yaml >/dev/null 2>/dev/null
++    then
++        echo "Found yaml files in /run/archiso/bootmnt/config.d"
++        for curfile in /run/archiso/bootmnt/config.d/*.yaml
++        do
++            echo "Parsing ${curfile} ..."
++            shortname=$(basename ${curfile})
++
++            # Attempt to find boolean entries in the yaml configuration file
++            for curentry in "copytoram" "checksum" "loadsrm"
++            do
++                if value=$(cat ${curfile} | aq -i yaml -o toml ".global.${curentry}" 2>/dev/null)
++                then
++                    if [[ "${value}" == 'true' ]] || [[ "${value}" == 'y' ]] || [[ "${value}" == 'yes' ]]
++                    then
++                        echo "Found a valid value for '.global.${curentry}': value='${value}'"
++                        eval "${curentry}='y'"
++                    elif [[ "${value}" == 'false' ]] || [[ "${value}" == 'n' ]] || [[ "${value}" == 'no' ]]
++                    then
++                        echo "Found a valid value for '.global.${curentry}': value='${value}'"
++                        eval "${curentry}=''"
++                    else
++                        echo "ERROR: Found invalid value for '.global.${curentry}': value='${value}'"
++                        sleep 8
++                    fi
++                fi
++            done
++        done
++    fi
++
+     if [[ "${checksum}" == "y" ]]; then
+         if [[ -f "/run/archiso/bootmnt/${archisobasedir}/${arch}/airootfs.sha512" ]]; then
+             msg -n ":: Self-test requested, please wait..."
