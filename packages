@@ -178,6 +178,7 @@ pv
 python
 python-llfuse
 python-pip
+python-yaml
 qemu-guest-agent
 rdesktop
 rdiff-backup
