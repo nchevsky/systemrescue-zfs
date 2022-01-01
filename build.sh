@@ -84,7 +84,7 @@ determine_snapshot_date() {
         snapshot_date=`cat ${work_dir}/build.snapshot_date`
         return
     fi
-    
+
     if [[ -z "$snapshot_date" ]]; then
         # while archive.archlinux.org offers lastsync files we could read out, archive.archlinux32.org doesn't
         # so use the current date (UTC), check if it's dir exists on the mirror, use the day before if not
@@ -111,7 +111,7 @@ determine_snapshot_date() {
         fi
         # we got a snapshot date that looks valid, use it without further network tests
     fi
-    
+
     echo "$snapshot_date" >${work_dir}/build.snapshot_date
 }
 
@@ -132,7 +132,7 @@ make_pacman_conf() {
             s|^Architecture\s*=.*$|Architecture = ${arch}|;
             s|^Include =.*$|Include = ${work_dir}/mirrorlist|g" \
             ${script_path}/pacman.conf > ${work_dir}/pacman.conf
-    
+
     sed "s|%SNAPSHOT_DATE%|${snapshot_date}|g;" \
         ${script_path}/${archive_mirrorlist_file} > ${work_dir}/mirrorlist
 }
@@ -155,19 +155,19 @@ make_documentation() {
         echo "ERROR: current version not in changelog. Did you update the website submodule?"
         exit 1
     fi
-    
+
     mkdir -p "${work_dir}/${arch}/airootfs/${documentation_dir}"
 
     # parameters are all relative to --source dir
     /usr/bin/hugo --source "website/" --config "config-offline.toml" --gc --verbose \
         --destination "../${work_dir}/${arch}/airootfs/${documentation_dir}"
     RET=$?
-    
+
     if ! [ "$RET" -eq 0 ]; then
         echo "error generating offline documentation (returned $RET), aborting"
         exit 1
     fi
-    
+
     # post-process hugo output and add index.hmtl to all directory links
     # required until https://github.com/gohugoio/hugo/issues/4428 is implemented
     find "${work_dir}/${arch}/airootfs/${documentation_dir}" -name "*.html" \
@@ -192,7 +192,7 @@ make_customize_airootfs() {
          s|%ISO_ARCH%|${arch}|g;
          s|%INSTALL_DIR%|${install_dir}|g" \
          ${script_path}/airootfs/etc/issue > ${work_dir}/${arch}/airootfs/etc/issue
-    
+
     # delete the target file first because it is a symlink
     rm -f ${work_dir}/${arch}/airootfs/etc/os-release
     sed "s|%ARCHISO_LABEL%|${iso_label}|g;
@@ -206,18 +206,18 @@ make_customize_airootfs() {
 
     sed "s|%SNAPSHOT_DATE%|${snapshot_date}|g;" \
         ${script_path}/${archive_mirrorlist_file} > ${work_dir}/${arch}/airootfs/etc/pacman.d/mirrorlist-snapshot
-        
+
     mkdir -p ${work_dir}/${arch}/airootfs/var/lib/pacman-rolling/local
-    
+
     setarch ${arch} mkarchiso ${verbose} -w "${work_dir}/${arch}" -C "${work_dir}/pacman.conf" -D "${install_dir}" -r '/root/customize_airootfs.sh' run
-    
+
     rm -f ${work_dir}/${arch}/airootfs/root/customize_airootfs.sh
 
     # change pacman config in airootfs to use snapshot repo by default
     # we can just do this after the mkarchiso run, it would flatten the symlink otherwise
     rm -f ${work_dir}/${arch}/airootfs/etc/pacman.conf
     ln -s pacman-snapshot.conf ${work_dir}/${arch}/airootfs/etc/pacman.conf
-    
+
     # strip large binaries
     find ${work_dir}/${arch}/airootfs/usr/lib -type f -name "lib*.so.*" -exec strip --strip-all {} \;
 }
@@ -345,6 +345,7 @@ make_prepare() {
 # Build ISO
 make_iso() {
     cp ${version_file} ${work_dir}/iso/${install_dir}/
+    cp -r config.d/ ${work_dir}/iso/
     (
         shopt -s nullglob
         rm -vf ${work_dir}/iso/${install_dir}/*.srm
