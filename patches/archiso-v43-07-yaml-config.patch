@@ -5,8 +5,8 @@ index 51dfcc1..fe709cf 100644
 @@ -197,6 +197,38 @@ archiso_mount_handler() {
          fi
      fi
- 
-+    echo ":: Attempt to read configuration from yaml files ..."
+
++    msg ":: Attempt to read configuration from yaml files ..."
 +
 +    if ls -l /run/archiso/bootmnt/config.d/*.yaml >/dev/null 2>/dev/null
 +    then
@@ -23,12 +23,12 @@ index 51dfcc1..fe709cf 100644
 +                then
 +                    if [[ "${value}" == 'true' ]] || [[ "${value}" == 'y' ]] || [[ "${value}" == 'yes' ]]
 +                    then
-+                        echo "Found a valid value for '.global.${curentry}': value='${value}'"
++                        echo "Entry '.global.${curentry}' enabled in config: value='${value}'"
 +                        eval "${curentry}='y'"
 +                    elif [[ "${value}" == 'false' ]] || [[ "${value}" == 'n' ]] || [[ "${value}" == 'no' ]]
 +                    then
-+                        echo "Found a valid value for '.global.${curentry}': value='${value}'"
-+                        eval "${curentry}=''"
++                        echo "Entry '.global.${curentry}' disabled in config: value='${value}'"
++                        # Do not change curentry as this would override values passed using the boot command line
 +                    else
 +                        echo "ERROR: Found invalid value for '.global.${curentry}': value='${value}'"
 +                        sleep 8
