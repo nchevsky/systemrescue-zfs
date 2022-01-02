@@ -54,7 +54,7 @@ def parse_config_file(yamlfile):
 
 for yamlconfdir in yamlconfdirs:
     if os.path.isdir(yamlconfdir):
-        conffiles = glob.glob(os.path.join(yamlconfdir, '*.yaml'), recursive=True)
+        conffiles = glob.glob(os.path.join(yamlconfdir, '*.[Yy][Aa][Mm][Ll]'), recursive=True)
         conffiles.sort() # Load yaml files in the alphabetical order
         for curfile in conffiles:
             parse_config_file(curfile)
