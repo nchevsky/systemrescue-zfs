@@ -8,10 +8,10 @@ index 51dfcc1..fe709cf 100644
 
 +    msg ":: Attempt to read configuration from yaml files ..."
 +
-+    if ls -l /run/archiso/bootmnt/config.d/*.yaml >/dev/null 2>/dev/null
++    if ls -l /run/archiso/bootmnt/config.d/*.[Yy][Aa][Mm][Ll] >/dev/null 2>/dev/null
 +    then
 +        echo "Found yaml files in /run/archiso/bootmnt/config.d"
-+        for curfile in /run/archiso/bootmnt/config.d/*.yaml
++        for curfile in /run/archiso/bootmnt/config.d/*.[Yy][Aa][Mm][Ll]
 +        do
 +            echo "Parsing ${curfile} ..."
 +            shortname=$(basename ${curfile})
