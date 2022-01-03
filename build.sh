@@ -158,6 +158,9 @@ make_documentation() {
 
     mkdir -p "${work_dir}/${arch}/airootfs/${documentation_dir}"
 
+    # Delete the download page from the offline version as it makes no sense to keep it
+    rm -rf website/content/Download
+
     # parameters are all relative to --source dir
     /usr/bin/hugo --source "website/" --config "config-offline.toml" --gc --verbose \
         --destination "../${work_dir}/${arch}/airootfs/${documentation_dir}"
