@@ -13,10 +13,10 @@ diff -urN archiso-43-a/archiso/initcpio/hooks/archiso archiso-43-b/archiso/initc
 +                launch_interactive_shell
 +            fi
 +        fi
-+        if ls -lh /run/archiso/bootmnt/config.d >/dev/null 2>/dev/null; then
++        if ls -lh /run/archiso/bootmnt/sysrescue.d >/dev/null 2>/dev/null; then
 +            msg ":: Copying configuration files to RAM ..."
-+            if ! cp -r /run/archiso/bootmnt/config.d /run/archiso/copytoram/ ; then
-+                echo "ERROR: failed to copy '/run/archiso/bootmnt/config.d' to '/run/archiso/copytoram/'"
++            if ! cp -r /run/archiso/bootmnt/sysrescue.d /run/archiso/copytoram/ ; then
++                echo "ERROR: failed to copy '/run/archiso/bootmnt/sysrescue.d' to '/run/archiso/copytoram/'"
 +                launch_interactive_shell
 +            fi
 +        fi

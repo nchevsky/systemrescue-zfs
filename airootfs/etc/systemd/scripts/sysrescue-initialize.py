@@ -34,7 +34,7 @@ config_global = {
 # Load configuration from the yaml files
 # ==============================================================================
 print(f"====> Loading configuration from yaml files located on the boot device ...")
-yamlconfdirs = ["/run/archiso/bootmnt/config.d", "/run/archiso/copytoram/config.d"]
+yamlconfdirs = ["/run/archiso/bootmnt/sysrescue.d", "/run/archiso/copytoram/sysrescue.d"]
 
 def parse_config_file(yamlfile):
     print(f"Parsing yaml file: {yamlfile} ...")

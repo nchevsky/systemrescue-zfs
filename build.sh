@@ -348,7 +348,7 @@ make_prepare() {
 # Build ISO
 make_iso() {
     cp ${version_file} ${work_dir}/iso/${install_dir}/
-    cp -r config.d/ ${work_dir}/iso/
+    cp -r sysrescue.d/ ${work_dir}/iso/
     (
         shopt -s nullglob
         rm -vf ${work_dir}/iso/${install_dir}/*.srm
