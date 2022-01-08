@@ -8,7 +8,7 @@ diff -urN archiso-43-a/archiso/initcpio/hooks/archiso archiso-43-b/archiso/initc
 +    if [[ "${copytoram}" == "y" ]]; then
 +        if ls -lh /run/archiso/bootmnt/autorun* >/dev/null 2>/dev/null; then
 +            msg ":: Copying autorun scripts to RAM ..."
-+            if ! cp /run/archiso/bootmnt/autorun* /run/archiso/copytoram/ ; then
++            if ! cp -r /run/archiso/bootmnt/autorun* /run/archiso/copytoram/ ; then
 +                echo "ERROR: failed to copy '/run/archiso/bootmnt/autorun*' to '/run/archiso/copytoram/'"
 +                launch_interactive_shell
 +            fi

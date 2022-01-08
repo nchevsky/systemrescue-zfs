@@ -347,8 +347,13 @@ make_prepare() {
 
 # Build ISO
 make_iso() {
+    # Copy version file
     cp ${version_file} ${work_dir}/iso/${install_dir}/
+    # Copy autorun folder
+    test -d autorun && cp -r autorun ${work_dir}/iso/
+    # Copy configuration files
     cp -r sysrescue.d/ ${work_dir}/iso/
+    # Copy SRM modules
     (
         shopt -s nullglob
         rm -vf ${work_dir}/iso/${install_dir}/*.srm
@@ -356,6 +361,7 @@ make_iso() {
             cp -vf "$srm" ${work_dir}/iso/${install_dir}/
         done
     )
+    # Create the ISO image
     setarch ${arch} mkarchiso ${verbose} -w "${work_dir}" -D "${install_dir}" -L "${iso_label}" -P "${iso_publisher}" -A "${iso_application}" -o "${out_dir}" iso "${iso_name}-${iso_version}-${arch/x86_64/amd64}.iso"
 }
 
