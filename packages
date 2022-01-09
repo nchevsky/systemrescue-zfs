@@ -100,6 +100,7 @@ jfsutils
 keepassxc
 less
 lftp
+libisoburn
 libvncserver
 linux-atm
 linux-firmware
@@ -159,6 +160,7 @@ par2cmdline
 partclone
 parted
 partimage
+patch
 pavucontrol
 pciutils
 pcre

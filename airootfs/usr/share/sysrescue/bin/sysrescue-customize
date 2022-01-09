@@ -1,0 +1,724 @@
+#! /usr/bin/env bash
+#
+# sysrescue-customize - customize an existing SystemRescue iso image
+# 
+# Author: Gerd v. Egidy
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# see https://www.system-rescue.org/scripts/systemrescue-customize/ for details
+
+# bash-checks right at the top due to many bashisms in the rest of the script
+if [ -n "$POSIXLY_CORRECT" ] || [ -z "$BASH_VERSION" ]; then
+    echo "ERROR: bash >= 4.0 is required for this script."
+    exit 1
+fi
+
+if (( BASH_VERSINFO[0]*100 + BASH_VERSINFO[1] < 400 )); then
+    echo "ERROR: bash >= 4.0 is required for this script."
+    exit 1
+fi
+
+# abort on failures
+set -o errexit -o pipefail -o noclobber -o nounset
+
+# we expect the isohybrid-mbr file to be within the iso image at this path
+# xorriso doesn't require the file to be in the iso filesystem, but SystemRescue always provides it, so we can rely on it
+ISOHYBRID_MBR="isolinux/isohdpfx.bin"
+
+print_help()
+{
+    echo "systemrescue-customize - customize an existing SystemRescue iso image"
+    echo ""
+    echo "Usage in unpack mode:"
+    echo "systemrescue-customize --unpack -s|--source=<ISO-FILE> -d|--dest=<DIR>"
+    echo "    [-o|--overwrite] [-v|--verbose]"
+    echo ""
+    echo "Usage in rebuild mode:"
+    echo "systemrescue-customize --rebuild -s|-source=<DIR> -d|--dest=<ISO-FILE>"
+    echo "    [-m|--srm-dir=<DIR>] [-o|--overwrite] [-v|--verbose]"
+    echo ""
+    echo "Usage in auto-mode:"
+    echo "systemrescue-customize --auto -s|--source=<ISO-FILE> -d|--dest=<ISO-FILE>"
+    echo "    -r|--recipe-dir=<DIR> [-w|--work-dir=<DIR>] [-o|--overwrite] [-v|--verbose]"
+    echo ""
+    echo "--source=<ISO or DIR>       unpack and auto: iso file (or raw block device)"
+    echo "                                     to extract. Must be in iso9660 format."
+    echo "                                     On SystemRescue: can be omitted, then"
+    echo "                                     the boot device is used if possible."
+    echo "                            rebuild: source dir to rebuild the iso image from."
+    echo "                                     Must be in the same format as created by"
+    echo "                                     --unpack."
+    echo "--dest=<ISO or DIR>         unpack: destination directory to unpack into."
+    echo "                            rebuild and auto: destination for the iso file."
+    echo "--srm-dir=<DIR>             Content of the directory will be packed into a" 
+    echo "                            SystemRescueModule (SRM). The --source dir will"
+    echo "                            be modified when this option is used."
+    echo "--recipe-dir=<DIR>          Directory that contains a recipe for fully"
+    echo "                            automatic customization. See SystemRescue manual"
+    echo "                            for details."
+    echo "--work-dir=<DIR>            Use this as a temporary work directory for"
+    echo "                            unpacking and rebuilding."
+    echo "--overwrite                 Without this option the target directories or"
+    echo "                            files must be empty or non-existing. This option"
+    echo "                            will overwrite existing files without questions."
+    echo "--verbose                   Verbose output when running xorriso."
+    echo ""
+    echo "See https://www.system-rescue.org/scripts/systemrescue-customize/ for details."
+    
+    return
+}
+
+# when running on SystemRescue:
+# check if we can use the boot device as source dir
+sysrescue_bootmnt_source()
+{
+    # are we on SystemRescue?
+    if ! grep -q "ID=sysrescue" /etc/os-release 2>/dev/null; then
+        echo "ERROR: source option missing or empty (not running on SystemRescue)"
+        exit 1
+    fi
+    
+    # check where bootmnt is mounted from
+    local bootmnt_src
+    local RET=0
+    bootmnt_src=$(findmnt --mountpoint /run/archiso/bootmnt --output source --raw --noheadings) || RET=$?
+    
+    if [[ $RET -ne 0 ]] || [[ ! -b "${bootmnt_src}" ]] || ! blkid "${bootmnt_src}" | grep -q "TYPE=\"iso9660\""; then
+        echo "ERROR: bootmnt source not in iso format, specify a source manually"
+        exit 1
+    fi
+    
+    # we have some kind of iso block device as bootmnt
+    # we could have a isohybrid on a regular disk, that would result in a partition instead of the root
+    
+    local deviceno=$(stat --format="%Hr:%Lr" "${bootmnt_src}")
+    if [[ -e "/sys/dev/block/${deviceno}/partition" ]]; then
+        # we have a partition, we need to get the corresponding main device
+        deviceno=$(stat --format="%Hr:0" "${bootmnt_src}")
+    fi
+
+    # navigate from the /sys entry to the entry in /dev
+    if [[ ! -d "/sys/dev/block/${deviceno}/device/block" ]]; then
+        echo "ERROR: can't find bootmnt source, specify a source manually"
+        exit 1
+    fi
+
+    local devname=$(ls -1 "/sys/dev/block/${deviceno}/device/block")
+    
+    if [[ -z "${devname}" ]] || [[ ! -b "/dev/${devname}" ]]; then
+        echo "ERROR: can't find bootmnt source, specify a source manually"
+        exit 1
+    fi
+    
+    # success, we have a source we can use
+    SOURCE="/dev/${devname}"
+
+    return
+}
+
+# error while parsing commandline parameters
+argument_error()
+{
+    echo "$1"
+    echo
+    echo "---------------------------------"
+    echo
+    print_help
+    exit 2
+}
+
+parse_args()
+{
+    # adapted from https://stackoverflow.com/a/29754866 by Robert Siemer
+    # version edited Mar 4 '21 at 0:11, licensed under CC BY-SA 4.0 due to Stackoverflow Terms of Service
+    # https://creativecommons.org/licenses/by-sa/4.0/
+
+    # show help when no arguments given
+    [[ $# -eq 0 ]] && { print_help ; exit 0 ; }
+    
+    # -allow a command to fail with !’s side effect on errexit
+    # -use return value from ${PIPESTATUS[0]}, because ! hosed $?
+    ! getopt --test > /dev/null 
+    if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
+        echo 'ERROR: `getopt --test` failed in this environment'
+        exit 1
+    fi
+
+    local OPTIONS="s:d:m:r:w:ovh"
+    local LONGOPTS="unpack,rebuild,auto,source:,dest:,srm-dir:,recipe-dir:,work-dir:,overwrite,verbose,help"
+
+    # option variables as globals, set to default values
+    declare -g MODE=""
+    declare -g SOURCE=""
+    declare -g DEST=""
+    declare -g SRM_DIR=""
+    declare -g WORK_DIR=""
+    declare -g RECIPE_DIR=""
+    declare -g OVERWRITE=0
+    declare -g VERBOSE=""
+    
+    # -regarding ! and PIPESTATUS see above
+    # -temporarily store output to be able to check for errors
+    # -activate quoting/enhanced mode (e.g. by writing out “--options”)
+    # -pass arguments only via   -- "$@"   to separate them correctly
+    ! PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTS --name "$0" -- "$@")
+    if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
+        # e.g. return value is 1
+        #  then getopt has complained about wrong arguments to stdout
+        echo
+        print_help
+        exit 2
+    fi
+    # read getopt’s output this way to handle the quoting right:
+    eval set -- "$PARSED"
+
+    while true; do
+        case "$1" in
+            --unpack)
+                [[ ! -z "$MODE" ]] && argument_error "ERROR: mode conflict"
+                MODE="unpack"
+                shift
+                ;;
+            --rebuild)
+                [[ ! -z "$MODE" ]] && argument_error "ERROR: mode conflict"
+                MODE="rebuild"
+                shift
+                ;;
+            --auto)
+                [[ ! -z "$MODE" ]] && argument_error "ERROR: mode conflict"
+                MODE="auto"
+                shift
+                ;;
+            -s|--source)
+                SOURCE="$2"
+                shift 2
+                ;;
+            -d|--dest)
+                DEST="$2"
+                shift 2
+                ;;
+            -m|--srm-dir)
+                SRM_DIR="$2"
+                shift 2
+                ;;
+            -w|--work-dir)
+                WORK_DIR="$2"
+                shift 2
+                ;;
+            -r|--recipe-dir)
+                RECIPE_DIR="$2"
+                shift 2
+                ;;
+            -o|--overwrite)
+                OVERWRITE=1
+                shift
+                ;;
+            -v|--verbose)
+                VERBOSE="-report_about ALL"
+                shift
+                ;;
+            -h|--help)
+                print_help
+                exit 0
+                ;;
+            --)
+                shift
+                break
+                ;;
+            *)
+                echo "ERROR: Argument parsing logic bug"
+                exit 2
+                ;;
+        esac
+    done
+
+    # we want no positional arguments 
+    [[ $# -ne 0 ]] && argument_error "ERROR: positional arguments not allowed"
+    
+    [[ -z "$MODE" ]] && argument_error "ERROR: mode option missing"
+    [[ -z "$DEST" ]] && argument_error "ERROR: dest option missing or empty"
+
+    if [[ -z "$SOURCE" ]]; then
+        sysrescue_bootmnt_source
+    fi
+    
+    if [[ $MODE == "unpack" ]] ; then
+        [[ ! -z "$RECIPE_DIR" ]] && argument_error "ERROR: option recipe-dir not allowed in unpack mode"
+        [[ ! -z "$WORK_DIR" ]] && argument_error "ERROR: option work-dir not allowed in unpack mode"
+        [[ ! -z "$SRM_DIR" ]] && argument_error "ERROR: option srm-dir not allowed in unpack mode"
+    fi
+    if [[ $MODE == "rebuild" ]] ; then
+        [[ ! -z "$RECIPE_DIR" ]] && argument_error "ERROR: option recipe-dir not allowed in rebuild mode"
+        [[ ! -z "$WORK_DIR" ]] && argument_error "ERROR: option work-dir not allowed in rebuild mode"
+    fi
+    if [[ $MODE == "auto" ]] ; then
+        [[ ! -z "$SRM_DIR" ]] && argument_error "ERROR: option srm-dir not allowed in auto mode"
+        [[ ! -z "$RECIPE_DIR" ]] || argument_error "ERROR: recipe-dir option missing or empty"
+    fi
+    
+    return
+}
+
+# ensure we have all the programs we need
+bin_check()
+{
+    declare -a missing=()
+    declare -a bins
+    bins=(
+        cat dirname find getopt grep ls mkdir mksquashfs mktemp patch realpath rm rsync sed sort tr xorriso
+    )
+    # ignore findmnt, blkid, stat: they are only used when ensured we are on SystemRescue
+    
+    for bin in "${bins[@]}"; do
+        if ! type "$bin" >/dev/null 2>&1; then
+            missing+=("$bin")
+        fi
+    done
+    
+    if (( ${#missing[@]} )); then
+        echo "ERROR: required binaries missing: ${missing[*]}"
+        echo "Please install them using the package manager of your distribution"
+        exit 1
+    fi
+    
+    return
+}
+
+write_iso_checks()
+{
+    local SOURCE_DIR="$1"
+    local DEST_ISO="$2"
+
+    # verify parameters and environment
+    
+    if ! [[ -f "${SOURCE_DIR}/meta-pvd" ]] || ! [[ -f "${SOURCE_DIR}/meta-cmd" ]] || ! [[ -d "${SOURCE_DIR}/filesystem/" ]]; then
+        echo "ERROR: source dir not in the expected format"
+        exit 3
+    fi
+    
+    if ! [[ -f "${SOURCE_DIR}/filesystem/${ISOHYBRID_MBR}" ]]; then
+        echo "ERROR: isohybrid-mbr file missing in filesystem (${ISOHYBRID_MBR})"
+        exit 3
+    fi
+
+    if [[ -e "${DEST_ISO}" ]] && [[ ! -f "${DEST_ISO}" ]]; then
+        echo "ERROR: iso destination not a file"
+        exit 3
+    fi
+    
+    if [[ -e "${DEST_ISO}" ]]; then
+        if [[ $OVERWRITE -eq 1 ]]; then
+            rm -f "${DEST_ISO}"
+        else
+            echo "ERROR: target iso file already existing (you may want to use --overwrite)"
+            exit 3
+        fi
+    fi
+
+    if ! grep -q "^Publisher Id *: " "${SOURCE_DIR}/meta-pvd"; then 
+        echo "ERROR: meta-pvd missing necessary information or wrong format"
+        exit 3
+    fi
+
+    if ! grep -q "^-volid" "${SOURCE_DIR}/meta-cmd" || \
+       ! grep -q "^-boot_image" "${SOURCE_DIR}/meta-cmd" ; then
+        echo "ERROR: meta-cmd missing necessary information or wrong format"
+        exit 3
+    fi
+
+    # forbid " and \ in meta-cmd as it means very complex quoting, we don't support that
+    if grep -q "\\\\" "${SOURCE_DIR}/meta-cmd" || \
+       grep -q "\"" "${SOURCE_DIR}/meta-cmd"; then
+        echo "ERROR: illegal char in meta-cmd"
+        exit 3
+    fi
+    
+    return
+}
+
+# write_iso_checks() is expected to have succeeded before
+write_iso()
+{
+    local SOURCE_DIR="$1"
+    local DEST_ISO="$2"
+
+    local PUBLISHER=$(grep "^Publisher Id *: " "${SOURCE_DIR}/meta-pvd" | sed -e "s/^Publisher Id *: //")
+    local APP_ID=$(grep "^App Id *: " "${SOURCE_DIR}/meta-pvd" | sed -e "s/^App Id *: //")
+
+    # read commands from meta-cmd file into array, split on space
+    # remove the lines with "-volume_date" and "-boot_image isolinux system_area"
+    # we want the current volume_date be set
+    # we explicitly supply the isohybrid-file because we don't want xorriso having it to extract it from the original file
+    # there is no way to write it out during the read phase, so the write phase would need to read from the original iso file which 
+    # would create unexpected dependencies and complications, so using the path hardcoded in $ISOHYBRID_MBR is the way
+    declare -a XO_PARAMETERS_RAW
+
+    # needs || true because it always returns nonzero
+    read -r -a XO_PARAMETERS_RAW -d "" < <(cat "${SOURCE_DIR}/meta-cmd" | grep -v -E "^(-volume_date|-boot_image isolinux system_area)" ) || true
+   
+    # we now have to sanitize the parameter array: remove single quotes and reconnect the parameters split by spaces within the quotes
+    # we don't want to eval the parameters, because reading from a malicious iso image could trigger code execution
+    # example patterns of what we have to deal with:
+    # -volid 'RESCUE807'
+    # -volid 'RESCUE 807'
+    # -volid 'RESCUE 8 07'
+    # bin_path='/isolinux/isolinux.bin'
+    
+    # relies on " and \ being forbidden, see check in write_iso_checks()
+
+    declare -a XO_PARAMETERS
+    local quote_status=0
+    local quoted_var
+    for i in "${XO_PARAMETERS_RAW[@]}" ; do
+
+        if [[ $quote_status -eq 1 ]]; then
+            if [[ "${i}" = *\'* ]]; then
+                # end of the quote
+                quoted_var="${quoted_var} ${i//\'/}"
+                XO_PARAMETERS+=("${quoted_var}")
+                quote_status=0
+            else
+                # more spaces, quoted section continues
+                quoted_var="${quoted_var} ${i}"
+            fi
+        else
+            if [[ "${i}" = *\'* ]]; then
+                # beginning of a quoted section
+                quoted_var="${i/\'/}"
+                
+                # does the quoted section end in the same array var again?
+                if [[ "${quoted_var}" = *\'* ]]; then
+                    # just remove all quotes and don't continue to the next array var
+                    XO_PARAMETERS+=("${quoted_var//\'/}")
+                else
+                    # the quote continues to the next array var
+                    quote_status=1
+                fi
+            else
+                # no quote, pass variable unchanged
+                XO_PARAMETERS+=("${i}")
+            fi
+        fi
+    done
+
+    # build the iso file
+    xorriso -x\
+            -compliance iso_9660_level=3 \
+            -application_id "${APP_ID}" \
+            -publisher "${PUBLISHER}" \
+            -preparer_id "prepared by sysrescue-customize" \
+            -boot_image isolinux system_area="${SOURCE_DIR}/filesystem/${ISOHYBRID_MBR}" \
+            "${XO_PARAMETERS[@]}" \
+            -outdev "${DEST_ISO}" \
+            $VERBOSE \
+            -map "${SOURCE_DIR}/filesystem/" "/"
+            
+    return
+}
+
+read_iso()
+{
+    local SOURCE_ISO="$1"
+    local DEST_DIR="$2"
+
+    # verify parameters and environment
+
+    if [[ ! -e "${SOURCE_ISO}" ]]; then
+        echo "ERROR: source iso not found"
+        exit 3
+    fi
+
+    # do we have a block device as source? xorriso may need to be convinced to use it
+    if [[ -b "${SOURCE_ISO}" ]]; then
+        SOURCE_ISO="stdio:${SOURCE_ISO}"
+    fi
+
+    if [[ "${DEST_DIR}" == "/" ]]; then
+        echo "ERROR: invalid destination dir"
+        exit 3
+    fi
+
+    # check if we really have an iso file as source and not something else
+    if ! xorriso -drive_access "shared:readonly" -indev "${SOURCE_ISO}" -toc >/dev/null 2>&1 ||
+        xorriso -drive_access "shared:readonly" -indev "${SOURCE_ISO}" -toc 2>&1 | grep -E "(is blank|Drive address .* rejected)"; then
+        echo "ERROR: source is not a valid ISO file"
+        exit 3
+    fi
+    
+    # we need an empty target dir
+    if ( [[ -e "${DEST_DIR}" ]] && ! [[ -d "${DEST_DIR}" ]] ) || \
+       ( [[ -d "${DEST_DIR}" ]] && ! $(find "${DEST_DIR}" -maxdepth 0 -empty -exec echo 1 \; | grep -q 1) );  then
+        if [[ $OVERWRITE -eq 1 ]]; then
+            rm -rf "${DEST_DIR}"
+        else
+            echo "ERROR: target directory already existing and not empty (you may want to use --overwrite)"
+            exit 3
+        fi
+    fi
+    
+    # create target dir if it doesn't exist
+    if ! [[ -d "${DEST_DIR}" ]]; then
+        mkdir -p "${DEST_DIR}"
+    fi
+    mkdir -p "${DEST_DIR}/filesystem"
+
+    xorriso -drive_access "shared:readonly" -indev "${SOURCE_ISO}" -report_system_area cmd $VERBOSE >"${DEST_DIR}/meta-cmd"
+    xorriso -drive_access "shared:readonly" -indev "${SOURCE_ISO}" -pvd_info $VERBOSE >"${DEST_DIR}/meta-pvd"
+    xorriso -osirrox on -drive_access "shared:readonly" -indev "${SOURCE_ISO}" -extract / "${DEST_DIR}/filesystem" $VERBOSE
+    
+    return
+}
+
+create_srm()
+{
+    local SRM_DIR="$1"
+    local DEST_SRM="$2"
+
+    # verify parameters and environment
+
+    if [[ ! -d "${SRM_DIR}" ]]; then
+        echo "ERROR: srm-dir not found"
+        exit 3
+    fi
+
+    if [[ -e "${DEST_SRM}" ]] && [[ ! -f "${DEST_SRM}" ]]; then
+        echo "ERROR: SRM destination not a file"
+        exit 3
+    fi
+    
+    if [[ -e "${DEST_SRM}" ]]; then
+        # we explicitly say that creating SRMs will modify the rebuild source-dir
+        # that also includes deleting/overwriting existing SRMs there
+        # so don't require the --overwrite flag here
+        rm -f "${DEST_SRM}" 
+    fi
+    
+    # is the srm-dir empty?
+    # test after deleting, so an empty source dir will yield no SRM even if one was there before
+    if $(find "${SRM_DIR}" -maxdepth 0 -empty -exec echo 1 \; | grep -q 1);  then
+        # don't create an empty SRM, ignore the whole call instead
+        return
+    fi
+
+    local DEST_DIR=$(dirname "${DEST_SRM}")
+    if [[ ! -d "${DEST_DIR}" ]]; then
+        mkdir -p "${DEST_DIR}"
+    fi
+
+    local squashfs_options=""
+    # load options for the mksquashfs call from options file
+    if [[ -f "${SRM_DIR}/.squashfs-options" ]]; then
+        # strip comment lines, replace newlines with spaces to allow using multiple lines easily
+        squashfs_options=$(cat "${SRM_DIR}/.squashfs-options" | grep -v "^#" | tr '\n' ' ')
+
+        # exclude the options file from the filesystem
+        # excludes must come after other options, so add it after the content of the options file
+        squashfs_options+=" -e .squashfs-options"
+    fi
+
+    # prepare the directory options to be correctly quoted for eval
+    local dir_options="\"${SRM_DIR}\" \"${DEST_SRM}\""
+    
+    # eval the command to allow full parameter quoting and variable expansion in .squashfs-options file
+    # this means the file must be fully trusted, it can easily execute arbitrary commands
+    eval mksquashfs $dir_options -info -comp zstd -exit-on-error $squashfs_options
+
+    return
+}
+
+set_loadsrm_option()
+{
+    local DEST_YAML="$1"
+    
+    if [[ -e "${DEST_YAML}" ]] && [[ ! -f "${DEST_YAML}" ]]; then
+        echo "ERROR: config YAML destination not a file"
+        exit 3
+    fi
+    
+    if [[ -e "${DEST_YAML}" ]]; then
+        # we explicitly say that creating SRMs will modify the rebuild source-dir
+        # that also includes deleting/overwriting existing YAMLs there
+        # so don't require the --overwrite flag here
+        rm -f "${DEST_YAML}" 
+    fi
+    
+    local DEST_DIR=$(dirname "${DEST_YAML}")
+    if [[ ! -d "${DEST_DIR}" ]]; then
+        mkdir -p "${DEST_DIR}"
+    fi
+
+    echo "---" >"${DEST_YAML}"
+    echo "global:" >>"${DEST_YAML}"
+    echo "    loadsrm: true" >>"${DEST_YAML}"
+    
+    return
+}
+
+# check the recipes before beginning to do anything
+recipe_checks()
+{
+    local RECIPE_DIR="$1"
+
+    if [[ ! -d "${RECIPE_DIR}" ]]; then
+        echo "ERROR: recipe dir not existing"
+        exit 3
+    fi
+    
+    local DELETE_ROOT="${RECIPE_DIR}/iso_delete"
+    local ADD_ROOT="${RECIPE_DIR}/iso_add"
+    local CHANGE_SCRIPTS="${RECIPE_DIR}/iso_patch_and_script"
+    local SRM_DIR="${RECIPE_DIR}/build_into_srm"
+    
+    if [[ ! -d "${DELETE_ROOT}" ]] && [[ ! -d "${ADD_ROOT}" ]] && \
+       [[ ! -d "${CHANGE_SCRIPTS}" ]] && [[ ! -d "${SRM_DIR}" ]]; then
+        echo "ERROR: no recipes in recipe-dir, no point in customizing anything"
+        exit 3
+    fi
+
+    if [[ -d "${CHANGE_SCRIPTS}" ]]; then
+        # make sure only sane filenames are used for the scripts and patches
+        # this ensures that they are all executed in a repeatable and predicatable order, regardless of filesystem or OS
+        # be really strict about this
+        local illegal_names=$(ls -1 "${CHANGE_SCRIPTS}" | grep -v -E "^[0-9_a-z-]+$" | grep -v -E "^[0-9_a-z-]+\.patch$")
+        if [[ ! -z "$illegal_names" ]]; then
+            echo "ERROR: illegal change script or patch filename: $illegal_names"
+            echo "only 0-9 a-z _ - are allowed in filenames, patches must end in \".patch\""
+            exit 3
+        fi
+        
+        if find "${CHANGE_SCRIPTS}" -mindepth 1 -type d | grep -q "." ; then
+            echo "ERROR: illegal subdirectory in patch_and_script directory"
+            exit 3
+        fi
+    
+        local SCRIPT
+        for SCRIPT in `ls -1 "${CHANGE_SCRIPTS}" | sort`; do
+            # check name to see if it is a script to be executed or a patch file to be applied
+            if [[ $SCRIPT =~ \.patch$ ]] ; then
+                # a patch
+                if [[ -x "${CHANGE_SCRIPTS}/${SCRIPT}" ]]; then
+                    echo "ERROR: patch ${SCRIPT} is marked executable"
+                    exit 3
+                fi
+            else
+                # must be a script
+                if [[ ! -x "${CHANGE_SCRIPTS}/${SCRIPT}" ]]; then
+                    echo "ERROR: change script ${SCRIPT} not marked executable"
+                    exit 3
+                fi
+            fi
+        done
+    fi
+    
+    return
+}
+
+run_recipe()
+{
+    local RECIPE_DIR="$1"
+    local WORK_DIR="$2"
+
+    ### STEP 1 delete files & dirs
+    # deletion is done first to allow recursive delete first and then to fill in new data later
+    local DELETE_ROOT="${RECIPE_DIR}/iso_delete"
+    if [[ -d "${DELETE_ROOT}" ]]; then
+        local FILE
+        find "${DELETE_ROOT}" -type f -printf '%P\0' 2>/dev/null | while read -d $'\0' FILE
+        do
+            # using -f means nonexistant files are ignored
+            rm -rf "${WORK_DIR}/${FILE}"
+        done
+    fi
+
+    ### STEP 2: add/overwrite files
+    local ADD_ROOT="${RECIPE_DIR}/iso_add"
+    if [[ -d "${ADD_ROOT}" ]]; then
+        rsync -a "${ADD_ROOT}/" "${WORK_DIR}"
+    fi
+    
+    ### STEP 3: patches and scripts
+    local CHANGE_SCRIPTS="${RECIPE_DIR}/iso_patch_and_script"
+    if [[ -d "${CHANGE_SCRIPTS}" ]]; then
+        
+        # $CHANGE_SCRIPTS must have an absolute filename to make it work after pushd below
+        CHANGE_SCRIPTS=$(realpath "${CHANGE_SCRIPTS}")
+        
+        # execute the scripts/patches in alphabetical order
+        # allow to mix patches and scripts for maximum flexibility
+        local SCRIPT
+        local RET=0
+        for SCRIPT in `ls -1 "${CHANGE_SCRIPTS}" | sort`; do
+            # check name to see if it is a script to be executed or a patch file to be applied
+            if [[ $SCRIPT =~ \.patch$ ]] ; then
+                # a patch
+
+                # use the --forward option to never consider a patch being reversed, just error out in that case, do not ask the user
+                patch -p 1 --batch --forward -i "${CHANGE_SCRIPTS}/${SCRIPT}" -d "${WORK_DIR}" || RET=$?
+                
+                if [[ "$RET" -ne 0 ]]; then
+                    echo "Error running patch ${SCRIPT}, returncode $RET, aborting"
+                    exit 4
+                fi
+            else
+                # change scripts are executed from the work-dir, so they can work without knowing about the whole dir-structure
+                pushd "${WORK_DIR}" >/dev/null
+                "${CHANGE_SCRIPTS}/${SCRIPT}" || RET=$?
+                popd >/dev/null
+                
+                if [[ "$RET" -ne 0 ]]; then
+                    echo "Error running change script ${SCRIPT}, returncode $RET, aborting"
+                    exit 4
+                fi
+            fi
+        done
+    fi
+
+    ### STEP 4: create SRM
+    if [[ -d "${RECIPE_DIR}/build_into_srm" ]]; then
+        create_srm "${RECIPE_DIR}/build_into_srm" "${WORK_DIR}/sysresccd/customize.srm"
+        set_loadsrm_option "${WORK_DIR}/sysrescue.d/02-loadsrm.yaml"
+    fi
+    
+    return
+}
+
+#################################
+# execution begins here
+
+bin_check
+parse_args "$@"
+
+if [[ "$MODE" == "unpack" ]] ; then
+    read_iso "$SOURCE" "$DEST"
+elif [[ "$MODE" == "rebuild" ]] ; then
+    write_iso_checks "$SOURCE" "$DEST"
+
+    if [[ ! -z "$SRM_DIR" ]]; then
+        create_srm "$SRM_DIR" "${SOURCE}/filesystem/sysresccd/customize.srm"
+        set_loadsrm_option "${SOURCE}/filesystem/sysrescue.d/02-loadsrm.yaml"
+    fi
+    
+    write_iso "$SOURCE" "$DEST"
+elif [[ "$MODE" == "auto" ]] ; then
+
+    recipe_checks "$RECIPE_DIR"
+    
+    declare TMPDIR=""
+    if [[ -z "$WORK_DIR" ]]; then
+        TMPDIR=$(mktemp --tmpdir="." --directory tmp.XXXXXXXXXX)
+        WORK_DIR=$TMPDIR
+        # errors during main execution will leave the TMPDIR behind
+        # useful for finding out what went wrong, but have to be cleaned manually
+    fi
+    
+    read_iso "$SOURCE" "$WORK_DIR"
+    run_recipe "$RECIPE_DIR" "$WORK_DIR/filesystem"
+    write_iso_checks "$WORK_DIR" "$DEST"
+    write_iso "$WORK_DIR" "$DEST"
+    
+    if [[ ! -z "$TMPDIR" ]]; then
+        rm -rf "$TMPDIR"
+    fi
+fi
+
+exit 0
