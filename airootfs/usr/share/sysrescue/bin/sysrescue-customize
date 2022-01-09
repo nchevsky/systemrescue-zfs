@@ -676,7 +676,7 @@ run_recipe()
     ### STEP 4: create SRM
     if [[ -d "${RECIPE_DIR}/build_into_srm" ]]; then
         create_srm "${RECIPE_DIR}/build_into_srm" "${WORK_DIR}/sysresccd/customize.srm"
-        set_loadsrm_option "${WORK_DIR}/sysrescue.d/02-loadsrm.yaml"
+        set_loadsrm_option "${WORK_DIR}/sysrescue.d/200-customize.yaml"
     fi
     
     return
@@ -695,7 +695,7 @@ elif [[ "$MODE" == "rebuild" ]] ; then
 
     if [[ ! -z "$SRM_DIR" ]]; then
         create_srm "$SRM_DIR" "${SOURCE}/filesystem/sysresccd/customize.srm"
-        set_loadsrm_option "${SOURCE}/filesystem/sysrescue.d/02-loadsrm.yaml"
+        set_loadsrm_option "${SOURCE}/filesystem/sysrescue.d/200-customize.yaml"
     fi
     
     write_iso "$SOURCE" "$DEST"
