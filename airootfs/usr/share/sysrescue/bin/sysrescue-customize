@@ -506,16 +506,28 @@ create_srm()
     fi
 
     local squashfs_options=""
+    local squashfs_exclude=""
+
+    # did the user specify a "pseudo-file"? a list with mode, uid, gid etc. overrides for files
+    if [[ -f "${SRM_DIR}/.squashfs-pseudo" ]]; then
+        squashfs_options+=" -pf \"${SRM_DIR}/.squashfs-pseudo\" "
+
+        # exclude the pseudeo file from the filesystem
+        squashfs_exclude+=" -e .squashfs-pseudo"
+    fi
+    
     # load options for the mksquashfs call from options file
     if [[ -f "${SRM_DIR}/.squashfs-options" ]]; then
         # strip comment lines, replace newlines with spaces to allow using multiple lines easily
-        squashfs_options=$(cat "${SRM_DIR}/.squashfs-options" | grep -v "^#" | tr '\n' ' ')
+        squashfs_options+=$(cat "${SRM_DIR}/.squashfs-options" | grep -v "^#" | tr '\n' ' ')
 
         # exclude the options file from the filesystem
-        # excludes must come after other options, so add it after the content of the options file
-        squashfs_options+=" -e .squashfs-options"
+        squashfs_exclude+=" -e .squashfs-options"
     fi
 
+    # excludes must come after all other options
+    squashfs_options+="$squashfs_exclude"
+    
     # prepare the directory options to be correctly quoted for eval
     local dir_options="\"${SRM_DIR}\" \"${DEST_SRM}\""
     
