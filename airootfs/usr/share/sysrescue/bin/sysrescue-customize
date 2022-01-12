@@ -34,7 +34,7 @@ print_help()
     echo "    [-o|--overwrite] [-v|--verbose]"
     echo ""
     echo "Usage in rebuild mode:"
-    echo "systemrescue-customize --rebuild -s|-source=<DIR> -d|--dest=<ISO-FILE>"
+    echo "systemrescue-customize --rebuild -s|--source=<DIR> -d|--dest=<ISO-FILE>"
     echo "    [-m|--srm-dir=<DIR>] [-o|--overwrite] [-v|--verbose]"
     echo ""
     echo "Usage in auto-mode:"
