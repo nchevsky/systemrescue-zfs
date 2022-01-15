@@ -5,7 +5,7 @@
 # Author: Gerd v. Egidy
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
-# see https://www.system-rescue.org/scripts/systemrescue-customize/ for details
+# see https://www.system-rescue.org/scripts/sysrescue-customize/ for details
 
 # bash-checks right at the top due to many bashisms in the rest of the script
 if [ -n "$POSIXLY_CORRECT" ] || [ -z "$BASH_VERSION" ]; then
@@ -27,18 +27,18 @@ ISOHYBRID_MBR="isolinux/isohdpfx.bin"
 
 print_help()
 {
-    echo "systemrescue-customize - customize an existing SystemRescue iso image"
+    echo "sysrescue-customize - customize an existing SystemRescue iso image"
     echo ""
     echo "Usage in unpack mode:"
-    echo "systemrescue-customize --unpack -s|--source=<ISO-FILE> -d|--dest=<DIR>"
+    echo "sysrescue-customize --unpack -s|--source=<ISO-FILE> -d|--dest=<DIR>"
     echo "    [-o|--overwrite] [-v|--verbose]"
     echo ""
     echo "Usage in rebuild mode:"
-    echo "systemrescue-customize --rebuild -s|--source=<DIR> -d|--dest=<ISO-FILE>"
+    echo "sysrescue-customize --rebuild -s|--source=<DIR> -d|--dest=<ISO-FILE>"
     echo "    [-m|--srm-dir=<DIR>] [-o|--overwrite] [-v|--verbose]"
     echo ""
     echo "Usage in auto-mode:"
-    echo "systemrescue-customize --auto -s|--source=<ISO-FILE> -d|--dest=<ISO-FILE>"
+    echo "sysrescue-customize --auto -s|--source=<ISO-FILE> -d|--dest=<ISO-FILE>"
     echo "    -r|--recipe-dir=<DIR> [-w|--work-dir=<DIR>] [-o|--overwrite] [-v|--verbose]"
     echo ""
     echo "--source=<ISO or DIR>       unpack and auto: iso file (or raw block device)"
@@ -54,8 +54,12 @@ print_help()
     echo "                            SystemRescueModule (SRM). The --source dir will"
     echo "                            be modified when this option is used."
     echo "--recipe-dir=<DIR>          Directory that contains a recipe for fully"
-    echo "                            automatic customization. See SystemRescue manual"
-    echo "                            for details."
+    echo "                            automatic customization. Uses these subdirectories:"
+    echo "                            iso_delete (Step 1: files there trigger deletes)"
+    echo "                            iso_add  (Step 2: add or overwrite)"
+    echo "                            iso_patch_and_script (Step 3: patch -p1 or scripts)"
+    echo "                            build_into_srm (Step 4: like --srm-dir option)"
+    echo "                            See SystemRescue manual for more details."
     echo "--work-dir=<DIR>            Use this as a temporary work directory for"
     echo "                            unpacking and rebuilding."
     echo "--overwrite                 Without this option the target directories or"
@@ -63,7 +67,7 @@ print_help()
     echo "                            will overwrite existing files without questions."
     echo "--verbose                   Verbose output when running xorriso."
     echo ""
-    echo "See https://www.system-rescue.org/scripts/systemrescue-customize/ for details."
+    echo "See https://www.system-rescue.org/scripts/sysrescue-customize/ for details."
     
     return
 }
