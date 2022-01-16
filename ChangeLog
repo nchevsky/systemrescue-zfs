@@ -2,6 +2,20 @@ SystemRescue ChangeLog
 ======================
 
 -------------------------------------------------------------------------------
+9.00 (YYYY-MM-DD):
+-------------------------------------------------------------------------------
+* Updated the kernel to the Long-Term-Supported linux-5.15
+* The new kernel brings the NTFS3 module which provides better NTFS support
+* The system comes with a copy of the website as an offline manual (Gerd v. Egidy)
+* Added sysrescue-customize script to create custom ISO images (Gerd v. Egidy)
+* Initial support for configuring the system with YAML files (#170)
+* Support for configuring autorun with the new YAML configuration files
+* Replaced the mesa package with a minimal alternative to save 52MB (#241)
+* Converted the bash system initialisation script to python (#170)
+* Boot with option "iomem=relaxed" by default so flashrom works (Gerd v. Egidy)
+* Removed XOrg driver "xf86-video-qxl" as it is currently not stable (#235)
+
+-------------------------------------------------------------------------------
 8.07 (2021-12-19):
 -------------------------------------------------------------------------------
 * Updated kernel to the Long-Term-Supported linux-5.10.87
