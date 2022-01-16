@@ -2,10 +2,10 @@ SystemRescue ChangeLog
 ======================
 
 -------------------------------------------------------------------------------
-9.00 (YYYY-MM-DD):
+9.00 (2022-01-16):
 -------------------------------------------------------------------------------
-* Updated the kernel to the Long-Term-Supported linux-5.15
-* The new kernel brings the NTFS3 module which provides better NTFS support
+* Updated the kernel to the Long-Term-Supported linux-5.15.14
+* The new kernel brings the ntfs3 module which provides better NTFS support
 * The system comes with a copy of the website as an offline manual (Gerd v. Egidy)
 * Added sysrescue-customize script to create custom ISO images (Gerd v. Egidy)
 * Initial support for configuring the system with YAML files (#170)
