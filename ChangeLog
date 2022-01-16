@@ -12,8 +12,9 @@ SystemRescue ChangeLog
 * Support for configuring autorun with the new YAML configuration files
 * Replaced the mesa package with a minimal alternative to save 52MB (#241)
 * Converted the bash system initialisation script to python (#170)
-* Boot with option "iomem=relaxed" by default so flashrom works (Gerd v. Egidy)
 * Removed XOrg driver "xf86-video-qxl" as it is currently not stable (#235)
+* Bring back accidently removed package inetutils (telnet, ftp, hostname,...)
+* Added packages: aq, libisoburn, patch, python-llfuse, python-yaml, rdiff-backup
 
 -------------------------------------------------------------------------------
 8.07 (2021-12-19):
