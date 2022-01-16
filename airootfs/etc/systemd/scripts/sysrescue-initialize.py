@@ -30,6 +30,8 @@ config_global = {
     'vncpass': None,
 }
 
+config_ca_trust = { }
+
 # ==============================================================================
 # Load configuration from the yaml files
 # ==============================================================================
@@ -46,6 +48,10 @@ def parse_config_file(yamlfile):
                 for entry in config_global:
                     if entry in curglobal:
                         config_global[entry] = curglobal[entry]
+            if 'ca-trust' in curconfig:
+                # later yaml files take precedence, overwrite if existing
+                for key, value in curconfig['ca-trust'].items():
+                    config_ca_trust[key] = value
             return True
         except yaml.YAMLError as err:
             print(err)
@@ -226,6 +232,22 @@ if config_global['dovnc'] == True:
     file.write("""[ -f ~/.vnc/passwd ] && pwopt="-usepw" || pwopt="-nopw"\n""")
     file.write("""x11vnc $pwopt -nevershared -forever -logfile /var/log/x11vnc.log &\n""")
     file.close()
+
+# ==============================================================================
+# Configure custom CA certificates
+# ==============================================================================
+ca_anchor_path = "/etc/ca-certificates/trust-source/anchors/"
+
+if config_ca_trust:
+    print(f"====> Adding trusted CA certificates ...")
+
+    for name, cert in sorted(config_ca_trust.items()):
+        print (f"Adding certificate '{name}' ...")
+        with open(os.path.join(ca_anchor_path, name + ".pem"), "w") as certfile:
+            certfile.write(cert)
+
+    print(f"Updating CA trust configuration ...")
+    p = subprocess.run(["update-ca-trust"], text=True)
 
 # ==============================================================================
 # End of the script
