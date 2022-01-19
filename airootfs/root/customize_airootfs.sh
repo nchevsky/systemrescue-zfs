@@ -64,6 +64,10 @@ rm -rf /usr/share/gir*
 rm -rf /usr/include
 rm -rf /usr/share/man/man3
 
+# save some more space by removing large & unnecessary files
+rm -f /lib/modules/*/vmlinuz
+rm -f /usr/share/grub/themes/starfield/starfield.png
+
 # Cleanup XFCE menu
 sed -i '2 i NoDisplay=true' /usr/share/applications/{xfce4-mail-reader,xfce4-web-browser}.desktop
 sed -i "s/^\(Categories=\).*\$/Categories=Utility;/" /usr/share/applications/{geany,*ristretto*,*GHex*}.desktop

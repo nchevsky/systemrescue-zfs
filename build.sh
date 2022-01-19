@@ -225,10 +225,9 @@ make_customize_airootfs() {
     find ${work_dir}/${arch}/airootfs/usr/lib -type f -name "lib*.so.*" -exec strip --strip-all {} \;
 
     # recompress kernel modules to save space (#247)
-    echo "Recompressing kernel modules ..."
+    echo "Uncompressing kernel modules ..."
     kernelver=$(basename ${work_dir}/${arch}/airootfs/usr/lib/modules/*)
     find ${work_dir}/${arch}/airootfs/usr/lib/modules/${kernelver} -type f -name "*.ko.zst" -exec zstd -q -d --rm {} \;
-    find ${work_dir}/${arch}/airootfs/usr/lib/modules/${kernelver} -type f -name "*.ko" -exec xz {} \;
     depmod --all --basedir=${work_dir}/${arch}/airootfs/usr ${kernelver}
 }
 
