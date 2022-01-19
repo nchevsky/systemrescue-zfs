@@ -5,6 +5,7 @@ SystemRescue ChangeLog
 9.01 (YYYY-MM-DD):
 -------------------------------------------------------------------------------
 * Support for adding Certification Authorities (CAs) via YAML config (Gerd v. Egidy)
+* Recompress kernel modules using xz to reduce the size of the ISO image (#247)
 
 -------------------------------------------------------------------------------
 9.00 (2022-01-16):
