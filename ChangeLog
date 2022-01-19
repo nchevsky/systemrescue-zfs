@@ -5,7 +5,8 @@ SystemRescue ChangeLog
 9.01 (YYYY-MM-DD):
 -------------------------------------------------------------------------------
 * Support for adding Certification Authorities (CAs) via YAML config (Gerd v. Egidy)
-* Recompress kernel modules using xz to reduce the size of the ISO image (#247)
+* Uncompress kernel modules so the squashfs compression provides a better ratio (#247)
+* Optimized the initramfs compression to reduce the size of the ISO (Gerd v. Egidy)
 
 -------------------------------------------------------------------------------
 9.00 (2022-01-16):
