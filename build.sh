@@ -18,6 +18,9 @@ gpg_key=
 arch="$(uname -m)"
 sfs_comp="xz"
 sfs_opts="-Xbcj x86 -b 512k -Xdict-size 512k"
+sfs_comp_devel="zstd"
+sfs_opts_devel="-Xcompression-level 5"
+devel_build=
 snapshot_date=""
 default_kernel_param="iomem=relaxed"
 documentation_dir="/usr/share/sysrescue/html"
@@ -71,6 +74,7 @@ _usage ()
     echo "    -o <out_dir>       Set the output directory"
     echo "                        Default: ${out_dir}"
     echo "    -s <YYYY/MM/DD>    Set the snapshot date to use the repository from"
+    echo "    -d                 Devel build: faster build time with low compression"
     echo "    -v                 Enable verbose output"
     echo "    -h                 This help message"
     exit ${1}
@@ -241,7 +245,19 @@ make_setup_mkinitcpio() {
         cp /usr/lib/initcpio/install/${_hook} ${work_dir}/${arch}/airootfs/etc/initcpio/install
     done
     cp /usr/lib/initcpio/install/archiso_kms ${work_dir}/${arch}/airootfs/etc/initcpio/install
-    cp ${script_path}/mkinitcpio.conf ${work_dir}/${arch}/airootfs/etc/mkinitcpio-archiso.conf
+    
+    if [ -z "$devel_build" ]; then
+        # release build, high compression but slower
+        sed "s|^COMPRESSION_RELEASE=|COMPRESSION=|g;
+             s|^COMPRESSION_OPTIONS_RELEASE=|COMPRESSION_OPTIONS=|g;" \
+             ${script_path}/mkinitcpio.conf > ${work_dir}/${arch}/airootfs/etc/mkinitcpio-archiso.conf
+    else
+        # devel build, low compression but fast build time
+        sed "s|^COMPRESSION_DEVEL=|COMPRESSION=|g;
+             s|^COMPRESSION_OPTIONS_DEVEL=|COMPRESSION_OPTIONS=|g;" \
+             ${script_path}/mkinitcpio.conf > ${work_dir}/${arch}/airootfs/etc/mkinitcpio-archiso.conf
+    fi
+    
     gnupg_fd=
     if [[ ${gpg_key} ]]; then
       gpg --export ${gpg_key} >${work_dir}/gpgkey
@@ -345,6 +361,13 @@ make_efiboot() {
 
 # Build airootfs filesystem image
 make_prepare() {
+
+    if [ -n "$devel_build" ]; then
+        # devel build, low compression but fast build time
+        sfs_comp="$sfs_comp_devel"
+        sfs_opts="$sfs_opts_devel"
+    fi
+
     cp -a -l -f ${work_dir}/${arch}/airootfs ${work_dir}
     setarch ${arch} mkarchiso ${verbose} -w "${work_dir}" -D "${install_dir}" pkglist
     setarch ${arch} mkarchiso ${verbose} -w "${work_dir}" -D "${install_dir}" ${gpg_key:+-g ${gpg_key}} -c ${sfs_comp} -t "${sfs_opts}" prepare
@@ -377,7 +400,7 @@ if [[ ${EUID} -ne 0 ]]; then
     _usage 1
 fi
 
-while getopts 'N:V:L:P:A:D:w:o:g:s:vh' arg; do
+while getopts 'N:V:L:P:A:D:w:o:g:s:vdh' arg; do
     case "${arg}" in
         N) iso_name="${OPTARG}" ;;
         V) iso_version="${OPTARG}" ;;
@@ -390,6 +413,7 @@ while getopts 'N:V:L:P:A:D:w:o:g:s:vh' arg; do
         g) gpg_key="${OPTARG}" ;;
         s) snapshot_date="${OPTARG}" ;;
         v) verbose="-v" ;;
+        d) devel_build="-d" ;;
         h) _usage 0 ;;
         *)
            echo "Invalid argument '${arg}'"
