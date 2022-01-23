@@ -8,6 +8,7 @@ SystemRescue ChangeLog
 * Uncompress kernel modules so the squashfs compression provides a better ratio (#247)
 * Optimized the initramfs compression to reduce the size of the ISO (Gerd v. Egidy)
 * Added development build option: faster build times but lower compression (Gerd v. Egidy)
+* Remove Q-Logic Fibrechannel/Infiniband HBA firmware to save space (#256)
 
 -------------------------------------------------------------------------------
 9.00 (2022-01-16):
