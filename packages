@@ -104,6 +104,8 @@ libisoburn
 libvncserver
 linux-atm
 linux-firmware
+linux-firmware-bnx2x
+linux-firmware-marvell
 linux-lts
 lm_sensors
 localepurge
