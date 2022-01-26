@@ -1,4 +1,3 @@
-aq
 alsa-utils
 amd-ucode
 archinstall
@@ -97,6 +96,7 @@ ipw2100-fw
 ipw2200-fw
 irssi
 jfsutils
+jq
 keepassxc
 less
 lftp
@@ -113,6 +113,8 @@ lshw
 lsof
 lsscsi
 lua
+lua-dkjson
+lua-yaml
 lvm2
 lz4
 lzip

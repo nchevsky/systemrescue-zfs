@@ -34,6 +34,7 @@ systemctl enable ip6tables.service
 systemctl enable pacman-init.service
 systemctl enable choose-mirror.service
 systemctl enable sshd.service
+systemctl enable sysrescue-configuration.service
 systemctl enable sysrescue-initialize.service
 systemctl enable sysrescue-autorun.service
 systemctl enable qemu-guest-agent.service

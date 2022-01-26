@@ -1,0 +1,14 @@
+#!/bin/bash
+
+build() {
+    add_file "/usr/bin/sysrescue-configuration.lua"
+    add_binary "/usr/bin/lua"
+    add_full_dir "/usr/lib/lua"
+    add_full_dir "/usr/share/lua"
+}
+
+help() {
+    cat <<HELPEOF
+This hook allows the configuration processing script to be installed with all its dependencies
+HELPEOF
+}
