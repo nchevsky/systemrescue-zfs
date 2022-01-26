@@ -11,6 +11,7 @@
 # 2021-07-07: Alexander Mahr --> added 'ar_attempts'
 # 2022-01-09: Francois Dupoux --> added support for yaml configuration
 # 2022-01-09: Francois Dupoux --> option 'autoruns=' renamed 'ar_suffixes='
+# 2022-01-23: Francois Dupoux --> use the generated effective configuration file
 #
 # ----------------------- autorun exec rules: ---------------------------------
 # - pass 'ar_source=/dev/fd#' to request floppy device test
@@ -29,7 +30,7 @@
 # - if option 'ar_ignorefail' is used, do not stop autorun if a script failed
 # - if option 'ar_disable' is used, absolutely no autorun script will be run
 
-import sys, os, re, subprocess, logging, time, glob, yaml
+import sys, os, re, subprocess, logging, time, glob, json
 
 # ------------------------ initialize internal variables -----------------------
 pidfile='/run/autorun.pid'
@@ -38,18 +39,9 @@ autorunlog=basedir+'/log'
 autorunmnt=basedir+'/mnt'
 autoruntmp=basedir+'/tmp'
 defaultsrc=['/run/archiso/bootmnt/autorun','/run/archiso/bootmnt','/run/archiso/copytoram/autorun','/run/archiso/copytoram','/var/autorun/cdrom','/root','/usr/share/sys.autorun']
+effectivecfg="/etc/sysrescue/sysrescue-effective-config.json"
 autorunfiles=[]
-
-# ------------------------ default autorun parameters --------------------------
-config = {
-    'ar_disable': False,
-    'ar_nowait': False,
-    'ar_nodel': False,
-    'ar_ignorefail': False,
-    'ar_attempts': 1,
-    'ar_source': '',
-    'ar_suffixes': ','.join(list('0123456789ABCDEF')),
-}
+config = {}
 
 # ----------------------- functions definitions --------------------------------
 def writemsg(message):
@@ -103,54 +95,24 @@ def search_autoruns(dirname, suffixes, copyfilefct):
             found+=1
     return found
 
-def parse_config_file(yamlfile):
-    logging.info(f"Parsing yaml file: {yamlfile} ...")
-    with open(yamlfile) as myfile:
-        try:
-            curconfig = yaml.safe_load(myfile)
-            if 'autorun' in curconfig:
-                curautorun = curconfig['autorun']
-                for entry in config:
-                    if entry in curautorun:
-                        config[entry] = curautorun[entry]
-            return True
-        except yaml.YAMLError as err:
-            writemsg(err)
-            return False
-
 def main():
         errcnt=0 # in case no autorun executed
         logging.basicConfig(filename='/var/log/sysrescue-autorun.log', format='%(asctime)s %(message)s', level=logging.DEBUG)
         writemsg('Initializing autorun ...')
 
-        # ---- parse options passed in the configuration file
-        writemsg(f"Loading configuration from yaml files located on the boot device ...")
-        yamlconfdirs = ["/run/archiso/bootmnt/sysrescue.d", "/run/archiso/copytoram/sysrescue.d"]
-        for yamlconfdir in yamlconfdirs:
-            if os.path.isdir(yamlconfdir):
-                conffiles = glob.glob(os.path.join(yamlconfdir, '*.[Yy][Aa][Mm][Ll]'), recursive=True)
-                conffiles.sort() # Load yaml files in the alphabetical order
-                for curfile in conffiles:
-                    parse_config_file(curfile)
+        # ---- read the effective configuration file
+        if os.path.exists(effectivecfg) == False:
+            print (f"Failed to find effective configuration file in {effectivecfg}")
+            sys.exit(1)
+        with open(effectivecfg) as file:
+            fullcfg = json.load(file)
+            config = fullcfg['autorun']
+            #print(json.dumps(config, indent=4))
 
-        # ---- parse options passed on the boot command line
+        # ---- parse legacy options passed on the boot command line
         for curopt in open("/proc/cmdline","r").read().split():
-            if re.match('^ar_nowait$', curopt):
-                config['ar_nowait'] = True
-            if re.match('^ar_nodel$', curopt):
-                config['ar_nodel'] = True
-            if re.match('^ar_ignorefail$', curopt):
-                config['ar_ignorefail'] = True
-            if re.match('^ar_disable$', curopt):
-                config['ar_disable'] = True
-            if re.match('^ar_source=', curopt):
-                config['ar_source'] = curopt.replace('ar_source=','')
-            if re.match(r'^ar_attempts=\d+$', curopt):
-                config['ar_attempts'] = int(curopt.replace('ar_attempts=',''))
-            if re.match('^autoruns=', curopt): # Legacy name for 'ar_suffixes'
+            if re.match('^autoruns=', curopt): # "autoruns" is the legacy name for 'ar_suffixes'
                 config['ar_suffixes'] = curopt.replace('autoruns=','')
-            if re.match('^ar_suffixes=', curopt): # New name for 'autoruns'
-                config['ar_suffixes'] = curopt.replace('ar_suffixes=','')
 
         # ---- show the effective configuration
         logging.info(f"Showing the effective autorun configuration ...")

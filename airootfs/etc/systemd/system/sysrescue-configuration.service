@@ -1,0 +1,11 @@
+[Unit]
+Description=Determine SystemRescue effective configuration
+Before=sysrescue-initialize
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/sysrescue-configuration.lua
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target

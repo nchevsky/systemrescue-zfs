@@ -1,42 +1,36 @@
 diff --git a/archiso/initcpio/hooks/archiso b/archiso/initcpio/hooks/archiso
-index 51dfcc1..fe709cf 100644
+index 853652e..53215eb 100644
 --- a/archiso/initcpio/hooks/archiso
 +++ b/archiso/initcpio/hooks/archiso
-@@ -197,6 +197,38 @@ archiso_mount_handler() {
+@@ -197,6 +197,32 @@ archiso_mount_handler() {
          fi
      fi
-
-+    msg ":: Attempt to read configuration from yaml files ..."
-+
-+    if ls -l /run/archiso/bootmnt/sysrescue.d/*.[Yy][Aa][Mm][Ll] >/dev/null 2>/dev/null
+ 
++    msg ":: Execute the configuration processing script ..."
++    jsonconfig="/etc/sysrescue/sysrescue-effective-config.json"
++    if ! /usr/bin/sysrescue-configuration.lua > /tmp/sysrescue-configuration.log 2>&1
 +    then
-+        echo "Found yaml files in /run/archiso/bootmnt/sysrescue.d"
-+        for curfile in /run/archiso/bootmnt/sysrescue.d/*.[Yy][Aa][Mm][Ll]
-+        do
-+            echo "Parsing ${curfile} ..."
-+            shortname=$(basename ${curfile})
-+
-+            # Attempt to find boolean entries in the yaml configuration file
-+            for curentry in "copytoram" "checksum" "loadsrm"
-+            do
-+                if value=$(cat ${curfile} | aq -i yaml -o toml ".global.${curentry}" 2>/dev/null)
-+                then
-+                    if [[ "${value}" == 'true' ]] || [[ "${value}" == 'y' ]] || [[ "${value}" == 'yes' ]]
-+                    then
-+                        echo "Entry '.global.${curentry}' enabled in config: value='${value}'"
-+                        eval "${curentry}='y'"
-+                    elif [[ "${value}" == 'false' ]] || [[ "${value}" == 'n' ]] || [[ "${value}" == 'no' ]]
-+                    then
-+                        echo "Entry '.global.${curentry}' disabled in config: value='${value}'"
-+                        # Do not change curentry as this would override values passed using the boot command line
-+                    else
-+                        echo "ERROR: Found invalid value for '.global.${curentry}': value='${value}'"
-+                        sleep 8
-+                    fi
-+                fi
-+            done
-+        done
++        echo "ERROR: The configuration processing script has failed"
++        cat /tmp/sysrescue-configuration.log
++        sleep 20
 +    fi
++
++    msg ":: Define early boot options based on the configuration ..."
++    for curentry in "copytoram" "checksum" "loadsrm"
++    do
++        if value=$(jq --raw-output ".global.${curentry}" ${jsonconfig} 2>/dev/null)
++        then
++            if [[ "${value}" == 'true' ]]; then
++                echo "Entry '.global.${curentry}' enabled in config: value='${value}'"
++                eval "${curentry}='y'"
++            elif [[ "${value}" == 'false' ]]; then
++                echo "Entry '.global.${curentry}' disabled in config: value='${value}'"
++            else
++                echo "ERROR: Found invalid value for '.global.${curentry}': value='${value}'"
++                sleep 8
++            fi
++        fi
++    done
 +
      if [[ "${checksum}" == "y" ]]; then
          if [[ -f "/run/archiso/bootmnt/${archisobasedir}/${arch}/airootfs.sha512" ]]; then
