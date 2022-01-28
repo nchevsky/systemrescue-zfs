@@ -78,7 +78,9 @@ config = {
         ['ar_source'] = "",
         ['ar_suffixes'] = "0,1,2,3,4,5,6,7,8,9,A,B,C,D,E,F",
     },
-    ["ca-trust"] = {},
+    ["sysconfig"] = {
+        ["ca-trust"] = {},
+    },
 }
 
 -- ==============================================================================
@@ -94,21 +96,11 @@ for _, confdir in ipairs(yamlconfdirs) do
             local curconfig = yaml.loadpath(curfile)
             --print("++++++++++++++\n"..yaml.dump(curconfig).."++++++++++++++\n")
             if curconfig ~= nil then
-                -- Override specific pre-defined options
-                for _, scope in ipairs({"global", "autorun"}) do
-                    for key, val in pairs(config[scope]) do
+                for scope, entries in pairs(config) do
+                    for key, val in pairs(entries) do
                         if (curconfig[scope] ~= nil) and (curconfig[scope][key] ~= nil) then
                             print("- Overriding config['"..scope.."']['"..key.."'] with the value from the yaml file")
                             config[scope][key] = curconfig[scope][key]
-                        end
-                    end
-                end
-                -- Populate additional items
-                for _, scope in ipairs({"ca-trust"}) do
-                    if curconfig[scope] ~= nil then
-                        for key, val in pairs(curconfig[scope]) do
-                            print("- Setting config['"..scope.."']['"..key.."'] with the value from the yaml file")
-                            config[scope][key] = val
                         end
                     end
                 end

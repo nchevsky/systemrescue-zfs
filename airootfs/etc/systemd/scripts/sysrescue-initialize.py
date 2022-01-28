@@ -140,10 +140,10 @@ if config['global']['dovnc'] == True:
 # ==============================================================================
 ca_anchor_path = "/etc/ca-certificates/trust-source/anchors/"
 
-if config['ca-trust']:
+if config['sysconfig']['ca-trust']:
     print(f"====> Adding trusted CA certificates ...")
 
-    for name, cert in sorted(config['ca-trust'].items()):
+    for name, cert in sorted(config['sysconfig']['ca-trust'].items()):
         print (f"Adding certificate '{name}' ...")
         with open(os.path.join(ca_anchor_path, name + ".pem"), "w") as certfile:
             certfile.write(cert)
