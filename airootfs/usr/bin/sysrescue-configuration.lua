@@ -50,6 +50,23 @@ function list_config_files(path)
     return results
 end
 
+function search_cmdline_option(optname)
+    local result = nil
+    local cmdline = read_file_contents("/proc/cmdline")
+    for curopt in cmdline:gmatch("%S+") do
+        optmatch1 = string.match(curopt, "^"..optname.."$")
+        _, _, optmatch2 = string.find(curopt, "^"..optname.."=([^%s]+)$")
+        if (optmatch1 ~= nil) or (optmatch2 == 'y') or (optmatch2 == 'yes') or (optmatch2 == 'true') then
+            result = true
+        elseif (optmatch2 == 'n') or (optmatch2 == 'no') or (optmatch2 == 'false') then
+            result = false
+        elseif (optmatch2 ~= nil) then
+            result = optmatch2
+        end
+    end
+    return result
+end
+
 -- ==============================================================================
 -- Define the default configuration
 -- ==============================================================================
@@ -115,27 +132,18 @@ end
 -- Override the configuration with values passed on the boot command line
 -- ==============================================================================
 print ("====> Overriding the configuration with options passed on the boot command line ...")
-local cmdline = read_file_contents("/proc/cmdline");
-for curopt in cmdline:gmatch("%S+") do
-    --print ("Found option on the boot command line: "..curopt)
-    for _, scope in ipairs({"global", "autorun"}) do
-        for key,val in pairs(config[scope]) do
-            optmatch1 = string.match(curopt, "^"..key.."$")
-            _, _, optmatch2 = string.find(curopt, "^"..key.."=([^%s]+)$")
-            if type(val) == "boolean" then
-                if (optmatch1 ~= nil) or (optmatch2 == 'y') or (optmatch2 == 'yes') or (optmatch2 == 'true') then
-                    print("- Option '"..key.."' has been enabled on the boot command line")
-                    config[scope][key] = true
-                elseif (optmatch2 == 'n') or (optmatch2 == 'no') or (optmatch2 == 'false') then
-                    print("- Option '"..key.."' has been disabled on the boot command line")
-                    config[scope][key] = false
-                end
-            else
-                if optmatch2 ~= nil then
-                    print("- Option '"..key.."' has been defined on the boot command line")
-                    config[scope][key] = optmatch2
-                end
-            end
+for _, scope in ipairs({"global", "autorun"}) do
+    for key,val in pairs(config[scope]) do
+        optresult = search_cmdline_option(key)
+        if optresult == true then
+            print("- Option '"..key.."' has been enabled on the boot command line")
+            config[scope][key] = optresult
+        elseif optresult == false then
+            print("- Option '"..key.."' has been disabled on the boot command line")
+            config[scope][key] = optresult
+        elseif optresult ~= nil then
+            print("- Option '"..key.."' has been defined as '"..optresult.."' on the boot command line")
+            config[scope][key] = optresult
         end
     end
 end
@@ -156,6 +164,10 @@ output_filename = "sysrescue-effective-config.json"
 output_fullpath = output_location.."/"..output_filename
 lfs.mkdir(output_location)
 jsoncfgfile = io.open(output_fullpath, "w")
+if jsoncfgfile == nil then
+    print ("ERROR: Failed to create effective configuration file in "..output_fullpath)
+    os.exit(1)
+end
 jsoncfgfile:write(jsoncfgtxt)
 jsoncfgfile:close()
 os.execute("chmod 700 "..output_location)
