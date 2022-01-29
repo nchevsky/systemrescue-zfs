@@ -10,6 +10,7 @@ SystemRescue ChangeLog
 * Added development build option: faster build times but lower compression (Gerd v. Egidy)
 * Remove Q-Logic Fibrechannel/Infiniband HBA firmware to save space (#256)
 * Implemented a script to determine the effective configuration from yaml files (#251)
+* Added boot option 'sysrescuecfg' to control how the configuration is loaded (#254)
 
 -------------------------------------------------------------------------------
 9.00 (2022-01-16):
