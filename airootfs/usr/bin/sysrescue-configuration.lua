@@ -27,6 +27,7 @@ local json = require("dkjson")
 -- ==============================================================================
 -- Utility functions
 -- ==============================================================================
+-- Read a file and return all its contents
 function read_file_contents(path)
     local file = io.open(path, "rb")
     if not file then
@@ -37,34 +38,69 @@ function read_file_contents(path)
     return content
 end
 
-function list_config_files(path)
+-- Return true if the item is present in the list or false otherwise
+function item_in_list(item, list)
+    for _, curitem in ipairs(list) do
+        if (curitem == item) then
+            return true
+        end
+    end
+    return false
+end
+
+-- Return the number of items in a table
+function get_table_size(mytable)
+    size = 0
+    for _ in pairs(mytable) do
+        size = size + 1
+    end
+    return size
+end
+
+-- Return a list of files with a yaml extension found in the directory 'dirname'
+-- If 'filenames' is an empty list then it will return all files which have been found
+-- If 'filenames' is not empty then it will only return files with a name present in the list
+function list_config_files(dirname, filenames)
     local results = {}
-    for curfile in lfs.dir(path) do
-        fullpath = path.."/"..curfile
+    for curfile in lfs.dir(dirname) do
+        fullpath = dirname.."/"..curfile
         filetype = lfs.attributes(fullpath, "mode")
-        if filetype == "file" and curfile:match(".[Yy][Aa][Mm][Ll]$") then
-            table.insert(results, fullpath)
+        if (filetype == "file") and curfile:match(".[Yy][Aa][Mm][Ll]$") then
+            if (get_table_size(filenames) == 0) or item_in_list(curfile, filenames) then
+                table.insert(results, fullpath)
+            end
         end
     end
     table.sort(results)
     return results
 end
 
-function search_cmdline_option(optname)
-    local result = nil
+-- Attempt to find the option 'optname' on the boot command line and return its value
+-- If 'multiple' is false then it will return the value of the last occurence found or nil
+-- If 'multiple' is true then it will return a list of all values passed or an empty list
+function search_cmdline_option(optname, multiple)
+    local result_single = nil
+    local result_multiple = {}
     local cmdline = read_file_contents("/proc/cmdline")
     for curopt in cmdline:gmatch("%S+") do
         optmatch1 = string.match(curopt, "^"..optname.."$")
         _, _, optmatch2 = string.find(curopt, "^"..optname.."=([^%s]+)$")
         if (optmatch1 ~= nil) or (optmatch2 == 'y') or (optmatch2 == 'yes') or (optmatch2 == 'true') then
-            result = true
+            result_single = true
+            table.insert(result_multiple, true)
         elseif (optmatch2 == 'n') or (optmatch2 == 'no') or (optmatch2 == 'false') then
-            result = false
+            result_single = false
+            table.insert(result_multiple, false)
         elseif (optmatch2 ~= nil) then
-            result = optmatch2
+            result_single = optmatch2
+            table.insert(result_multiple, optmatch2)
         end
     end
-    return result
+    if multiple == true then
+        return result_multiple
+    else
+        return result_single
+    end
 end
 
 -- ==============================================================================
@@ -104,11 +140,12 @@ config = {
 -- Override the configuration with values from yaml files
 -- ==============================================================================
 print ("====> Overriding the default configuration with values from yaml files ...")
-yamlconfdirs = {"/run/archiso/bootmnt/sysrescue.d", "/run/archiso/copytoram/sysrescue.d"}
-for _, confdir in ipairs(yamlconfdirs) do
-    if lfs.attributes(confdir, "mode") == "directory" then
-        print("Searching for yaml configuration files in "..confdir.." ...")
-        for _, curfile in ipairs(list_config_files(confdir)) do
+confdirs = {"/run/archiso/bootmnt/sysrescue.d", "/run/archiso/copytoram/sysrescue.d"}
+conffiles = search_cmdline_option("sysrescuecfg", true)
+for _, curdir in ipairs(confdirs) do
+    if lfs.attributes(curdir, "mode") == "directory" then
+        print("Searching for yaml configuration files in "..curdir.." ...")
+        for _, curfile in ipairs(list_config_files(curdir, conffiles)) do
             print("Processing yaml configuration file: "..curfile.." ...")
             local curconfig = yaml.loadpath(curfile)
             --print("++++++++++++++\n"..yaml.dump(curconfig).."++++++++++++++\n")
@@ -124,7 +161,7 @@ for _, confdir in ipairs(yamlconfdirs) do
             end
         end
     else
-        print("Directory "..confdir.." was not found so it has been ignored")
+        print("Directory "..curdir.." was not found so it has been ignored")
     end
 end
 
@@ -134,7 +171,7 @@ end
 print ("====> Overriding the configuration with options passed on the boot command line ...")
 for _, scope in ipairs({"global", "autorun"}) do
     for key,val in pairs(config[scope]) do
-        optresult = search_cmdline_option(key)
+        optresult = search_cmdline_option(key, false)
         if optresult == true then
             print("- Option '"..key.."' has been enabled on the boot command line")
             config[scope][key] = optresult
