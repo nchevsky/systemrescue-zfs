@@ -103,6 +103,28 @@ function search_cmdline_option(optname, multiple)
     end
 end
 
+-- Process a block of yaml configuration and override the current configuration with new values
+function process_yaml_config(curconfig)
+    if (curconfig == nil) or (type(curconfig) ~= "table") then
+        io.stderr:write(string.format("This is not valid yaml, it will be ignored\n"))
+        return false
+    end
+    for scope, entries in pairs(config) do
+        for key, val in pairs(entries) do
+            if (curconfig[scope] ~= nil) and (curconfig[scope][key] ~= nil) then
+                print("- Overriding config['"..scope.."']['"..key.."'] with the value from the yaml file")
+                config[scope][key] = curconfig[scope][key]
+            end
+        end
+    end
+    return true
+end
+
+-- ==============================================================================
+-- Initialisation
+-- ==============================================================================
+errcnt = 0
+
 -- ==============================================================================
 -- Define the default configuration
 -- ==============================================================================
@@ -142,22 +164,17 @@ config = {
 print ("====> Overriding the default configuration with values from yaml files ...")
 confdirs = {"/run/archiso/bootmnt/sysrescue.d", "/run/archiso/copytoram/sysrescue.d"}
 conffiles = search_cmdline_option("sysrescuecfg", true)
+
+-- Process local yaml configuration files
 for _, curdir in ipairs(confdirs) do
     if lfs.attributes(curdir, "mode") == "directory" then
         print("Searching for yaml configuration files in "..curdir.." ...")
         for _, curfile in ipairs(list_config_files(curdir, conffiles)) do
-            print("Processing yaml configuration file: "..curfile.." ...")
+            print(string.format("Processing local yaml configuration file: %s ...", curfile))
             local curconfig = yaml.loadpath(curfile)
             --print("++++++++++++++\n"..yaml.dump(curconfig).."++++++++++++++\n")
-            if curconfig ~= nil then
-                for scope, entries in pairs(config) do
-                    for key, val in pairs(entries) do
-                        if (curconfig[scope] ~= nil) and (curconfig[scope][key] ~= nil) then
-                            print("- Overriding config['"..scope.."']['"..key.."'] with the value from the yaml file")
-                            config[scope][key] = curconfig[scope][key]
-                        end
-                    end
-                end
+            if process_yaml_config(curconfig) == false then
+                errcnt = errcnt + 1
             end
         end
     else
@@ -202,7 +219,7 @@ output_fullpath = output_location.."/"..output_filename
 lfs.mkdir(output_location)
 jsoncfgfile = io.open(output_fullpath, "w")
 if jsoncfgfile == nil then
-    print ("ERROR: Failed to create effective configuration file in "..output_fullpath)
+    io.stderr:write(string.format("ERROR: Failed to create effective configuration file in %s\n", output_fullpath))
     os.exit(1)
 end
 jsoncfgfile:write(jsoncfgtxt)
@@ -210,3 +227,14 @@ jsoncfgfile:close()
 os.execute("chmod 700 "..output_location)
 os.execute("chmod 600 "..output_fullpath)
 print ("Effective configuration has been written to "..output_fullpath)
+
+-- ==============================================================================
+-- Error handling
+-- ==============================================================================
+if errcnt == 0 then
+    print ("SUCCESS: Have successfully completed the processing of the configuration")
+    os.exit(0)
+else
+    io.stderr:write(string.format("FAILURE: Have completed the processing of the configuration with %d errors\n", errcnt))
+    os.exit(1)
+end
