@@ -114,6 +114,7 @@ lsof
 lsscsi
 lua
 lua-dkjson
+lua-http
 lua-yaml
 lvm2
 lz4
