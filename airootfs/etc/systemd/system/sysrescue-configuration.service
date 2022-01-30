@@ -1,6 +1,8 @@
 [Unit]
 Description=Determine SystemRescue effective configuration
-Before=sysrescue-initialize
+After=network.target network-online.target
+Before=sysrescue-initialize.service
+Wants=network-online.target
 
 [Service]
 Type=oneshot

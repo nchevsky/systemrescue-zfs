@@ -15,7 +15,7 @@
 -- Shell scripts can read values from the JSON file using a command such as:
 -- jq --raw-output '.global.copytoram' /etc/sysrescue/sysrescue-effective-config.json
 -- This script requires the following lua packages to run on Arch Linux:
--- sudo pacman -Sy lua lua-yaml lua-dkjson
+-- sudo pacman -Sy lua lua-yaml lua-dkjson lua-http
 
 -- ==============================================================================
 -- Import modules
@@ -23,6 +23,7 @@
 local lfs = require('lfs')
 local yaml = require('yaml')
 local json = require("dkjson")
+local request = require("http.request")
 
 -- ==============================================================================
 -- Utility functions
@@ -120,6 +121,32 @@ function process_yaml_config(curconfig)
     return true
 end
 
+-- Download a file over http/https and return the contents of the file or nil if it fails
+function download_file(fileurl)
+    local req_timeout = 10
+    local req = request.new_from_uri(fileurl)
+    local headers, stream = req:go(req_timeout)
+
+    if headers == nil then
+        io.stderr:write(string.format("Failed to download %s: Could not connect\n", fileurl))
+        return nil
+    end
+
+    status = headers:get(":status")
+    if status ~= '200' then
+        io.stderr:write(string.format("Failed to download %s: Received HTTP code %s\n", fileurl, status))
+        return nil
+    end
+
+    local body, err = stream:get_body_as_string()
+    if not body and err then
+        io.stderr:write(string.format("Failed to download %s: Error %s\n", fileurl, tostring(err)))
+        return nil
+    end
+
+    return body
+end
+
 -- ==============================================================================
 -- Initialisation
 -- ==============================================================================
@@ -179,6 +206,18 @@ for _, curdir in ipairs(confdirs) do
         end
     else
         print("Directory "..curdir.." was not found so it has been ignored")
+    end
+end
+
+-- Process remote yaml configuration files
+print("Searching for remote yaml configuration files ...")
+for _, curfile in ipairs(conffiles) do
+    if string.match(curfile, "^https?://") then
+        print(string.format("Processing remote yaml configuration file: %s ...", curfile))
+        local contents = download_file(curfile)
+        if (contents == nil) or (process_yaml_config(yaml.load(contents)) == false) then
+            errcnt = errcnt + 1
+        end
     end
 end
 
