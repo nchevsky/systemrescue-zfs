@@ -12,6 +12,7 @@ SystemRescue ChangeLog
 * Implemented a script to determine the effective configuration from yaml files (#251)
 * Added boot option 'sysrescuecfg' to control how the configuration is loaded (#254)
 * Added support for loading remote yaml configuration files over http/https (#254)
+* Allow all kinds of scripts to be used for autorun, not just /bin/sh (Gerd v. Egidy)
 
 -------------------------------------------------------------------------------
 9.00 (2022-01-16):

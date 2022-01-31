@@ -48,11 +48,40 @@ def writemsg(message):
     print(message)
     logging.info(message)
 
-def processdostextfiles(curfile): # remove all '\r' in that file
-    txt=open(curfile).read().replace('\r','')
-    txtfile=open(curfile, 'wt')
+# remove all '\r' in that file
+def processdostextfiles(curfile):
+    txt=open(curfile,'rb').read()
+    origlen=len(txt)
+    txt=txt.replace(b'\r',b'')
+    if len(txt) != origlen:
+        writemsg(f'WARNING: \\r line endings removed from {curfile}.')
+        writemsg('Relying on automatic line ending sanitizing is deprecated and it will be removed from a future release.')
+    txtfile=open(curfile, 'wb')
     txtfile.write(txt)
     txtfile.close()
+
+def is_elf_binary(filename):
+    with open(filename,'rb') as f:
+        content = f.read(4)
+        if len(content) == 4 and \
+            content[0] == '\x7f' and content[1] == 'E' and \
+            content[2] == 'L' and content[3] == 'F':
+            return True
+        else:
+            return False
+
+def ensure_shebang(filename):
+    # does the file have a shebang?
+    with open(filename,'r+') as f:
+        content = f.read()
+        if len(content) > 2 and content[0] == '#' and content[1] == '!':
+            # we have a shebang, nothing to do
+            return
+        # no shebang, we have to add one
+        writemsg(f'WARNING: no shebang in {filename}.')
+        writemsg('This is deprecated and a shebang will be required in future releases.')
+        f.seek(0, 0)
+        f.write("#!/bin/sh\n" + content)
 
 def format_title(title, padding):
     totallen=80
@@ -183,20 +212,53 @@ def main():
         # ---- execute the autorun scripts found ----
         for curfile in autorunfiles:
             try:
-                 processdostextfiles(curfile)
+                if not is_elf_binary(curfile):
+                    processdostextfiles(curfile)
+                    # compatibility with old autorun: add #!/bin/sh if no shebang
+                    ensure_shebang(curfile)
             except:
-                 pass
+                pass
             filebase=os.path.basename(curfile)
             writemsg("\n")
             writemsg(format_title(f'executing {filebase}', '='))
             redir=os.path.join(autorunlog, filebase)
-            result=subprocess.run(f"set -o pipefail ; sh {curfile} 2>&1 | tee {redir}", shell=True, text=True)
+
+            logoutput=open(redir,'wt')
+            try:
+                # directly (=without extra shell) execute the script
+                # stdin=None means the stdin of sysrescue-autorun will be passed through
+                # this allows the autorun script to take input from the terminal
+                proc = subprocess.Popen(curfile, stdin=None, stdout=subprocess.PIPE,
+                                        stderr=subprocess.STDOUT, shell=False,universal_newlines=True)
+                # pipe through stdout&stderr live, write it to the autorunlog too
+                # we do not expect too much data here, so reading byte-by-byte is ok
+                # but it allows us to show for example progress indicators live on the console
+                while not proc.stdout.closed and proc.stdout.readable() and proc.poll() is None:
+                    output = proc.stdout.read(1)
+                    sys.stdout.write(output)
+                    sys.stdout.flush()
+                    logoutput.write(output)
+
+                # the program has ended. read the rest of data that is in the buffer
+                if not proc.stdout.closed and proc.stdout.readable():
+                    output = proc.stdout.read(-1)
+                    sys.stdout.write(output)
+                    sys.stdout.flush()
+                    logoutput.write(output)
+                    logoutput.close()
+
+                returncode = proc.returncode
+            except OSError as e:
+                # for example the program wasn't found or is not executable
+                writemsg (f'Execution of {filebase} failed: {e.strerror}')
+                returncode = e.errno
+
             fileres=open(redir+'.return','wt')
-            fileres.write(str(result.returncode)+'\n')
+            fileres.write(str(returncode)+'\n')
             fileres.close()
             writemsg('='*80)
-            writemsg (f'Execution of {filebase} returned {result.returncode}')
-            if result.returncode != 0:
+            writemsg (f'Execution of {filebase} returned {returncode}')
+            if returncode != 0:
                 errcnt += 1
                 if config['ar_ignorefail'] == False:
                     writemsg (f'Now aborting autorun as {filebase} has failed')
