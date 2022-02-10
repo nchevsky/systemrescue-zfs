@@ -2,8 +2,9 @@ SystemRescue ChangeLog
 ======================
 
 -------------------------------------------------------------------------------
-9.01 (YYYY-MM-DD):
+9.01 (2022-02-10):
 -------------------------------------------------------------------------------
+* Updated the kernel to the Long-Term-Supported linux-5.15.22
 * Support for adding Certification Authorities (CAs) via YAML config (Gerd v. Egidy)
 * Uncompress kernel modules so the squashfs compression provides a better ratio (#247)
 * Optimized the initramfs compression to reduce the size of the ISO (Gerd v. Egidy)
