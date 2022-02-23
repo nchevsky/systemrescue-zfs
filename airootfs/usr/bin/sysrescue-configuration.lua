@@ -176,7 +176,7 @@ config = {
         ['ar_nowait'] = false,
         ['ar_nodel'] = false,
         ['ar_ignorefail'] = false,
-        ['ar_attempts'] = false,
+        ['ar_attempts'] = 1,
         ['ar_source'] = "",
         ['ar_suffixes'] = "0,1,2,3,4,5,6,7,8,9,A,B,C,D,E,F",
     },
