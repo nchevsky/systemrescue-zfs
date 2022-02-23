@@ -284,6 +284,19 @@ bin_check()
         echo "Please install them using the package manager of your distribution"
         exit 1
     fi
+
+    if ! xorriso -help >/dev/null 2>&1; then
+        echo "Error running xorriso"
+        echo "Please ensure that xorriso is installed correctly."
+        exit 1
+    fi
+
+    # check that xorriso supports the -drive_access option
+    if ! xorriso -help 2>&1 | grep "drive_access" >/dev/null; then
+        echo "xorriso seems to not support the -drive_access option"
+        echo "Please check the installed version of xorriso. Version 1.5.2 or newer is required."
+        exit 1
+    fi
     
     return
 }
