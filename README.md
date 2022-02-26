@@ -35,11 +35,26 @@ The build process can be started by running the build.sh script. It will create
 a large "work" sub-directory and the ISO file will be written in the "out"
 sub-directory.
 
-If you are not running archlinux, you can run the build process in docker.
-You need to have a Linux system running with docker installed and configured.
-You can use the scripts provided in the `docker` folder of this repository.
-First you need to run the script which builds a new docker image, and then you
-need to run the script which uses this docker image to builds the ISO image.
+## Building SystemRescue with docker
+If you are not running archlinux, you can run the build process in docker
+containers. You need to have a Linux system running with docker installed
+and configured. You can use the scripts provided in the `docker` folder of
+this repository.
+
+You must export the environment variable named `sysrescuearch` before you
+run the two helper scripts. It should be set as either `x86_64` or `i686`
+depending on the target architecture for which you want to build the ISO image.
+
+After this, you need to run the script which builds a new docker image, and
+then the script which uses this docker image to builds the ISO image. The second
+script will pass the arguments it receives to the main `build.sh` script.
+
+For example you can build a 64bit version of SystemRescue in docker using these commands:
+```
+export sysrescuearch="x86_64"
+./docker/build-docker-image.sh
+./docker/build-iso-image.sh -v
+```
 
 ## Including your SystemRescueModules
 If you want to include your own [SystemRescueModules][srm], place their srm files
