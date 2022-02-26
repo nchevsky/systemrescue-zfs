@@ -5,6 +5,7 @@ SystemRescue ChangeLog
 9.02 (YYYY-MM-DD):
 -------------------------------------------------------------------------------
 * Fix the type of the default definition of parameter "ar_attempts" (#266)
+* Added scripts and documentation to help build the ISO image in a docker container
 
 -------------------------------------------------------------------------------
 9.01 (2022-02-10):

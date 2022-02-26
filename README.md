@@ -35,9 +35,14 @@ The build process can be started by running the build.sh script. It will create
 a large "work" sub-directory and the ISO file will be written in the "out"
 sub-directory.
 
+If you are not running archlinux, you can run the build process in docker.
+You need to have a Linux system running with docker installed and configured.
+You can use the scripts provided in the `docker` folder of this repository.
+First you need to run the script which builds a new docker image, and then you
+need to run the script which uses this docker image to builds the ISO image.
+
 ## Including your SystemRescueModules
 If you want to include your own [SystemRescueModules][srm], place their srm files
 in the [srm](./srm) directory of the repository before running the build script.
 
 [srm]: https://www.system-rescue.org/Modules/
-
