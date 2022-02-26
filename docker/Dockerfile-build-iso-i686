@@ -1,0 +1,7 @@
+FROM fdupoux/archlinux32
+RUN mkdir -p /workspace
+COPY tmpfiles/pacman.conf /etc/pacman.conf
+RUN sed -i -e 's/^Architecture.*$/Architecture = i686/' /etc/pacman.conf
+RUN pacman -Syyu --noconfirm archiso binutils edk2-shell grub hugo mtools && rm -rf /var/cache/pacman/pkg/*
+CMD ["setarch","i686","/usr/bin/bash"]
+WORKDIR /workspace
