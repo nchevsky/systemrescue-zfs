@@ -6,6 +6,7 @@ SystemRescue ChangeLog
 -------------------------------------------------------------------------------
 * Fix the type of the default definition of parameter "ar_attempts" (#266)
 * Added scripts and documentation to help build the ISO image in a docker container
+* Reduce compression ratio for initramfs on i686 to prevent a crash at build time (#261)
 
 -------------------------------------------------------------------------------
 9.01 (2022-02-10):

@@ -24,6 +24,10 @@ devel_build=
 snapshot_date=""
 default_kernel_param="iomem=relaxed"
 documentation_dir="/usr/share/sysrescue/html"
+mkinitcpio_comp_algo="xz"
+mkinitcpio_comp_opts="--threads=0 --verbose"
+mkinitcpio_comp_algo_devel="zstd"
+mkinitcpio_comp_opts_devel="--threads=0 --fast --verbose"
 
 verbose=""
 
@@ -37,6 +41,7 @@ case ${arch} in
         mirrorlist_url='https://archlinux.org/mirrorlist/?country=all&protocol=http&use_mirror_status=on'
         archive_prefix='https://archive.archlinux.org/repos/'
         archive_mirrorlist_file='mirrorlist-snapshot-x86_64'
+        mkinitcpio_comp_opts="--threads=0 --lzma2=preset=9e,dict=128MiB --verbose"
         ;;
     i686)
         efiarch="i386-efi"
@@ -45,6 +50,7 @@ case ${arch} in
         mirrorlist_url='https://archlinux32.org/mirrorlist/?country=all&protocol=http&use_mirror_status=on'
         archive_prefix='https://archive.archlinux32.org/repos/'
         archive_mirrorlist_file='mirrorlist-snapshot-i686'
+        mkinitcpio_comp_opts="--threads=0 --verbose"
         ;;
     *)
         echo "ERROR: Unsupported architecture: '${arch}'"
@@ -245,19 +251,17 @@ make_setup_mkinitcpio() {
         cp /usr/lib/initcpio/install/${_hook} ${work_dir}/${arch}/airootfs/etc/initcpio/install
     done
     cp /usr/lib/initcpio/install/archiso_kms ${work_dir}/${arch}/airootfs/etc/initcpio/install
-    
-    if [ -z "$devel_build" ]; then
-        # release build, high compression but slower
-        sed "s|^COMPRESSION_RELEASE=|COMPRESSION=|g;
-             s|^COMPRESSION_OPTIONS_RELEASE=|COMPRESSION_OPTIONS=|g;" \
-             ${script_path}/mkinitcpio.conf > ${work_dir}/${arch}/airootfs/etc/mkinitcpio-archiso.conf
-    else
-        # devel build, low compression but fast build time
-        sed "s|^COMPRESSION_DEVEL=|COMPRESSION=|g;
-             s|^COMPRESSION_OPTIONS_DEVEL=|COMPRESSION_OPTIONS=|g;" \
-             ${script_path}/mkinitcpio.conf > ${work_dir}/${arch}/airootfs/etc/mkinitcpio-archiso.conf
+
+    # when the "devel build" option is enabled, apply low but fast compression to reduce build time
+    if [ -n "$devel_build" ]; then
+        mkinitcpio_comp_algo="${mkinitcpio_comp_algo_devel}"
+        mkinitcpio_comp_opts="${mkinitcpio_comp_opts_devel}"
     fi
-    
+    # configure the compression algorithm and options to use for the initramfs
+    sed "s|^COMPRESSION=.*|COMPRESSION=\"${mkinitcpio_comp_algo}\"|g;
+         s|^COMPRESSION_OPTIONS=.*|COMPRESSION_OPTIONS=\"${mkinitcpio_comp_opts}\"|g;" \
+            ${script_path}/mkinitcpio.conf > ${work_dir}/${arch}/airootfs/etc/mkinitcpio-archiso.conf
+
     gnupg_fd=
     if [[ ${gpg_key} ]]; then
       gpg --export ${gpg_key} >${work_dir}/gpgkey
