@@ -1,0 +1,6 @@
+FROM archlinux:latest
+RUN mkdir -p /workspace
+COPY tmpfiles/pacman.conf /etc/pacman.conf
+RUN pacman -Syyu --noconfirm archiso binutils edk2-shell grub hugo mtools && rm -rf /var/cache/pacman/pkg/*
+CMD ["setarch","x86_64","/usr/bin/bash"]
+WORKDIR /workspace
