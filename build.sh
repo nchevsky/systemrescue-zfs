@@ -214,6 +214,7 @@ make_customize_airootfs() {
          s|%INSTALL_DIR%|${install_dir}|g;
          s|%SNAPSHOT_DATE%|${snapshot_date//\//-}|g;" \
          ${script_path}/airootfs/etc/os-release > ${work_dir}/${arch}/airootfs/etc/os-release
+    cp -f ${work_dir}/${arch}/airootfs/etc/os-release ${work_dir}/${arch}/airootfs/usr/lib/os-release
 
     curl -o ${work_dir}/${arch}/airootfs/etc/pacman.d/mirrorlist "$mirrorlist_url"
 
