@@ -1,0 +1,263 @@
+#! /usr/bin/env bash
+#
+# load-srm - late-load a SystemRescueModule (SRM) by copying it's content onto the Copy-on-Write (CoW) space
+# 
+# Author: Gerd v. Egidy
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# see https://www.system-rescue.org/Modules/ for details
+
+# bash-checks right at the top due to many bashisms in the rest of the script
+if [ -n "$POSIXLY_CORRECT" ] || [ -z "$BASH_VERSION" ]; then
+    echo "ERROR: bash >= 4.0 is required for this script."
+    exit 1
+fi
+
+if (( BASH_VERSINFO[0]*100 + BASH_VERSINFO[1] < 400 )); then
+    echo "ERROR: bash >= 4.0 is required for this script."
+    exit 1
+fi
+
+# abort on failures
+set -o errexit -o pipefail -o noclobber -o nounset
+
+MOUNTPOINT="/run/archiso/load-srm"
+
+print_help()
+{
+    echo "load-srm - late-load a SystemRescueModule (SRM)"
+    echo "           by copying it's content onto the Copy-on-Write (CoW) space"
+    echo ""
+    echo "Usage:"
+    echo "load-srm [-v|--verbose] [-i|--insecure] <URL-or-Path>"
+    echo ""
+    echo "<URL-or-Path>    Either a path to the SRM or a URL to download it from."
+    echo "                 Supports http:// and https:// URLs."
+    echo ""
+    echo "--insecure       Ignore TLS errors like wrong certificate when using HTTPS."
+    echo "                 Not recommended to use unless you know what you are doing."
+    echo "--verbose        Output progress and details about each step."
+    echo ""
+    echo "See https://www.system-rescue.org/Modules/ for details."
+    
+    return
+}
+
+# error while parsing commandline parameters
+argument_error()
+{
+    echo "$1"
+    echo
+    echo "---------------------------------"
+    echo
+    print_help
+    exit 2
+}
+
+do_cleanup()
+{
+    # cleanups necessary for ending
+
+    if findmnt --mountpoint "$MOUNTPOINT" >/dev/null 2>&1; then
+        umount "$MOUNTPOINT" || true
+        [[ $VERBOSE -eq 1 ]] && echo "squashfs unmounted"
+    fi
+
+    if [[ -n "${TMPDIR:-}" ]]; then
+        rm -rf "${TMPDIR}" || true
+        [[ $VERBOSE -eq 1 ]] && echo "tmpdir removed"
+    fi
+   
+    return 0
+}
+
+# an error occured after argument parsing
+error_exit()
+{
+    do_cleanup
+
+    echo "ERROR: $1"
+    exit $2
+}
+
+parse_args()
+{
+    # adapted from https://stackoverflow.com/a/29754866 by Robert Siemer
+    # version edited Mar 4 '21 at 0:11, licensed under CC BY-SA 4.0 due to Stackoverflow Terms of Service
+    # https://creativecommons.org/licenses/by-sa/4.0/
+
+    # show help when no arguments given
+    [[ $# -eq 0 ]] && { print_help ; exit 0 ; }
+    
+    # -allow a command to fail with !’s side effect on errexit
+    # -use return value from ${PIPESTATUS[0]}, because ! hosed $?
+    ! getopt --test > /dev/null 
+    if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
+        echo 'ERROR: `getopt --test` failed in this environment'
+        exit 1
+    fi
+
+    local OPTIONS="ivh"
+    local LONGOPTS="insecure,verbose,help"
+
+    # option variables as globals, set to default values
+    declare -g INSECURE=0
+    declare -g VERBOSE=0
+    declare -g URL=""
+    declare -g URL_PROTO=""
+    
+    # -regarding ! and PIPESTATUS see above
+    # -temporarily store output to be able to check for errors
+    # -activate quoting/enhanced mode (e.g. by writing out “--options”)
+    # -pass arguments only via   -- "$@"   to separate them correctly
+    ! PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTS --name "$0" -- "$@")
+    if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
+        # e.g. return value is 1
+        #  then getopt has complained about wrong arguments to stdout
+        echo
+        print_help
+        exit 2
+    fi
+    # read getopt’s output this way to handle the quoting right:
+    eval set -- "$PARSED"
+
+    while true; do
+        case "$1" in
+            -i|--insecure)
+                INSECURE=1
+                shift
+                ;;
+            -v|--verbose)
+                VERBOSE=1
+                shift
+                ;;
+            -h|--help)
+                print_help
+                exit 0
+                ;;
+            --)
+                shift
+                break
+                ;;
+            *)
+                echo "ERROR: Argument parsing logic bug"
+                exit 2
+                ;;
+        esac
+    done
+
+    # one positional argument required: the URL
+    [[ $# -ne 1 ]] && argument_error "ERROR: URL missing"
+    URL=$1
+    
+    # basic check for the URL parameter
+    if [[ $URL =~ ^[a-z0-9]+://.+ ]]; then
+        # we have a URI style parameter
+        
+        if [[ $URL =~ ^http://.+ ]]; then
+            URL_PROTO="http"
+            return 0
+        elif [[ $URL =~ ^https://.+ ]]; then
+            URL_PROTO="https"
+            return 0
+        fi
+        
+        argument_error "ERROR: invalid URL or unsupported protocol"
+        
+    elif [[ -f "$URL" ]]; then
+        URL_PROTO="file"
+        return 0
+    fi
+    
+    argument_error "ERROR: can't find file"
+    
+    return 0
+}
+
+mount_srm()
+{
+    local srm_path=$1
+    
+    # first test if we really have a valid squashfs file
+    if ! unsquashfs -l "$srm_path" >/dev/null 2>&1; then
+        error_exit "file not a valid squashfs file" 100
+    fi
+    [[ $VERBOSE -eq 1 ]] && echo "squashfs file verified $srm_path"
+    
+    # prepare mount
+    if ! [[ -d "$MOUNTPOINT" ]]; then
+        mkdir "$MOUNTPOINT"
+    elif findmnt --mountpoint "$MOUNTPOINT" >/dev/null 2>&1; then
+        error_exit "$MOUNTPOINT already mounted" 101
+    fi
+    
+    if ! mount -t squashfs "$srm_path" "$MOUNTPOINT"; then
+        error_exit "can't mount squashfs file" 102
+    fi
+    
+    [[ $VERBOSE -eq 1 ]] && echo "squashfs successfully mounted to $MOUNTPOINT"
+    
+    return 0
+}
+
+rsync_to_cow()
+{
+    # dry-run first, we want to find any problems before beginning the actual sync
+    if ! rsync -a --sparse --checksum --quiet --dry-run "$MOUNTPOINT/" "/"; then
+        error_exit "problem while testing to copy the SRM content" 103
+    fi
+    
+    local param="--quiet"
+    [[ $VERBOSE -eq 1 ]] && param="--progress"
+    
+    if ! rsync -a --sparse --checksum $param "$MOUNTPOINT/" "/"; then
+        error_exit "problem copying the SRM content" 104
+    fi
+    
+    [[ $VERBOSE -eq 1 ]] && echo "files copied successfully"
+    
+    return 0
+}
+
+curl_download()
+{
+    # first create a tmpdir we use to download the srm to
+    # use tmpfs (and not the CoW space) because we want to fully remove it afterwards
+    declare -g TMPDIR
+    if ! TMPDIR=$(mktemp --directory --tmpdir="/tmp" "load-srm.XXXXXXXXXX"); then
+        error_exit "can't create tmpdir" 3
+    fi
+    
+    local curl_param
+    [[ $VERBOSE -eq 0 ]] && curl_param="--show-error --silent"
+    [[ $VERBOSE -eq 1 ]] && curl_param="--progress-meter"
+    [[ $INSECURE -eq 1 ]] && curl_param="$curl_param --insecure"
+    
+    if ! curl --output "$TMPDIR/srm" --fail --location --max-redirs 10 \
+        --retry-connrefused --retry 2 --retry-delay 3 $curl_param "$URL"; then
+        error_exit "error downloading SRM" 4
+    fi
+
+    [[ $VERBOSE -eq 1 ]] && echo "file downloaded successfully"
+    
+    return 0
+}
+
+#################################
+# execution begins here
+
+parse_args "$@"
+
+[[ $VERBOSE -eq 1 ]] && echo "URL/path: $URL"
+
+if [[ $URL_PROTO == "http" ]] || [[ $URL_PROTO == "https" ]]; then
+    curl_download
+    # replace the URL parameter with the location we downloaded the file to
+    URL="$TMPDIR/srm"
+fi
+
+mount_srm "$URL"
+rsync_to_cow
+do_cleanup
+
+exit 0
