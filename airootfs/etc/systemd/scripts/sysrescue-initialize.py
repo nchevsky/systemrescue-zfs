@@ -38,6 +38,7 @@ print(f"config['global']['nofirewall']={config['global']['nofirewall']}")
 print(f"config['global']['dostartx']={config['global']['dostartx']}")
 print(f"config['global']['noautologin']={config['global']['noautologin']}")
 print(f"config['global']['dovnc']={config['global']['dovnc']}")
+print(f"config['global']['late_load_srm']={config['global']['late_load_srm']}")
 
 # ==============================================================================
 # Apply the effective configuration
@@ -150,6 +151,17 @@ if config['sysconfig']['ca-trust']:
 
     print(f"Updating CA trust configuration ...")
     p = subprocess.run(["update-ca-trust"], text=True)
+
+# ==============================================================================
+# late-load a SystemRescueModule (SRM)
+# ==============================================================================
+
+late_load_srm = config['global']['late_load_srm']
+if (late_load_srm != None) and (late_load_srm != ""):
+    print(f"====> Late-loading SystemRescueModule (SRM) ...")
+    p = subprocess.run(["/usr/share/sysrescue/bin/load-srm", late_load_srm], text=True)
+    # the SRM could contain changes to systemd units -> let them take effect
+    p = subprocess.run(["/usr/bin/systemctl", "daemon-reload"], text=True)
 
 # ==============================================================================
 # End of the script

@@ -4,6 +4,7 @@ SystemRescue ChangeLog
 -------------------------------------------------------------------------------
 9.02 (YYYY-MM-DD):
 -------------------------------------------------------------------------------
+* Add script and config.yaml parameter for late-loading of SystemRescueModules (SRM) (Gerd v. Egidy)
 * Fix the type of the default definition of parameter "ar_attempts" (#266)
 * Added scripts and documentation to help build the ISO image in a docker container
 * Reduce compression ratio for initramfs on i686 to prevent a crash at build time (#261)

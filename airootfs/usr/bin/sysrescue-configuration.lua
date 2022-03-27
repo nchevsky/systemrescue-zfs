@@ -161,6 +161,7 @@ config = {
         ['copytoram'] = false,
         ['checksum'] = false,
         ['loadsrm'] = false,
+        ['late_load_srm'] = "",
         ['dostartx'] = false,
         ['dovnc'] = false,
         ['noautologin'] = false,
