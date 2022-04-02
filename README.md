@@ -11,20 +11,20 @@ https://gitlab.archlinux.org/archlinux/archiso/
 SystemRescue can be built for x86_64 or i686 architectures. It must be built
 on archlinux if you want to build a 64bit edition, or archlinux32 if you want
 to create a 32bit edition. The following packages must be installed on the
-build system: archiso, grub, mtools, edk2-shell, hugo. You need to use a modified
-version of archiso for the build to work and for additional fixes and features
-to be present. You can find the required archiso version and patches in the
-"patches" folder in this git repository.
+build system: archiso, grub, mtools, edk2-shell, hugo. 
+
+You need to use a modified version of archiso for the build to work. This 
+version is provided in the custom `sysrescuerepo` repository. See the 
+`pacman.conf` file in the source. Either copy the `sysrescuerepo` section 
+into your `/etc/pacman.conf` or replace the whole `/etc/pacman.conf` file with 
+the one from the source. Install archiso afterwards.
 
 The package list contains packages which are not part of the official binary
-package repositories. These packages need to be built from sources from the AUR
-website. These sources are made of at least a PKGBUILD file and quite often
-other related files, such as patches. These can be built using the makepkg
-command which generates binary packages. These binary packages must be copied to
-a custom package repository which can be hosted locally using httpd or nginx.
-The repo-add command must be used to generate the repository package index.
-The pacman.conf file must be updated with the address of this repository so
-custom packages can be accessed.
+package repositories from Arch Linux. These packages are also provided in the
+`sysrescuerepo` repository. If you want to rebuild them, see 
+[systemrescue-custompkg](https://gitlab.com/systemrescue/systemrescue-custompkg).
+Create a local repository out of them with `repo-add`, host it on a webserver
+and then adapt pacman.conf.
 
 The build process requires the systemrescue-website repository which is included
 as git submodule. So when checking out this repository, make sure to check out
