@@ -8,6 +8,29 @@ import glob
 import os
 import sys
 import re
+import tempfile
+
+# pythons os.symlink bails when a file already exists, this function also handles overwrites
+def symlink_overwrite(target, link_file):
+    link_dir = os.path.dirname(link_file)
+    
+    while True:
+        # get a tmp filename in the same dir as link_file
+        tmp = tempfile.NamedTemporaryFile(delete=True, dir=link_dir)
+        tmp.close()
+        # tmp is now deleted
+        
+        # os.symlink aborts when a file with the same name already exists
+        # someone could have created a new file with the tmp name right in this moment
+        # so we need to loop and try again in this case
+        try:
+            os.symlink(target,tmp.name)
+            break
+        except FileExistsError:
+            pass
+    
+    os.replace(tmp.name, link_file)
+
 
 # ==============================================================================
 # Initialization
@@ -174,6 +197,44 @@ if (late_load_srm != None) and (late_load_srm != ""):
     p = subprocess.run(["/usr/share/sysrescue/bin/load-srm", late_load_srm], text=True)
     # the SRM could contain changes to systemd units -> let them take effect
     p = subprocess.run(["/usr/bin/systemctl", "daemon-reload"], text=True)
+
+# ==============================================================================
+# autoterminal: programs that take over a virtual terminal for user interaction
+# ==============================================================================
+
+# expect a dict with terminal-name: command, like config['autoterminal']['tty2'] = "/usr/bin/setkmap"
+if ('autoterminal' in config) and (config['autoterminal'] is not None) and \
+   (config['autoterminal'] is not False) and isinstance(config['autoterminal'], dict):
+    print("====> Configuring autoterminal ...")
+    with open('/usr/share/sysrescue/template/autoterminal.service', 'r') as template_file:
+        conf_template = template_file.read()
+    start_services = []
+    for terminal, command in sorted(config['autoterminal'].items()):
+        if not re.match(r"^[a-zA-Z0-9_-]+$", terminal):
+            print (f"Ignoring invalid terminal name '{terminal}'")
+            errcnt+=1
+            continue
+        # do not check if terminal or command exists: an autorun could create them later on
+        print (f"setting terminal '{terminal}' to '{command}'")
+        with open(f"/etc/systemd/system/autoterminal-{terminal}.service", "w") as terminal_conf:
+            # write service config, based on the template config we loaded above
+            # don't use getty@{terminal}.service name to not use autovt@{terminal}.service on-demand logic
+            conf_data=conf_template.replace("%TTY%",terminal)
+            conf_data=conf_data.replace("%EXEC%",command)
+            terminal_conf.write(conf_data)
+        # enable service: always start it, do not wait for the user to switch to the terminal
+        # means other programs (like X.org) can't allocate it away, also allows for longer running init sequences
+        symlink_overwrite(f"/etc/systemd/system/autoterminal-{terminal}.service",
+                        f"/etc/systemd/system/getty.target.wants/autoterminal-{terminal}.service")
+        # mask the regular getty for this terminal
+        symlink_overwrite("/dev/null",f"/etc/systemd/system/getty@{terminal}.service")
+        symlink_overwrite("/dev/null",f"/etc/systemd/system/autovt@{terminal}.service")
+        start_services.append(f"autoterminal-{terminal}.service")
+    # reload systemd to allow the new config to take effect
+    subprocess.run(["/usr/bin/systemctl", "daemon-reload"])
+    # explicitly start new services (after daemon-reload): systemd can't update dependencies while starting
+    for s in start_services:
+        subprocess.run(["/usr/bin/systemctl", "--no-block", "start", s])
 
 # ==============================================================================
 # End of the script
