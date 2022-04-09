@@ -2,12 +2,14 @@ SystemRescue ChangeLog
 ======================
 
 -------------------------------------------------------------------------------
-9.02 (YYYY-MM-DD):
+9.02 (2022-04-09):
 -------------------------------------------------------------------------------
+* Updated the kernel to the Long-Term-Supported linux-5.15.32
 * Add script and config.yaml parameter for late-loading of SystemRescueModules (SRM) (Gerd v. Egidy)
 * Fix the type of the default definition of parameter "ar_attempts" (#266)
 * Added scripts and documentation to help build the ISO image in a docker container
 * Reduce compression ratio for initramfs on i686 to prevent a crash at build time (#261)
+* Updated disk utilities: GParted-1.4.0 and partclone-0.3.19
 
 -------------------------------------------------------------------------------
 9.01 (2022-02-10):
