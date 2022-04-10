@@ -2,7 +2,7 @@
                     \e[00;31mhttps://www.system-rescue.org/
 
 \e[00;31m*\e[01;31m Console environment\e[00;37m :
-   Run \e[01;37msetkmap\e[00;37m to choose the keyboard layout
+   Run \e[01;37msetkmap\e[00;37m to choose the keyboard layout (also accessible with the arrow up key)
    Run \e[01;37mmanual\e[00;37m to read the documentation of SystemRescue
 
 \e[00;31m*\e[01;31m Graphical environment\e[00;37m :
