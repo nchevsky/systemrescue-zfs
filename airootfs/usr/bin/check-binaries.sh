@@ -2,7 +2,7 @@
 errcnt=0
 
 for curfile in /usr/bin/{*btrfs*,*xfs*,dislocker*,udp*,dump,restore} \
-               /usr/bin/{ms-sys,nwipe,whdd,zerofree} \
+               /usr/bin/{ghex,growpart*,hardinfo,*lshw*,ms-sys,nwipe,whdd,zerofree} \
                /opt/firefox*/firefox* \
                /usr/lib/ntfs-3g/ntfs-plugin*.so \
                /usr/lib/libgbm.so* \
