@@ -105,13 +105,22 @@ function search_cmdline_option(optname, multiple)
 end
 
 -- Process a block of yaml configuration and override the current configuration with new values
-function process_yaml_config(curconfig)
-    if (curconfig == nil) or (type(curconfig) ~= "table") then
-        io.stderr:write(string.format("This is not valid yaml (=no table), it will be ignored\n"))
+function process_yaml_config(config_content)
+    if (config_content == nil) then
+        io.stderr:write(string.format("Error downloading or empty file received\n"))
         return false
     end
-    merge_config_table(config, curconfig, "config")
-    return true
+    if pcall(function() curconfig = yaml.load(config_content) end) then
+        if (curconfig == nil) or (type(curconfig) ~= "table") then
+            io.stderr:write(string.format("This is not valid yaml (=no table), it will be ignored\n"))
+            return false
+        end
+        merge_config_table(config, curconfig, "config")
+        return true
+    else
+        io.stderr:write(string.format("Failed parsing yaml, it will be ignored\n"))
+        return false
+    end
 end
 
 -- Recursive merge of a config table
@@ -185,21 +194,14 @@ config = { }
 -- ==============================================================================
 print ("====> Merging configuration with values from yaml files ...")
 confdirs = {"/run/archiso/bootmnt/sysrescue.d", "/run/archiso/copytoram/sysrescue.d"}
-conffiles = search_cmdline_option("sysrescuecfg", true)
 
 -- Process local yaml configuration files
 for _, curdir in ipairs(confdirs) do
     if lfs.attributes(curdir, "mode") == "directory" then
         print("Searching for yaml configuration files in "..curdir.." ...")
-        for _, curfile in ipairs(list_config_files(curdir, conffiles)) do
+        for _, curfile in ipairs(list_config_files(curdir, {})) do
             print(string.format("Processing local yaml configuration file: %s ...", curfile))
-            if pcall(function() curconfig = yaml.loadpath(curfile) end) then
-                --print("++++++++++++++\n"..yaml.dump(curconfig).."++++++++++++++\n")
-                if process_yaml_config(curconfig) == false then
-                    errcnt = errcnt + 1
-                end
-            else
-                io.stderr:write(string.format("Failed parsing yaml, it will be ignored\n"))
+            if process_yaml_config(read_file_contents(curfile)) == false then
                 errcnt = errcnt + 1
             end
         end
@@ -208,23 +210,35 @@ for _, curdir in ipairs(confdirs) do
     end
 end
 
--- Process remote yaml configuration files
+-- Process explicitly configured configuration files
+-- these are parsed afterwards and in the order given, so they have precedence
+conffiles = search_cmdline_option("sysrescuecfg", true)
 print("Searching for remote yaml configuration files ...")
 for _, curfile in ipairs(conffiles) do
     if string.match(curfile, "^https?://") then
         print(string.format("Processing remote yaml configuration file: %s ...", curfile))
         local contents = download_file(curfile)
-        if (contents == nil) then
-            io.stderr:write(string.format("Error downloading or empty file received\n"))
+        if process_yaml_config(contents) == false then
             errcnt = errcnt + 1
         end
-        if pcall(function() curconfig = yaml.load(contents) end) then
-            if process_yaml_config(curconfig) == false then
-                errcnt = errcnt + 1
-            end
-        else
-            io.stderr:write(string.format("Failed parsing yaml, it will be ignored\n"))
+    elseif string.match(curfile, "^/") then
+        -- we have a local file with absolute path
+        print(string.format("Processing local yaml configuration file: %s ...",curfile))
+        if process_yaml_config(read_file_contents(curfile)) == false then
             errcnt = errcnt + 1
+        end
+    else
+        -- we have a local file with relative path, prefix the one existing config dir
+        -- this will apply the config again, but later than before, giving it higher priority
+        for _, curdir in ipairs(confdirs) do
+            if lfs.attributes(curdir, "mode") == "directory" then
+                print(string.format("Processing local yaml configuration file: %s ...",curdir.."/"..curfile))
+                if process_yaml_config(read_file_contents(curdir.."/"..curfile)) == false then
+                    errcnt = errcnt + 1
+                end
+                -- just try the explicitly configured filename with one dir prefix
+                break
+            end
         end
     end
 end
