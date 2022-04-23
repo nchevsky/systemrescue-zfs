@@ -28,17 +28,35 @@ with open(effectivecfg) as file:
     config = json.load(file)
 
 # ==============================================================================
-# Show the effective configuration
+# Sanitize config, initialize variables
+# Make sysrescue-initialize work safely without them being defined
+# Also show the effective configuration
 # ==============================================================================
 print(f"====> Showing the effective global configuration (except clear passwords) ...")
-print(f"config['global']['setkmap']='{config['global']['setkmap']}'")
-print(f"config['global']['rootshell']='{config['global']['rootshell']}'")
-print(f"config['global']['rootcryptpass']='{config['global']['rootcryptpass']}'")
-print(f"config['global']['nofirewall']={config['global']['nofirewall']}")
-print(f"config['global']['dostartx']={config['global']['dostartx']}")
-print(f"config['global']['noautologin']={config['global']['noautologin']}")
-print(f"config['global']['dovnc']={config['global']['dovnc']}")
-print(f"config['global']['late_load_srm']={config['global']['late_load_srm']}")
+
+def read_cfg_value(scope, name, printval):
+    if not scope in config:
+        val = None
+    elif name in config[scope]:
+        val = config[scope][name]
+    else:
+        val = None
+
+    if printval:
+        print(f"config['{scope}']['{name}']={val}")
+    
+    return val
+
+setkmap = read_cfg_value('global','setkmap', True)
+rootshell = read_cfg_value('global','rootshell', True)
+rootpass = read_cfg_value('global','rootpass', False)
+rootcryptpass = read_cfg_value('global','rootcryptpass', False)
+nofirewall = read_cfg_value('global','nofirewall', True)
+noautologin = read_cfg_value('global','noautologin', True)
+dostartx = read_cfg_value('global','dostartx', True)
+dovnc = read_cfg_value('global','dovnc', True)
+vncpass = read_cfg_value('global','vncpass', False)
+late_load_srm = read_cfg_value('global','late_load_srm', True)
 
 # ==============================================================================
 # Apply the effective configuration
@@ -46,7 +64,6 @@ print(f"config['global']['late_load_srm']={config['global']['late_load_srm']}")
 print(f"====> Applying configuration ...")
 
 # Configure keyboard layout if requested in the configuration
-setkmap = config['global']['setkmap']
 if (setkmap != None) and (setkmap != ""):
     p = subprocess.run(["localectl", "set-keymap", setkmap], text=True)
     if p.returncode == 0:
@@ -56,7 +73,6 @@ if (setkmap != None) and (setkmap != ""):
         errcnt+=1
 
 # Configure root login shell if requested in the configuration
-rootshell = config['global']['rootshell']
 if (rootshell != None) and (rootshell != ""):
     p = subprocess.run(["chsh", "--shell", rootshell, "root"], text=True)
     if p.returncode == 0:
@@ -66,7 +82,6 @@ if (rootshell != None) and (rootshell != ""):
         errcnt+=1
 
 # Set the system root password from a clear password
-rootpass = config['global']['rootpass']
 if (rootpass != None) and (rootpass != ""):
     p = subprocess.run(["chpasswd", "--crypt-method", "SHA512"], text=True, input=f"root:{rootpass}")
     if p.returncode == 0:
@@ -78,7 +93,6 @@ if (rootpass != None) and (rootpass != ""):
 # Set the system root password from an encrypted password
 # A password can be encrypted using a one-line python3 command such as:
 # python3 -c 'import crypt; print(crypt.crypt("MyPassWord123", crypt.mksalt(crypt.METHOD_SHA512)))'
-rootcryptpass = config['global']['rootcryptpass']
 if (rootcryptpass != None) and (rootcryptpass != ""):
     p = subprocess.run(["chpasswd", "--encrypted"], text=True, input=f"root:{rootcryptpass}")
     if p.returncode == 0:
@@ -88,7 +102,7 @@ if (rootcryptpass != None) and (rootcryptpass != ""):
         errcnt+=1
 
 # Disable the firewall
-if config['global']['nofirewall'] == True:
+if nofirewall == True:
     # The firewall service(s) must be in the Before-section of sysrescue-initialize.service
     p = subprocess.run(["systemctl", "disable", "--now", "iptables.service", "ip6tables.service"], text=True)
     if p.returncode == 0:
@@ -98,7 +112,7 @@ if config['global']['nofirewall'] == True:
         errcnt+=1
 
 # Auto-start the graphical environment (tty1 only)
-if config['global']['dostartx'] == True:
+if dostartx == True:
     str = '[[ ! $DISPLAY ]] && [[ ! $SSH_TTY ]] && [[ $XDG_VTNR == 1 ]] && startx'
     if (os.path.exists("/root/.bash_profile") == False) or (open("/root/.bash_profile", 'r').read().find(str) == -1):
         file1 = open("/root/.bash_profile", "a")
@@ -109,7 +123,7 @@ if config['global']['dostartx'] == True:
     file2.close()
 
 # Require authenticated console access
-if config['global']['noautologin'] == True:
+if noautologin == True:
     p = subprocess.run(["systemctl", "revert", "getty@.service", "serial-getty@.service"], text=True)
     if p.returncode == 0:
         print (f"Have enabled authenticated console access successfully")
@@ -118,7 +132,6 @@ if config['global']['noautologin'] == True:
         errcnt+=1
 
 # Set the VNC password from a clear password
-vncpass = config['global']['vncpass']
 if (vncpass != None) and (vncpass != ""):
     os.makedirs("/root/.vnc", exist_ok = True)
     p = subprocess.run(["x11vnc", "-storepasswd", vncpass, "/root/.vnc/passwd"], text=True)
@@ -129,7 +142,7 @@ if (vncpass != None) and (vncpass != ""):
         errcnt+=1
 
 # Auto-start x11vnc with the graphical environment
-if config['global']['dovnc'] == True:
+if dovnc == True:
     print (f"Enabling VNC Server in /root/.xprofile ...")
     file = open("/root/.xprofile", "w")
     file.write("""[ -f ~/.vnc/passwd ] && pwopt="-usepw" || pwopt="-nopw"\n""")
@@ -141,7 +154,7 @@ if config['global']['dovnc'] == True:
 # ==============================================================================
 ca_anchor_path = "/etc/ca-certificates/trust-source/anchors/"
 
-if config['sysconfig']['ca-trust']:
+if 'sysconfig' in config and 'ca-trust' in config['sysconfig'] and config['sysconfig']['ca-trust']:
     print(f"====> Adding trusted CA certificates ...")
 
     for name, cert in sorted(config['sysconfig']['ca-trust'].items()):
@@ -156,7 +169,6 @@ if config['sysconfig']['ca-trust']:
 # late-load a SystemRescueModule (SRM)
 # ==============================================================================
 
-late_load_srm = config['global']['late_load_srm']
 if (late_load_srm != None) and (late_load_srm != ""):
     print(f"====> Late-loading SystemRescueModule (SRM) ...")
     p = subprocess.run(["/usr/share/sysrescue/bin/load-srm", late_load_srm], text=True)
