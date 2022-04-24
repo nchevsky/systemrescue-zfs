@@ -27,6 +27,10 @@ sed -i 's/#\(HandleLidSwitch=\)suspend/\1ignore/' /etc/systemd/logind.conf
 # PulseAudio takes care of volume restore
 ln -sf /dev/null /etc/udev/rules.d/90-alsa-restore.rules
 
+# config symlink
+mkdir /etc/sysrescue/
+ln -sf /run/archiso/config/sysrescue-effective-config.json /etc/sysrescue/sysrescue-effective-config.json
+
 # Services
 systemctl enable NetworkManager.service
 systemctl enable iptables.service
@@ -34,7 +38,6 @@ systemctl enable ip6tables.service
 systemctl enable pacman-init.service
 systemctl enable choose-mirror.service
 systemctl enable sshd.service
-systemctl enable sysrescue-configuration.service
 systemctl enable sysrescue-initialize.service
 systemctl enable sysrescue-autorun.service
 systemctl enable qemu-guest-agent.service

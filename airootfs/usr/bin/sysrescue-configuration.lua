@@ -13,7 +13,7 @@
 -- At the end it writes the effective configuration to a JSON file which is meant
 -- to be ready by any initialisation script which needs to know the configuration.
 -- Shell scripts can read values from the JSON file using a command such as:
--- jq --raw-output '.global.copytoram' /etc/sysrescue/sysrescue-effective-config.json
+-- jq --raw-output '.global.copytoram' /run/archiso/config/sysrescue-effective-config.json
 -- This script requires the following lua packages to run on Arch Linux:
 -- sudo pacman -Sy lua lua-yaml lua-dkjson lua-http
 
@@ -253,10 +253,9 @@ print (jsoncfgtxt)
 -- Write the effective configuration to a JSON file
 -- ==============================================================================
 print ("====> Writing the effective configuration to a JSON file ...")
-output_location = "/etc/sysrescue"
+output_location = "/run/archiso/config"
 output_filename = "sysrescue-effective-config.json"
 output_fullpath = output_location.."/"..output_filename
-lfs.mkdir(output_location)
 jsoncfgfile = io.open(output_fullpath, "w")
 if jsoncfgfile == nil then
     io.stderr:write(string.format("ERROR: Failed to create effective configuration file in %s\n", output_fullpath))
