@@ -208,27 +208,47 @@ if ('autoterminal' in config) and (config['autoterminal'] is not None) and \
     print("====> Configuring autoterminal ...")
     with open('/usr/share/sysrescue/template/autoterminal.service', 'r') as template_file:
         conf_template = template_file.read()
+    with open('/usr/share/sysrescue/template/serial-autoterminal.service', 'r') as template_file:
+        serial_conf_template = template_file.read()
     start_services = []
     for terminal, command in sorted(config['autoterminal'].items()):
+        if m := re.match(r"^serial:([a-zA-Z0-9_-]+)$", terminal):
+            serial=True
+            terminal = m.group(1)
+        else:
+            serial=False
+
         if not re.match(r"^[a-zA-Z0-9_-]+$", terminal):
             print (f"Ignoring invalid terminal name '{terminal}'")
             errcnt+=1
             continue
         # do not check if terminal or command exists: an autorun could create them later on
-        print (f"setting terminal '{terminal}' to '{command}'")
+        if serial:
+            print (f"setting serial terminal '{terminal}' to '{command}'")
+        else:
+            print (f"setting terminal '{terminal}' to '{command}'")
         with open(f"/etc/systemd/system/autoterminal-{terminal}.service", "w") as terminal_conf:
             # write service config, based on the template config we loaded above
             # don't use getty@{terminal}.service name to not use autovt@{terminal}.service on-demand logic
-            conf_data=conf_template.replace("%TTY%",terminal)
+            if serial:
+                conf_data=serial_conf_template.replace("%TTY%",terminal)
+            else:
+                conf_data=conf_template.replace("%TTY%",terminal)
+
             conf_data=conf_data.replace("%EXEC%",command)
             terminal_conf.write(conf_data)
         # enable service: always start it, do not wait for the user to switch to the terminal
         # means other programs (like X.org) can't allocate it away, also allows for longer running init sequences
         symlink_overwrite(f"/etc/systemd/system/autoterminal-{terminal}.service",
                         f"/etc/systemd/system/getty.target.wants/autoterminal-{terminal}.service")
+
         # mask the regular getty for this terminal
-        symlink_overwrite("/dev/null",f"/etc/systemd/system/getty@{terminal}.service")
-        symlink_overwrite("/dev/null",f"/etc/systemd/system/autovt@{terminal}.service")
+        if serial:
+            symlink_overwrite("/dev/null",f"/etc/systemd/system/serial-getty@{terminal}.service")
+        else:
+            symlink_overwrite("/dev/null",f"/etc/systemd/system/getty@{terminal}.service")
+            symlink_overwrite("/dev/null",f"/etc/systemd/system/autovt@{terminal}.service")
+
         start_services.append(f"autoterminal-{terminal}.service")
     # reload systemd to allow the new config to take effect
     subprocess.run(["/usr/bin/systemctl", "daemon-reload"])
