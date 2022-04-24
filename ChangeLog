@@ -1,6 +1,13 @@
 SystemRescue ChangeLog
 ======================
 
+------------------------------------------------------------------------------
+9.03 (YYYY-MM-DD):
+-------------------------------------------------------------------------------
+* Change how the "sysrescuecfg" boot command line option is implemented:
+  Merge given config files after reading the ones in the sysrescue.d dir
+* Change YAML config file loading logic to fully merge multiple files (#254)
+
 -------------------------------------------------------------------------------
 9.02 (2022-04-09):
 -------------------------------------------------------------------------------
