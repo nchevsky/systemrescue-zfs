@@ -133,6 +133,7 @@ minicom
 mkinitcpio
 mkinitcpio-nfs-utils
 mlocate
+moreutils
 ms-sys
 mtools
 mtr
@@ -185,6 +186,7 @@ psmisc
 pulseaudio-alsa
 pv
 python
+python-pythondialog
 python-llfuse
 python-pip
 python-yaml
