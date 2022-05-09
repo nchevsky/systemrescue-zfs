@@ -1,0 +1,246 @@
+#! /usr/bin/env bash
+#
+# mountall - mount all suitable block devices
+# 
+# Author: Gerd v. Egidy
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# see https://www.system-rescue.org/scripts/mountall/ for details
+
+# abort on failures
+set -o errexit -o pipefail -o noclobber -o nounset
+
+print_help()
+{
+    echo "mountall - mount all suitable block devices"
+    echo ""
+    echo "Usage:"
+    echo "mountall [-n|--no-bind] [-v|--verbose]"
+    echo ""
+    echo "--no-bind                   Don't try to bind-mount /dev /proc and /sys when"
+    echo "                            the partition has these dirs"
+    echo "--verbose                   Verbose output."
+    echo ""
+    echo "See https://www.system-rescue.org/scripts/mountall/ for details."
+    
+    return
+}
+
+# error while parsing commandline parameters
+argument_error()
+{
+    echo "$1"
+    echo
+    echo "---------------------------------"
+    echo
+    print_help
+    exit 2
+}
+
+parse_args()
+{
+    # adapted from https://stackoverflow.com/a/29754866 by Robert Siemer
+    # version edited Mar 4 '21 at 0:11, licensed under CC BY-SA 4.0 due to Stackoverflow Terms of Service
+    # https://creativecommons.org/licenses/by-sa/4.0/
+
+    # -allow a command to fail with !’s side effect on errexit
+    # -use return value from ${PIPESTATUS[0]}, because ! hosed $?
+    ! getopt --test > /dev/null 
+    if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
+        echo 'ERROR: `getopt --test` failed in this environment'
+        exit 1
+    fi
+
+    local OPTIONS="nvh"
+    local LONGOPTS="no-bind,verbose,help"
+
+    # option variables as globals, set to default values
+    declare -g BIND=1
+    declare -g VERBOSE=0
+    
+    # -regarding ! and PIPESTATUS see above
+    # -temporarily store output to be able to check for errors
+    # -activate quoting/enhanced mode (e.g. by writing out “--options”)
+    # -pass arguments only via   -- "$@"   to separate them correctly
+    ! PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTS --name "$0" -- "$@")
+    if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
+        # e.g. return value is 1
+        #  then getopt has complained about wrong arguments to stdout
+        echo
+        print_help
+        exit 2
+    fi
+    # read getopt’s output this way to handle the quoting right:
+    eval set -- "$PARSED"
+
+    while true; do
+        case "$1" in
+            -n|--no-bind)
+                BIND=0
+                shift
+                ;;
+            -v|--verbose)
+                VERBOSE=1
+                shift
+                ;;
+            -h|--help)
+                print_help
+                exit 0
+                ;;
+            --)
+                shift
+                break
+                ;;
+            *)
+                echo "ERROR: Argument parsing logic bug"
+                exit 2
+                ;;
+        esac
+    done
+
+    # we want no positional arguments 
+    [[ $# -ne 0 ]] && argument_error "ERROR: positional arguments not allowed"
+    
+    true
+}
+
+is_mountable()
+{
+    local DEV="$1"
+
+    [[ $VERBOSE -eq 1 ]] && echo "Checking if $DEV is mountable..."
+    
+    BLKID=$(blkid "$DEV")
+    [[ $VERBOSE -eq 1 ]] && echo "blkid output: $BLKID"
+
+    if [[ "$BLKID" != *" TYPE="* ]] && [[ "$BLKID" != "TYPE="* ]]; then
+        # blkid must return a "TYPE" tag for it to be mountable at all
+        [[ $VERBOSE -eq 1 ]] && echo "$DEV is not mountable (no TYPE)"
+        false
+        return
+    fi
+    
+    if [[ "$BLKID" == *"TYPE=\"linux_raid_member\""* ]] ||
+        [[ "$BLKID" == *"TYPE=\"LVM2_member\""* ]]; then
+        # these are not directly mountable
+        [[ $VERBOSE -eq 1 ]] && echo "$DEV is not mountable (RAID or LVM)"
+        false
+        return
+    fi
+
+    if findmnt --source "$DEV" >/dev/null 2>&1 ; then
+        [[ $VERBOSE -eq 1 ]] && echo "$DEV is already mounted"
+        false
+        return
+    fi
+    
+    [[ $VERBOSE -eq 1 ]] && echo "$DEV looks to be mountable"
+    
+    true
+}
+
+# create a suitable dir below /mnt
+# tries to use the block dev name, but uses a different one if already existing
+create_mountpoint()
+{
+    local DEV="$1"
+
+    DEVNAME=$(basename "$DEV")
+    
+    MOUNTPOINT="/mnt/$DEVNAME"
+    local NUMBER=1
+
+    while [[ -e "$MOUNTPOINT" ]]; do
+        [[ $VERBOSE -eq 1 ]] && echo "wanted mountpoint $MOUNTPOINT already existing, choosing a different one"
+        MOUNTPOINT="/mnt/${DEVNAME}_${NUMBER}"
+        NUMBER=$[$NUMBER+1]
+    done
+
+    [[ $VERBOSE -eq 1 ]] && echo "creating mountpoint $MOUNTPOINT"
+    
+    if ! mkdir "$MOUNTPOINT"; then
+        echo "error creating mountpoint $MOUNTPOINT"
+        false
+        return
+    fi
+}
+
+# if there is /dev /proc /sys in the just mounted path, bind mount them to ours
+# this allows using some commands in a chroot (like grub-install)
+try_bind_mounts()
+{
+    local MOUNTPOINT="$1"
+
+    [[ $VERBOSE -eq 1 ]] && echo "checking if to create bind-mounts below $MOUNTPOINT"
+    
+    if [[ -d "${MOUNTPOINT}/dev" ]]; then
+        if mount --bind "/dev" "${MOUNTPOINT}/dev"; then
+            echo "bind mounted /dev to ${MOUNTPOINT}/dev"
+        else
+            echo "failed bind mounting /dev to ${MOUNTPOINT}/dev"
+        fi
+    fi
+    
+    if [[ -d "${MOUNTPOINT}/sys" ]]; then
+        if mount --bind "/sys" "${MOUNTPOINT}/sys"; then
+            echo "bind mounted /sys to ${MOUNTPOINT}/sys"
+        else
+            echo "failed bind mounting /sys to ${MOUNTPOINT}/sys"
+        fi
+    fi
+    
+    if [[ -d "${MOUNTPOINT}/proc" ]]; then
+        if mount --bind "/proc" "${MOUNTPOINT}/proc"; then
+            echo "bind mounted /proc to ${MOUNTPOINT}/proc"
+        else
+            echo "failed bind mounting /proc to ${MOUNTPOINT}/proc"
+        fi
+    fi
+}
+
+try_mount()
+{
+    local DEV="$1"
+
+    echo -n "mounting $DEV... "
+    
+    create_mountpoint "$DEV" || return
+
+    if ! mount "$DEV" "$MOUNTPOINT"; then
+        echo "error mounting $DEV"
+        return
+    fi
+    
+    echo "OK"
+    
+    if [[ $BIND -eq 1 ]]; then
+        try_bind_mounts "$MOUNTPOINT"
+    fi
+}
+
+#################################
+# execution begins here
+
+parse_args "$@"
+
+# loop through regular block devices
+for BLKDEV in $(ls -1 "/sys/block"); do
+    # handle device mapper / lvm volumes in the 2nd loop for nice names
+    [[ -d "/sys/block/${BLKDEV}/dm" ]] && continue
+
+    if is_mountable "/dev/${BLKDEV}"; then
+        try_mount "/dev/${BLKDEV}"
+    fi
+done
+
+# loop through device mapper / lvm volumes
+for LVMDEV in $(ls -1 "/dev/mapper"); do
+    # there is always one central control entry
+    [[ "$LVMDEV" == "control" ]] && continue
+    
+    if is_mountable "/dev/mapper/${LVMDEV}"; then
+        try_mount "/dev/mapper/${LVMDEV}"
+    fi
+done
+
+exit 0
