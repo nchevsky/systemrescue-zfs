@@ -124,7 +124,17 @@ def search_autoruns(dirname, suffixes, copyfilefct):
             found+=1
     return found
 
+def read_cfg_value(name, defaultval=None):
+    if name in config:
+        val = config[name]
+    else:
+        val = defaultval
+    print(f"config['{name}']={val}")
+    return val
+
 def main():
+        global config
+
         errcnt=0 # in case no autorun executed
         logging.basicConfig(filename='/var/log/sysrescue-autorun.log', format='%(asctime)s %(message)s', level=logging.DEBUG)
         writemsg('Initializing autorun ...')
@@ -135,39 +145,47 @@ def main():
             sys.exit(1)
         with open(effectivecfg) as file:
             fullcfg = json.load(file)
-            config = fullcfg['autorun']
-            #print(json.dumps(config, indent=4))
+            if 'autorun' in fullcfg:
+                config = fullcfg['autorun']
+            else:
+                config = { }
 
         # ---- parse legacy options passed on the boot command line
         for curopt in open("/proc/cmdline","r").read().split():
             if re.match('^autoruns=', curopt): # "autoruns" is the legacy name for 'ar_suffixes'
                 config['ar_suffixes'] = curopt.replace('autoruns=','')
 
-        # ---- show the effective configuration
+        # ---- load the config into local variables, allow the keys not to exist
+        # ---- also print the effective configuration
         logging.info(f"Showing the effective autorun configuration ...")
-        for key, val in config.items():
-            logging.info(f"config['{key}']={val}")
+        ar_suffixes = read_cfg_value('ar_suffixes', "")
+        ar_disable = read_cfg_value('ar_disable', False)
+        ar_attempts = read_cfg_value('ar_attempts', 1)
+        ar_source = read_cfg_value('ar_source', "")
+        ar_ignorefail = read_cfg_value('ar_ignorefail', False)
+        ar_nodel = read_cfg_value('ar_nodel', False)
+        ar_nowait = read_cfg_value('ar_nowait', False)
 
         # ---- determine the effective script files suffixes
-        if config['ar_suffixes'] in (None, 'no', ''):
+        if ar_suffixes in (None, 'no', ''):
             suffixes=['']
         else:
-            suffixes=[''] + str(config['ar_suffixes']).split(',')
+            suffixes=[''] + str(ar_suffixes).split(',')
         logging.info(f"suffixes={suffixes}")
 
         # ---- exit here is there is nothing to do
-        if config['ar_disable'] == True:
+        if ar_disable == True:
             writemsg(f"Autorun has been disabled using ar_disable, exiting now")
             sys.exit(0)
 
         # ---- parse autorun sources ----
-        if re.match('^https?://', config['ar_source']):
-            while config['ar_attempts'] > 0 and not autorunfiles:
+        if re.match('^https?://', ar_source):
+            while ar_attempts > 0 and not autorunfiles:
                 time.sleep(1)
-                config['ar_attempts'] -= 1
-                search_autoruns(config['ar_source'], suffixes, copyfilefct_http)
-        elif re.match('^/dev/', config['ar_source']): # mount a partition/device
-            mnt1=('mount',config['ar_source'],autorunmnt)
+                ar_attempts -= 1
+                search_autoruns(ar_source, suffixes, copyfilefct_http)
+        elif re.match('^/dev/', ar_source): # mount a partition/device
+            mnt1=('mount',ar_source,autorunmnt)
             mnt2=('umount',autorunmnt)
             p = subprocess.Popen(mnt1)
             p.wait()
@@ -176,8 +194,8 @@ def main():
                 sys.exit(1)
             search_autoruns(autorunmnt, suffixes, copyfilefct_basic)
             subprocess.Popen(mnt2)
-        elif re.match('^nfs://', config['ar_source']): # mount an nfs share
-            source=config['ar_source'].replace('nfs://','')
+        elif re.match('^nfs://', ar_source): # mount an nfs share
+            source=ar_source.replace('nfs://','')
             mnt1=('mount','-t','nfs','-o','nolock',source,autorunmnt)
             mnt2=('umount',autorunmnt)
             p = subprocess.Popen(mnt1)
@@ -187,8 +205,8 @@ def main():
                 sys.exit(1)
             search_autoruns(autorunmnt, suffixes, copyfilefct_basic)
             subprocess.Popen(mnt2)
-        elif re.match('^smb://', config['ar_source']): # mount a samba share
-            source=config['ar_source'].replace('smb://','')
+        elif re.match('^smb://', ar_source): # mount a samba share
+            source=ar_source.replace('smb://','')
             mnt1=('mount','-t','cifs','//%s'%source,autorunmnt)
             mnt2=('umount',autorunmnt)
             p = subprocess.Popen(mnt1)
@@ -260,20 +278,20 @@ def main():
             writemsg (f'Execution of {filebase} returned {returncode}')
             if returncode != 0:
                 errcnt += 1
-                if config['ar_ignorefail'] == False:
+                if ar_ignorefail == False:
                     writemsg (f'Now aborting autorun as {filebase} has failed')
                     break; # Stop on the first script failure
 
         # ---- delete the copies of the scripts ----
-        if config['ar_nodel'] == False:
+        if ar_nodel == False:
             for curfile in autorunfiles:
                 writemsg (f'removing {curfile}')
                 os.unlink(curfile)
 
         # ---- wait a keypress feature -----
         if os.path.isfile('/etc/ar_nowait'):
-            config['ar_nowait'] = True
-        if (config['ar_nowait'] == False) and (len(autorunfiles) > 0):
+            ar_nowait = True
+        if (ar_nowait != True) and (len(autorunfiles) > 0):
             writemsg(f'Autorun scripts completed with {errcnt} errors, press <Enter> to continue')
             sys.stdin.read(1)
 

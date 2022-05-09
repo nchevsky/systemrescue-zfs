@@ -105,20 +105,51 @@ function search_cmdline_option(optname, multiple)
 end
 
 -- Process a block of yaml configuration and override the current configuration with new values
-function process_yaml_config(curconfig)
-    if (curconfig == nil) or (type(curconfig) ~= "table") then
-        io.stderr:write(string.format("This is not valid yaml, it will be ignored\n"))
+function process_yaml_config(config_content)
+    if (config_content == nil) then
+        io.stderr:write(string.format("Error downloading or empty file received\n"))
         return false
     end
-    for scope, entries in pairs(config) do
-        for key, val in pairs(entries) do
-            if (curconfig[scope] ~= nil) and (curconfig[scope][key] ~= nil) then
-                print("- Overriding config['"..scope.."']['"..key.."'] with the value from the yaml file")
-                config[scope][key] = curconfig[scope][key]
+    if pcall(function() curconfig = yaml.load(config_content) end) then
+        if (curconfig == nil) or (type(curconfig) ~= "table") then
+            io.stderr:write(string.format("This is not valid yaml (=no table), it will be ignored\n"))
+            return false
+        end
+        merge_config_table(config, curconfig, "config")
+        return true
+    else
+        io.stderr:write(string.format("Failed parsing yaml, it will be ignored\n"))
+        return false
+    end
+end
+
+-- Recursive merge of a config table
+-- config_table: references the current level within the global config
+-- new_table: the current level within the new yaml we want to merge right now
+-- leveltext: textual representation of the current level used for messages, split by "|"
+function merge_config_table(config_table, new_table, leveltext)
+    for key, value in pairs(new_table) do
+        -- loop through the current level of the new config
+        if (config_table[key] == nil) then
+            -- a key just existing in the new config, not in current config -> copy it
+            print("- Merging "..leveltext.."|"..key.." into the config")
+            config_table[key] = value
+        else
+            -- key of the new config also exisiting in the current config: check value type
+            if (type(value) == "nil" or (type(value) == "string" and value == "")) then
+                -- remove an existing table entry with an empty value
+                print("- Removing "..leveltext.."|"..key)
+                config_table[key] = nil
+            elseif (type(value) == "table" and type(config_table[key]) == "table") then
+                -- old and new values are tables: recurse
+                merge_config_table(config_table[key], value, leveltext.."|"..key)
+            else
+                -- overwrite the old value
+                print("- Overriding "..leveltext.."|"..key.." with the value from the yaml file")
+                config_table[key] = value
             end
         end
     end
-    return true
 end
 
 -- Download a file over http/https and return the contents of the file or nil if it fails
@@ -153,55 +184,24 @@ end
 errcnt = 0
 
 -- ==============================================================================
--- Define the default configuration
+-- We start with an empty global config
+-- the default config is usually in the first yaml file parsed (100-defaults.yaml)
 -- ==============================================================================
-print ("====> Define the default configuration ...")
-config = {
-    ["global"] = {
-        ['copytoram'] = false,
-        ['checksum'] = false,
-        ['loadsrm'] = false,
-        ['late_load_srm'] = "",
-        ['dostartx'] = false,
-        ['dovnc'] = false,
-        ['noautologin'] = false,
-        ['nofirewall'] = false,
-        ['rootshell'] = "",
-        ['rootpass'] = "",
-        ['rootcryptpass'] = "",
-        ['setkmap'] = "",
-        ['vncpass'] = "",
-    },
-    ["autorun"] = {
-        ['ar_disable'] = false,
-        ['ar_nowait'] = false,
-        ['ar_nodel'] = false,
-        ['ar_ignorefail'] = false,
-        ['ar_attempts'] = 1,
-        ['ar_source'] = "",
-        ['ar_suffixes'] = "0,1,2,3,4,5,6,7,8,9,A,B,C,D,E,F",
-    },
-    ["sysconfig"] = {
-        ["ca-trust"] = {},
-    },
-}
+config = { }
 
 -- ==============================================================================
--- Override the configuration with values from yaml files
+-- Merge one yaml file after the other in lexicographic order
 -- ==============================================================================
-print ("====> Overriding the default configuration with values from yaml files ...")
+print ("====> Merging configuration with values from yaml files ...")
 confdirs = {"/run/archiso/bootmnt/sysrescue.d", "/run/archiso/copytoram/sysrescue.d"}
-conffiles = search_cmdline_option("sysrescuecfg", true)
 
 -- Process local yaml configuration files
 for _, curdir in ipairs(confdirs) do
     if lfs.attributes(curdir, "mode") == "directory" then
         print("Searching for yaml configuration files in "..curdir.." ...")
-        for _, curfile in ipairs(list_config_files(curdir, conffiles)) do
+        for _, curfile in ipairs(list_config_files(curdir, {})) do
             print(string.format("Processing local yaml configuration file: %s ...", curfile))
-            local curconfig = yaml.loadpath(curfile)
-            --print("++++++++++++++\n"..yaml.dump(curconfig).."++++++++++++++\n")
-            if process_yaml_config(curconfig) == false then
+            if process_yaml_config(read_file_contents(curfile)) == false then
                 errcnt = errcnt + 1
             end
         end
@@ -210,35 +210,82 @@ for _, curdir in ipairs(confdirs) do
     end
 end
 
--- Process remote yaml configuration files
+-- Process explicitly configured configuration files
+-- these are parsed afterwards and in the order given, so they have precedence
+conffiles = search_cmdline_option("sysrescuecfg", true)
 print("Searching for remote yaml configuration files ...")
 for _, curfile in ipairs(conffiles) do
     if string.match(curfile, "^https?://") then
         print(string.format("Processing remote yaml configuration file: %s ...", curfile))
         local contents = download_file(curfile)
-        if (contents == nil) or (process_yaml_config(yaml.load(contents)) == false) then
+        if process_yaml_config(contents) == false then
             errcnt = errcnt + 1
+        end
+    elseif string.match(curfile, "^/") then
+        -- we have a local file with absolute path
+        print(string.format("Processing local yaml configuration file: %s ...",curfile))
+        if process_yaml_config(read_file_contents(curfile)) == false then
+            errcnt = errcnt + 1
+        end
+    else
+        -- we have a local file with relative path, prefix the one existing config dir
+        -- this will apply the config again, but later than before, giving it higher priority
+        for _, curdir in ipairs(confdirs) do
+            if lfs.attributes(curdir, "mode") == "directory" then
+                print(string.format("Processing local yaml configuration file: %s ...",curdir.."/"..curfile))
+                if process_yaml_config(read_file_contents(curdir.."/"..curfile)) == false then
+                    errcnt = errcnt + 1
+                end
+                -- just try the explicitly configured filename with one dir prefix
+                break
+            end
         end
     end
 end
 
 -- ==============================================================================
 -- Override the configuration with values passed on the boot command line
+--
+-- NOTE: boot command line options are only for legacy compatibility and
+--       very common options. Consider carfully before adding new boot 
+--       command line options. New features should by default just be 
+--       configured through the yaml config.
 -- ==============================================================================
+
+cmdline_options = {
+    ['copytoram'] = "global",
+    ['checksum'] = "global",
+    ['loadsrm'] = "global",
+    ['dostartx'] = "global",
+    ['dovnc'] = "global",
+    ['noautologin'] = "global",
+    ['nofirewall'] = "global",
+    ['rootshell'] = "global",
+    ['rootpass'] = "global",
+    ['rootcryptpass'] = "global",
+    ['setkmap'] = "global",
+    ['vncpass'] = "global",
+    ['ar_disable'] = "autorun",
+    ['ar_nowait'] = "autorun",
+    ['ar_nodel'] = "autorun",
+    ['ar_ignorefail'] = "autorun",
+    ['ar_attempts'] = "autorun",
+    ['ar_source'] = "autorun",
+    ['ar_suffixes'] = "autorun"
+}
+
 print ("====> Overriding the configuration with options passed on the boot command line ...")
-for _, scope in ipairs({"global", "autorun"}) do
-    for key,val in pairs(config[scope]) do
-        optresult = search_cmdline_option(key, false)
-        if optresult == true then
-            print("- Option '"..key.."' has been enabled on the boot command line")
-            config[scope][key] = optresult
-        elseif optresult == false then
-            print("- Option '"..key.."' has been disabled on the boot command line")
-            config[scope][key] = optresult
-        elseif optresult ~= nil then
-            print("- Option '"..key.."' has been defined as '"..optresult.."' on the boot command line")
-            config[scope][key] = optresult
-        end
+for option, scope in pairs(cmdline_options) do
+    optresult = search_cmdline_option(option, false)
+    if optresult == true then
+        print("- Option '"..option.."' has been enabled on the boot command line")
+        config[scope][option] = optresult
+    elseif optresult == false then
+        print("- Option '"..option.."' has been disabled on the boot command line")
+        config[scope][option] = optresult
+    elseif optresult ~= nil then
+        print("- Option '"..option.."' has been defined as '"..optresult.."' on the boot command line")
+        config[scope][option] = optresult
     end
 end
 

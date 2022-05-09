@@ -4,6 +4,8 @@ global:
     checksum: false
     loadsrm: false
     dostartx: false
+    dovnc: false
+    noautologin: false
     nofirewall: false
 
 autorun:
