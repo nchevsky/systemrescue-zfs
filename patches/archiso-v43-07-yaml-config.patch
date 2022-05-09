@@ -2,12 +2,15 @@ diff --git a/archiso/initcpio/hooks/archiso b/archiso/initcpio/hooks/archiso
 index 853652e..53215eb 100644
 --- a/archiso/initcpio/hooks/archiso
 +++ b/archiso/initcpio/hooks/archiso
-@@ -197,6 +197,32 @@ archiso_mount_handler() {
+@@ -197,6 +197,35 @@ archiso_mount_handler() {
          fi
      fi
  
++    msg ":: Creating config dir ..."
++    mkdir -p /run/archiso/config/
++
 +    msg ":: Execute the configuration processing script ..."
-+    jsonconfig="/etc/sysrescue/sysrescue-effective-config.json"
++    jsonconfig="/run/archiso/config/sysrescue-effective-config.json"
 +    if ! /usr/bin/sysrescue-configuration.lua > /tmp/sysrescue-configuration.log 2>&1
 +    then
 +        echo "ERROR: The configuration processing script has failed"

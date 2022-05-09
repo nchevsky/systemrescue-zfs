@@ -19,7 +19,7 @@ errcnt = 0
 # Read the effective configuration file
 # ==============================================================================
 print(f"====> Read the effective configuration file ...")
-effectivecfg = "/etc/sysrescue/sysrescue-effective-config.json"
+effectivecfg = "/run/archiso/config/sysrescue-effective-config.json"
 if os.path.exists(effectivecfg) == False:
     print (f"Failed to find effective configuration file in {effectivecfg}")
     sys.exit(1)
