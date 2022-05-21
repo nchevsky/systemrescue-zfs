@@ -171,9 +171,13 @@ if 'sysconfig' in config and 'ca-trust' in config['sysconfig'] and config['sysco
 
 if (late_load_srm != None) and (late_load_srm != ""):
     print(f"====> Late-loading SystemRescueModule (SRM) ...")
-    p = subprocess.run(["/usr/share/sysrescue/bin/load-srm", late_load_srm], text=True)
+    subprocess.run(["/usr/share/sysrescue/bin/load-srm", late_load_srm])
     # the SRM could contain changes to systemd units -> let them take effect
-    p = subprocess.run(["/usr/bin/systemctl", "daemon-reload"], text=True)
+    subprocess.run(["/usr/bin/systemctl", "daemon-reload"])
+    # trigger start of multi-user.target: the SRM could have added something to it's "Wants"
+    # systemd doesn't re-evaluate the dependencies on daemon-reload while running a transaction
+    # so we have to do this manually. Note: only affects multi-user.target, nothing else
+    subprocess.run(["/usr/bin/systemctl", "--no-block", "start", "multi-user.target"])
 
 # ==============================================================================
 # End of the script
