@@ -124,9 +124,13 @@ def search_autoruns(dirname, suffixes, copyfilefct):
             found+=1
     return found
 
-def read_cfg_value(name, defaultval=None):
+def read_cfg_value(name, defaultval):
     if name in config:
-        val = config[name]
+        try:
+            val = type(defaultval)(config[name])
+        except (TypeError, ValueError) as e:
+            writemsg(f"{name} with {config[name]} is not the same type as defaultval: {e}")
+            val = defaultval
     else:
         val = defaultval
     print(f"config['{name}']={val}")
