@@ -31,6 +31,23 @@ def symlink_overwrite(target, link_file):
     
     os.replace(tmp.name, link_file)
 
+def strtobool (val):
+    """Convert a string representation of truth to true (1) or false (0).
+
+    True values are 'y', 'yes', 't', 'true', 'on', and '1'; false values
+    are 'n', 'no', 'f', 'false', 'off', and '0'.  Raises ValueError if
+    'val' is anything else.
+    
+    Function adapted from Pythons distutils.util.py because it will be deprecated soon
+    Copyright (c) Python Software Foundation; All Rights Reserved
+    """
+    val = str(val).lower()
+    if val in ('y', 'yes', 't', 'true', 'on', '1'):
+        return True
+    elif val in ('n', 'no', 'f', 'false', 'off', '0'):
+        return False
+    else:
+        raise ValueError("invalid truth value %r" % (val,))
 
 # ==============================================================================
 # Initialization
@@ -52,34 +69,47 @@ with open(effectivecfg) as file:
 
 # ==============================================================================
 # Sanitize config, initialize variables
-# Make sysrescue-initialize work safely without them being defined
+# Make sysrescue-initialize work safely without them being defined or have a wrong type
 # Also show the effective configuration
 # ==============================================================================
 print(f"====> Showing the effective global configuration (except clear passwords) ...")
 
-def read_cfg_value(scope, name, printval):
+def read_cfg_value(scope, name, defaultval, printval):
     if not scope in config:
-        val = None
+        val = defaultval
     elif name in config[scope]:
-        val = config[scope][name]
+        chkval = config[scope][name]
+        try:
+            if isinstance(chkval, list) or isinstance(chkval, dict):
+                raise TypeError(f"must be a {type(defaultval)}, not a {type(chkval)}")
+            elif isinstance(defaultval, bool) and not isinstance(chkval, bool):
+                val = strtobool(chkval)
+            else:
+                val = type(defaultval)(chkval)
+        except (TypeError, ValueError) as e:
+            if printval:
+                print(f"config['{scope}']['{name}'] with {chkval} is not the same type as defaultval: {e}")
+            else:
+                print(f"config['{scope}']['{name}'] is not the same type as defaultval: {e}")
+            val = defaultval
     else:
-        val = None
+        val = defaultval
 
     if printval:
         print(f"config['{scope}']['{name}']={val}")
     
     return val
 
-setkmap = read_cfg_value('global','setkmap', True)
-rootshell = read_cfg_value('global','rootshell', True)
-rootpass = read_cfg_value('global','rootpass', False)
-rootcryptpass = read_cfg_value('global','rootcryptpass', False)
-nofirewall = read_cfg_value('global','nofirewall', True)
-noautologin = read_cfg_value('global','noautologin', True)
-dostartx = read_cfg_value('global','dostartx', True)
-dovnc = read_cfg_value('global','dovnc', True)
-vncpass = read_cfg_value('global','vncpass', False)
-late_load_srm = read_cfg_value('global','late_load_srm', True)
+setkmap = read_cfg_value('global','setkmap', "", True)
+rootshell = read_cfg_value('global','rootshell', "", True)
+rootpass = read_cfg_value('global','rootpass', "", False)
+rootcryptpass = read_cfg_value('global','rootcryptpass', "", False)
+nofirewall = read_cfg_value('global','nofirewall', False, True)
+noautologin = read_cfg_value('global','noautologin', False, True)
+dostartx = read_cfg_value('global','dostartx', False, True)
+dovnc = read_cfg_value('global','dovnc', False, True)
+vncpass = read_cfg_value('global','vncpass', "", False)
+late_load_srm = read_cfg_value('global','late_load_srm', "", True)
 
 # ==============================================================================
 # Apply the effective configuration
@@ -87,7 +117,7 @@ late_load_srm = read_cfg_value('global','late_load_srm', True)
 print(f"====> Applying configuration ...")
 
 # Configure keyboard layout if requested in the configuration
-if (setkmap != None) and (setkmap != ""):
+if setkmap != "":
     p = subprocess.run(["localectl", "set-keymap", setkmap], text=True)
     if p.returncode == 0:
         print (f"Have changed the keymap successfully")
@@ -96,7 +126,7 @@ if (setkmap != None) and (setkmap != ""):
         errcnt+=1
 
 # Configure root login shell if requested in the configuration
-if (rootshell != None) and (rootshell != ""):
+if rootshell != "":
     p = subprocess.run(["chsh", "--shell", rootshell, "root"], text=True)
     if p.returncode == 0:
         print (f"Have changed the root shell successfully")
@@ -105,7 +135,7 @@ if (rootshell != None) and (rootshell != ""):
         errcnt+=1
 
 # Set the system root password from a clear password
-if (rootpass != None) and (rootpass != ""):
+if rootpass != "":
     p = subprocess.run(["chpasswd", "--crypt-method", "SHA512"], text=True, input=f"root:{rootpass}")
     if p.returncode == 0:
         print (f"Have changed the root password successfully")
@@ -116,7 +146,7 @@ if (rootpass != None) and (rootpass != ""):
 # Set the system root password from an encrypted password
 # A password can be encrypted using a one-line python3 command such as:
 # python3 -c 'import crypt; print(crypt.crypt("MyPassWord123", crypt.mksalt(crypt.METHOD_SHA512)))'
-if (rootcryptpass != None) and (rootcryptpass != ""):
+if rootcryptpass != "":
     p = subprocess.run(["chpasswd", "--encrypted"], text=True, input=f"root:{rootcryptpass}")
     if p.returncode == 0:
         print (f"Have changed the root password successfully")
@@ -155,7 +185,7 @@ if noautologin == True:
         errcnt+=1
 
 # Set the VNC password from a clear password
-if (vncpass != None) and (vncpass != ""):
+if vncpass != "":
     os.makedirs("/root/.vnc", exist_ok = True)
     p = subprocess.run(["x11vnc", "-storepasswd", vncpass, "/root/.vnc/passwd"], text=True)
     if p.returncode == 0:
@@ -192,7 +222,7 @@ if 'sysconfig' in config and 'ca-trust' in config['sysconfig'] and config['sysco
 # late-load a SystemRescueModule (SRM)
 # ==============================================================================
 
-if (late_load_srm != None) and (late_load_srm != ""):
+if late_load_srm != "":
     print(f"====> Late-loading SystemRescueModule (SRM) ...")
     subprocess.run(["/usr/share/sysrescue/bin/load-srm", late_load_srm])
     # the SRM could contain changes to systemd units -> let them take effect
