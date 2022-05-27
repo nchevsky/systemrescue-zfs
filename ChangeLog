@@ -14,7 +14,7 @@ https://gitlab.com/systemrescue/systemrescue-sources/-/issues/278
 * Change how the "sysrescuecfg" boot command line option is implemented:
   Merge given config files after reading the ones in the sysrescue.d dir
 * Change YAML config file loading logic to fully merge multiple files (#254)
-* Added packages: acpi, moreutils, python-pythondialog
+* Added packages: acpi, fatresize, kexec-tools, moreutils, python-pythondialog
 
 -------------------------------------------------------------------------------
 9.02 (2022-04-09):
