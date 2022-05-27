@@ -53,6 +53,7 @@ exfatprogs
 expac
 ext4magic
 f2fs-tools
+fatresize
 featherpad
 file
 findutils
@@ -99,6 +100,7 @@ irssi
 jfsutils
 jq
 keepassxc
+kexec-tools
 less
 lftp
 libisoburn
@@ -218,6 +220,7 @@ sshfs
 strace
 stress
 sudo
+syslinux
 sysstat
 tar
 tcl
