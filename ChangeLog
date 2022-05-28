@@ -6,8 +6,9 @@ unless volunteers are found to help maintaining it. See
 https://gitlab.com/systemrescue/systemrescue-sources/-/issues/278
 
 ------------------------------------------------------------------------------
-9.03 (YYYY-MM-DD):
+9.03 (2022-05-28):
 -------------------------------------------------------------------------------
+* Updated the kernel to the Long-Term-Supported linux-5.15.43
 * Added "autoterminal" to run custom scripts in dedicated consoles for user interaction
 * Added "mountall" script which mounts all available disks and volumes
 * Updated "sysrescuecfg" boot option to merge given files after files in sysrescue.d
