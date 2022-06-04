@@ -7,6 +7,7 @@ Wants=getty-pre.target
 Type=oneshot
 ExecStart=/etc/systemd/scripts/sysrescue-initialize.py
 RemainAfterExit=true
+StandardOutput=journal+console
 
 [Install]
 WantedBy=multi-user.target
