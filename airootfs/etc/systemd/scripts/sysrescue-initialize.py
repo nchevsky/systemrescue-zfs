@@ -9,6 +9,10 @@ import os
 import sys
 import re
 import tempfile
+import functools
+
+# flush stdout buffer after each print call: immediately show the user what is going on
+print = functools.partial(print, flush=True)
 
 # pythons os.symlink bails when a file already exists, this function also handles overwrites
 def symlink_overwrite(target, link_file):
@@ -224,7 +228,7 @@ if 'sysconfig' in config and 'ca-trust' in config['sysconfig'] and config['sysco
 
 if late_load_srm != "":
     print(f"====> Late-loading SystemRescueModule (SRM) ...")
-    subprocess.run(["/usr/share/sysrescue/bin/load-srm", late_load_srm])
+    subprocess.run(["/usr/share/sysrescue/bin/load-srm", late_load_srm], stdout=None, stderr=None)
     # the SRM could contain changes to systemd units -> let them take effect
     subprocess.run(["/usr/bin/systemctl", "daemon-reload"])
     # trigger start of multi-user.target: the SRM could have added something to it's "Wants"
