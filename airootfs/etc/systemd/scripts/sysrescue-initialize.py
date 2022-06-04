@@ -245,6 +245,43 @@ if late_load_srm != "":
     subprocess.run(["/usr/bin/systemctl", "--no-block", "start", "multi-user.target"])
 
 # ==============================================================================
+# configure SSH authorized_keys
+# do this after late-loading SRMs because we want to add to what is contained in a SRM
+# ==============================================================================
+
+if 'sysconfig' in config and 'authorized_keys' in config['sysconfig'] and \
+  config['sysconfig']['authorized_keys'] and isinstance(config['sysconfig']['authorized_keys'], dict):
+    print(f"====> Adding SSH authorized_keys ...")
+    # create list of key lines we want to add
+    keylines = []
+    for key, value in config['sysconfig']['authorized_keys'].items():
+        keylines.append(f"{value} {key}")
+
+    try:
+        if os.path.exists("/root/.ssh/authorized_keys"):
+            # check if we already have one of our keylines in the file: don't add it again
+            with open("/root/.ssh/authorized_keys", "r") as authfile:
+                for line in authfile:
+                    line = line.strip()
+                    # iterate backwards through the list to make deletion safe
+                    for i in range(len(keylines)-1, -1, -1):
+                        if line == keylines[i]:
+                            del keylines[i]
+        if keylines:
+            if not os.path.isdir("/root/.ssh"):
+                os.mkdir("/root/.ssh")
+                os.chmod("/root/.ssh", 0o700)
+            with open("/root/.ssh/authorized_keys", "a") as authfile:
+                # append all our keylines
+                for line in keylines:
+                    authfile.write(f"{line}\n")
+                authfile.close()
+                os.chmod("/root/.ssh/authorized_keys", 0o600)
+    except Exception as e:
+        print(e)
+        errcnt+=1
+
+# ==============================================================================
 # autoterminal: programs that take over a virtual terminal for user interaction
 # ==============================================================================
 
