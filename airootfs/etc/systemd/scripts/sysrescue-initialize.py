@@ -114,6 +114,7 @@ dostartx = read_cfg_value('global','dostartx', False, True)
 dovnc = read_cfg_value('global','dovnc', False, True)
 vncpass = read_cfg_value('global','vncpass', "", False)
 late_load_srm = read_cfg_value('global','late_load_srm', "", True)
+timezone = read_cfg_value('sysconfig','timezone', "", True)
 
 # ==============================================================================
 # Apply the effective configuration
@@ -205,6 +206,13 @@ if dovnc == True:
     file.write("""[ -f ~/.vnc/passwd ] && pwopt="-usepw" || pwopt="-nopw"\n""")
     file.write("""x11vnc $pwopt -nevershared -forever -logfile /var/log/x11vnc.log &\n""")
     file.close()
+
+# Set the timezone
+if timezone != "":
+    p = subprocess.run(["/usr/bin/timedatectl", "set-timezone", timezone], text=True)
+    if p.returncode != 0:
+        print (f"Failed to set timezone")
+        errcnt+=1
 
 # ==============================================================================
 # Configure custom CA certificates
