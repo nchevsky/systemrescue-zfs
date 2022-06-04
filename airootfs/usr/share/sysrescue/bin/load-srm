@@ -243,6 +243,41 @@ curl_download()
     return 0
 }
 
+wait_online()
+{
+    # timeout in seconds
+    local timeout=$1
+
+    # 4 tests per second
+    local tries=$[$timeout*4]
+    local online=0
+
+    while [[ $tries -gt 0 ]]; do
+        if /usr/bin/nm-online --timeout=0 --quiet; then
+            # we are online
+            online=1
+            break
+        fi
+        tries=$[$tries-1]
+        if [[ $tries -eq 0 ]]; then
+            # no unnecessary sleep+message at the end
+            continue
+        fi
+
+        # print a message every 5 seconds (=20 tests) to not spam the console
+        if [[ $(expr $tries % 20) == "0" ]]; then
+            echo "Waiting for network connection ($[tries/4]s of ${timeout}s left)..."
+        fi
+
+        sleep 0.25
+    done
+
+    if [[ $online -eq 0 ]]; then
+        # the user could have circumvented NetworkManager
+        echo "No network connection detected by NetworkManager, trying download anyway"
+    fi
+}
+
 #################################
 # execution begins here
 
@@ -251,6 +286,10 @@ parse_args "$@"
 [[ $VERBOSE -eq 1 ]] && echo "URL/path: $URL"
 
 if [[ $URL_PROTO == "http" ]] || [[ $URL_PROTO == "https" ]]; then
+    # wait until we have some kind on network connection before trying the download
+    # waiting is important even if we try downloading anyways: the network may take some time to get up
+    wait_online 30
+
     curl_download
     # replace the URL parameter with the location we downloaded the file to
     URL="$TMPDIR/srm"
