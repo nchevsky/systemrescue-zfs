@@ -49,6 +49,16 @@ function item_in_list(item, list)
     return false
 end
 
+-- Ensure that the given scope exists in the config table, create it if not
+function ensure_scope(cfg_table, scopename)
+    if (cfg_table == nil) or (type(cfg_table) ~= "table") then
+        cfg_table = { }
+    end
+    if (cfg_table[scopename] == nil) or (type(cfg_table[scopename]) ~= "table") then
+        cfg_table[scopename] = { }
+    end
+end
+
 -- Return the number of items in a table
 function get_table_size(mytable)
     size = 0
@@ -279,12 +289,15 @@ for option, scope in pairs(cmdline_options) do
     optresult = search_cmdline_option(option, false)
     if optresult == true then
         print("- Option '"..option.."' has been enabled on the boot command line")
+        ensure_scope(config, scope)
         config[scope][option] = optresult
     elseif optresult == false then
         print("- Option '"..option.."' has been disabled on the boot command line")
+        ensure_scope(config, scope)
         config[scope][option] = optresult
     elseif optresult ~= nil then
         print("- Option '"..option.."' has been defined as '"..optresult.."' on the boot command line")
+        ensure_scope(config, scope)
         config[scope][option] = optresult
     end
 end
