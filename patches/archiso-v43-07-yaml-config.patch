@@ -26,7 +26,7 @@ index 853652e..53215eb 100644
 +            if [[ "${value}" == 'true' ]]; then
 +                echo "Entry '.global.${curentry}' enabled in config: value='${value}'"
 +                eval "${curentry}='y'"
-+            elif [[ "${value}" == 'false' ]]; then
++            elif [[ "${value}" == 'false' ]] || [[ "${value}" == 'null' ]]; then
 +                echo "Entry '.global.${curentry}' disabled in config: value='${value}'"
 +            else
 +                echo "ERROR: Found invalid value for '.global.${curentry}': value='${value}'"
