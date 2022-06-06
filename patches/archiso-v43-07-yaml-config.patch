@@ -2,7 +2,7 @@ diff --git a/archiso/initcpio/hooks/archiso b/archiso/initcpio/hooks/archiso
 index 853652e..53215eb 100644
 --- a/archiso/initcpio/hooks/archiso
 +++ b/archiso/initcpio/hooks/archiso
-@@ -197,6 +197,35 @@ archiso_mount_handler() {
+@@ -197,6 +197,39 @@ archiso_mount_handler() {
          fi
      fi
  
@@ -21,12 +21,16 @@ index 853652e..53215eb 100644
 +    msg ":: Define early boot options based on the configuration ..."
 +    for curentry in "copytoram" "checksum" "loadsrm"
 +    do
-+        if value=$(jq --raw-output ".global.${curentry}" ${jsonconfig} 2>/dev/null)
++        if value=$(jq --raw-output ".global.${curentry} | tostring | ascii_downcase" ${jsonconfig} 2>/dev/null)
 +        then
-+            if [[ "${value}" == 'true' ]]; then
++            if [[ "${value}" == 'y' ]] || [[ "${value}" == 'yes' ]] || [[ "${value}" == 't' ]] || \
++               [[ "${value}" == 'true' ]] || [[ "${value}" == 'on' ]] || [[ "${value}" == '1' ]] || \
++               [[ "${value}" == '1.0' ]] ; then
 +                echo "Entry '.global.${curentry}' enabled in config: value='${value}'"
 +                eval "${curentry}='y'"
-+            elif [[ "${value}" == 'false' ]] || [[ "${value}" == 'null' ]]; then
++            elif [[ "${value}" == 'n' ]] || [[ "${value}" == 'no' ]] || [[ "${value}" == 'f' ]] || \
++                 [[ "${value}" == 'false' ]] || [[ "${value}" == 'off' ]] || [[ "${value}" == '0' ]] || \
++                 [[ "${value}" == '0.0' ]] || [[ "${value}" == 'null' ]] ; then
 +                echo "Entry '.global.${curentry}' disabled in config: value='${value}'"
 +            else
 +                echo "ERROR: Found invalid value for '.global.${curentry}': value='${value}'"
