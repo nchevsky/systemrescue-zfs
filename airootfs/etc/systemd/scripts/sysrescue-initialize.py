@@ -214,11 +214,45 @@ if timezone != "":
         print (f"Failed to set timezone")
         errcnt+=1
 
+# Add Firefox bookmarks
+firefox_policy_path = "/opt/firefox-esr/distribution/policies.json"
+if 'sysconfig' in config and 'bookmarks' in config['sysconfig'] and config['sysconfig']['bookmarks']:
+    if os.path.exists(firefox_policy_path):
+        with open(firefox_policy_path) as polfile:
+            ff_policy = json.load(polfile)
+    else:
+        ff_policy = {}
+
+    # build dict structure if it doesn't exist yet
+    if not "policies" in ff_policy:
+        ff_policy["policies"] = {}
+    if not "Bookmarks" in ff_policy["policies"]:
+        ff_policy["policies"]["Bookmarks"] = []
+
+    # Don't add bookmark titles again if we already have them in the list
+    for ff_bmarkdict in ff_policy["policies"]["Bookmarks"]:
+        if "Title" in ff_bmarkdict and ff_bmarkdict["Title"]:
+            for prio, cfg_bmarkdict in sorted(config['sysconfig']['bookmarks'].items()):
+                if "title" in cfg_bmarkdict and cfg_bmarkdict["title"] == ff_bmarkdict["Title"]:
+                    del config['sysconfig']['bookmarks'][prio]
+
+    for prio, cfg_bmarkdict in sorted(config['sysconfig']['bookmarks'].items()):
+        if "title" in cfg_bmarkdict and "url" in cfg_bmarkdict:
+            ff_bmarkdict = {}
+            ff_bmarkdict["Title"] = cfg_bmarkdict["title"]
+            ff_bmarkdict["URL"] = cfg_bmarkdict["url"]
+            ff_policy["policies"]["Bookmarks"].append(ff_bmarkdict)
+
+    # create dir, write out
+    if not os.path.isdir(os.path.dirname(firefox_policy_path)):
+        os.makedirs(os.path.dirname(firefox_policy_path))
+    with open(firefox_policy_path, "w", encoding='utf-8') as polfile:
+        json.dump(ff_policy, polfile, ensure_ascii=False, indent=2)
+
 # ==============================================================================
 # Configure custom CA certificates
 # ==============================================================================
 ca_anchor_path = "/etc/ca-certificates/trust-source/anchors/"
-firefox_policy_path = "/opt/firefox-esr/distribution/policies.json"
 
 if 'sysconfig' in config and 'ca-trust' in config['sysconfig'] and config['sysconfig']['ca-trust']:
     print("====> Adding trusted CA certificates ...")
