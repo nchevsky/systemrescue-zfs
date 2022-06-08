@@ -218,17 +218,46 @@ if timezone != "":
 # Configure custom CA certificates
 # ==============================================================================
 ca_anchor_path = "/etc/ca-certificates/trust-source/anchors/"
+firefox_policy_path = "/opt/firefox-esr/distribution/policies.json"
 
 if 'sysconfig' in config and 'ca-trust' in config['sysconfig'] and config['sysconfig']['ca-trust']:
-    print(f"====> Adding trusted CA certificates ...")
+    print("====> Adding trusted CA certificates ...")
 
     for name, cert in sorted(config['sysconfig']['ca-trust'].items()):
         print (f"Adding certificate '{name}' ...")
         with open(os.path.join(ca_anchor_path, name + ".pem"), "w") as certfile:
             certfile.write(cert)
 
-    print(f"Updating CA trust configuration ...")
+    print("Updating CA trust configuration ...")
     p = subprocess.run(["update-ca-trust"], text=True)
+
+    # Firefox wants special treatment, doesn't read the default CA list but has it's own
+    print("Setting CA trust for Firefox ...")
+    if os.path.exists(firefox_policy_path):
+        with open(firefox_policy_path) as polfile:
+            ff_policy = json.load(polfile)
+    else:
+        ff_policy = {}
+
+    # build dict structure if it doesn't exist yet
+    if not "policies" in ff_policy:
+        ff_policy["policies"] = {}
+    if not "Certificates" in ff_policy["policies"]:
+        ff_policy["policies"]["Certificates"] = {}
+    if not "Install" in ff_policy["policies"]["Certificates"]:
+        ff_policy["policies"]["Certificates"]["Install"] = []
+
+    for name, cert in sorted(config['sysconfig']['ca-trust'].items()):
+        ff_policy["policies"]["Certificates"]["Install"].append(os.path.join(ca_anchor_path, name + ".pem"))
+
+    # remove duplicates
+    ff_policy["policies"]["Certificates"]["Install"] = list(set(ff_policy["policies"]["Certificates"]["Install"]))
+
+    # create dir, write out
+    if not os.path.isdir(os.path.dirname(firefox_policy_path)):
+        os.makedirs(os.path.dirname(firefox_policy_path))
+    with open(firefox_policy_path, "w", encoding='utf-8') as polfile:
+        json.dump(ff_policy, polfile, ensure_ascii=False, indent=2)
 
 # ==============================================================================
 # late-load a SystemRescueModule (SRM)
