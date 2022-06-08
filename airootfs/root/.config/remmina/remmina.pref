@@ -1,0 +1,5 @@
+[remmina_news]
+periodic_news_permitted=false
+periodic_rmnews_last_get=0
+periodic_rmnews_get_count=1
+periodic_rmnews_uuid_prefix=
