@@ -104,6 +104,41 @@ parse_args()
     true
 }
 
+is_cryptodev()
+{
+    local DEV="$1"
+
+    [[ $VERBOSE -eq 1 ]] && echo "Checking if $DEV is an encrypted device..."
+
+    BLKID=$(blkid "$DEV")
+    [[ $VERBOSE -eq 1 ]] && echo "blkid output: $BLKID"
+
+    if [[ "$BLKID" != *" TYPE="* ]] && [[ "$BLKID" != "TYPE="* ]]; then
+        # blkid must return a "TYPE" tag for it to be mountable at all
+        [[ $VERBOSE -eq 1 ]] && echo "$DEV is not mountable (no TYPE)"
+        false
+        return
+    fi
+
+    if [[ "$BLKID" != *"TYPE=\"crypto"* ]]; then
+        [[ $VERBOSE -eq 1 ]] && echo "$DEV is not not encrypted"
+        false
+        return
+    fi
+
+    # is the device already opened?
+    DEVNAME=$(basename "$DEV")
+    if /usr/bin/test -d /sys/devices/virtual/block/*/slaves/$DEVNAME ; then
+        [[ $VERBOSE -eq 1 ]] && echo "$DEV is already opened"
+        false
+        return
+    fi
+
+    [[ $VERBOSE -eq 1 ]] && echo "$DEV looks to be an encrypted device that could be opened"
+
+    true
+}
+
 is_mountable()
 {
     local DEV="$1"
@@ -121,9 +156,11 @@ is_mountable()
     fi
     
     if [[ "$BLKID" == *"TYPE=\"linux_raid_member\""* ]] ||
-        [[ "$BLKID" == *"TYPE=\"LVM2_member\""* ]]; then
+        [[ "$BLKID" == *"TYPE=\"LVM2_member\""* ]] ||
+        [[ "$BLKID" == *"TYPE=\"swap\""* ]] ||
+        [[ "$BLKID" == *"TYPE=\"crypto"* ]] ; then
         # these are not directly mountable
-        [[ $VERBOSE -eq 1 ]] && echo "$DEV is not mountable (RAID or LVM)"
+        [[ $VERBOSE -eq 1 ]] && echo "$DEV is not mountable (swap, RAID or LVM)"
         false
         return
     fi
@@ -134,6 +171,15 @@ is_mountable()
         return
     fi
     
+    # special mounted check for btrfs filesystems:
+    # when they consist of multiple parts, you can mount them with either device name
+    if [[ "$BLKID" == *"TYPE=\"btrfs\""* ]] &&
+       /usr/bin/btrfs device stats "$DEV" >/dev/null 2>&1; then
+        [[ $VERBOSE -eq 1 ]] && echo "$DEV is already mounted (btrfs)"
+        false
+        return
+    fi
+
     [[ $VERBOSE -eq 1 ]] && echo "$DEV looks to be mountable"
     
     true
@@ -224,9 +270,18 @@ try_mount()
 parse_args "$@"
 
 # loop through regular block devices
-for BLKDEV in $(ls -1 "/sys/block"); do
+for BLKDEV in $(ls -1 "/sys/class/block"); do
     # handle device mapper / lvm volumes in the 2nd loop for nice names
-    [[ -d "/sys/block/${BLKDEV}/dm" ]] && continue
+    [[ -d "/sys/class/block/${BLKDEV}/dm" ]] && continue
+
+    if is_cryptodev "/dev/${BLKDEV}"; then
+        if /usr/bin/cryptsetup open "/dev/${BLKDEV}" "${BLKDEV}_crypt"; then
+            # we will handle the opened crypto volume in the mapper loop below
+            continue
+        else
+            echo "error opening ${BLKDEV}"
+        fi
+    fi
 
     if is_mountable "/dev/${BLKDEV}"; then
         try_mount "/dev/${BLKDEV}"
@@ -235,8 +290,17 @@ done
 
 # loop through device mapper / lvm volumes
 for LVMDEV in $(ls -1 "/dev/mapper"); do
-    # there is always one central control entry
+    # there is always one central control entry, skip it
     [[ "$LVMDEV" == "control" ]] && continue
+
+    if is_cryptodev "/dev/mapper/${LVMDEV}"; then
+        if /usr/bin/cryptsetup open "/dev/mapper/${LVMDEV}" "${LVMDEV}_crypt"; then
+            # check if we can mount the opened device below
+            LVMDEV="${LVMDEV}_crypt"
+        else
+            echo "error opening ${LVMDEV}"
+        fi
+    fi
     
     if is_mountable "/dev/mapper/${LVMDEV}"; then
         try_mount "/dev/mapper/${LVMDEV}"
