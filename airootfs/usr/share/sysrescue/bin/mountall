@@ -121,9 +121,10 @@ is_mountable()
     fi
     
     if [[ "$BLKID" == *"TYPE=\"linux_raid_member\""* ]] ||
-        [[ "$BLKID" == *"TYPE=\"LVM2_member\""* ]]; then
+        [[ "$BLKID" == *"TYPE=\"LVM2_member\""* ]] ||
+        [[ "$BLKID" == *"TYPE=\"swap\""* ]]; then
         # these are not directly mountable
-        [[ $VERBOSE -eq 1 ]] && echo "$DEV is not mountable (RAID or LVM)"
+        [[ $VERBOSE -eq 1 ]] && echo "$DEV is not mountable (swap, RAID or LVM)"
         false
         return
     fi
