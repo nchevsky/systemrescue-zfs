@@ -225,9 +225,9 @@ try_mount()
 parse_args "$@"
 
 # loop through regular block devices
-for BLKDEV in $(ls -1 "/sys/block"); do
+for BLKDEV in $(ls -1 "/sys/class/block"); do
     # handle device mapper / lvm volumes in the 2nd loop for nice names
-    [[ -d "/sys/block/${BLKDEV}/dm" ]] && continue
+    [[ -d "/sys/class/block/${BLKDEV}/dm" ]] && continue
 
     if is_mountable "/dev/${BLKDEV}"; then
         try_mount "/dev/${BLKDEV}"
