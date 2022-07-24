@@ -2,6 +2,8 @@
 
 set -e -u
 
+echo "customize_airootfs.sh started..."
+
 sed -i 's/#\(en_US\.UTF-8\)/\1/' /etc/locale.gen
 locale-gen
 
@@ -35,7 +37,6 @@ ln -sf /run/archiso/config/sysrescue-effective-config.json /etc/sysrescue/sysres
 systemctl enable NetworkManager.service
 systemctl enable iptables.service
 systemctl enable ip6tables.service
-systemctl enable pacman-init.service
 systemctl enable choose-mirror.service
 systemctl enable sshd.service
 systemctl enable sysrescue-initialize.service
@@ -52,6 +53,11 @@ systemctl mask updatedb.timer
 
 # ldconfig ("Rebuild Dynamic Linker Cache") unnecessarily slows down boot some time after the release
 systemctl mask ldconfig.service
+
+# setup pacman signing key storage
+/usr/bin/pacman-key --init
+/usr/bin/pacman-key --populate
+rm -f /etc/pacman.d/gnupg/*~
 
 # Provide additional commands (using busybox instead of binutils to save space)
 ln -sf /usr/bin/busybox /usr/local/bin/ar
