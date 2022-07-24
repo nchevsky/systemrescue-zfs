@@ -171,6 +171,15 @@ is_mountable()
         return
     fi
     
+    # special mounted check for btrfs filesystems:
+    # when they consist of multiple parts, you can mount them with either device name
+    if [[ "$BLKID" == *"TYPE=\"btrfs\""* ]] &&
+       /usr/bin/btrfs device stats "$DEV" >/dev/null 2>&1; then
+        [[ $VERBOSE -eq 1 ]] && echo "$DEV is already mounted (btrfs)"
+        false
+        return
+    fi
+
     [[ $VERBOSE -eq 1 ]] && echo "$DEV looks to be mountable"
     
     true
