@@ -1,7 +1,7 @@
 diff -u -r archiso-43.orig/archiso/initcpio/install/archiso_pxe_common archiso-43/archiso/initcpio/install/archiso_pxe_common
 --- archiso-43.orig/archiso/initcpio/install/archiso_pxe_common	2019-10-16 11:10:09.000000000 +0000
 +++ archiso-43/archiso/initcpio/install/archiso_pxe_common	2022-07-04 21:27:54.206666328 +0000
-@@ -12,6 +12,10 @@
+@@ -12,9 +12,16 @@
      add_binary $(readlink -f /usr/lib/libnss_files.so.2)
      add_symlink /usr/lib/libnss_dns.so.2 $(readlink /usr/lib/libnss_dns.so.2)
      add_binary $(readlink -f /usr/lib/libnss_dns.so.2)
@@ -12,3 +12,9 @@ diff -u -r archiso-43.orig/archiso/initcpio/install/archiso_pxe_common archiso-4
  
      add_dir /etc
      echo "hosts: files dns" > $BUILDROOT/etc/nsswitch.conf
++
++    # the lua dns library (used in sysrescue-configuration.lua) requires /etc/hosts to exist
++    touch $BUILDROOT/etc/hosts
+ }
+ 
+ help() {
