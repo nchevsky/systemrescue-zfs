@@ -5,6 +5,10 @@ build() {
     add_binary "/usr/bin/lua"
     add_full_dir "/usr/lib/lua"
     add_full_dir "/usr/share/lua"
+
+    # install our rules to handle the "nomdlvm" boot commandline option
+    add_file /usr/lib/udev/rules.d/09-nomdlvm.rules
+    add_file /usr/lib/udev/rules.d/61-nomdlvm.rules
 }
 
 help() {

@@ -1,0 +1,16 @@
+SUBSYSTEM!="block", GOTO="nomdlvm_end"
+
+# handle potential components of arrays (the ones supported by md)
+ENV{ID_FS_TYPE}=="linux_raid_member", GOTO="check_cmdline"
+ENV{ID_FS_TYPE}=="ddf_raid_member", GOTO="check_cmdline"
+ENV{ID_FS_TYPE}=="isw_raid_member", GOTO="check_cmdline"
+GOTO="nomdlvm_end"
+
+LABEL="check_cmdline"
+
+# "nomdlvm" on kernel command line stops activating or
+# registering any md device
+IMPORT{cmdline}="nomdlvm"
+ENV{nomdlvm}=="?*", ENV{SYSTEMD_READY}="0"
+
+LABEL="nomdlvm_end"
