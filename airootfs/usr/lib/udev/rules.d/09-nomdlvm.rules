@@ -1,0 +1,20 @@
+SUBSYSTEM!="block", GOTO="dm_end"
+
+# treat all block devices according to boot cmdline option:
+# we don't know if the device is actually dm or lvm
+# but once we know, it is too late
+
+# "nomdlvm" on kernel command line stops activating or
+# registering any dm or lvm device
+IMPORT{cmdline}="nomdlvm"
+ENV{nomdlvm}=="?*", GOTO="dm_disable"
+
+GOTO="dm_end"
+
+LABEL="dm_disable"
+ENV{DM_UDEV_DISABLE_SUBSYSTEM_RULES_FLAG}="1"
+ENV{DM_UDEV_DISABLE_DISK_RULES_FLAG}="1"
+ENV{DM_UDEV_DISABLE_OTHER_RULES_FLAG}="1"
+OPTIONS:="nowatch"
+
+LABEL="dm_end"
