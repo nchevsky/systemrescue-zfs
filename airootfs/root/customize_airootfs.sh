@@ -78,6 +78,8 @@ rm -rf /usr/share/man/man3
 rm -f /lib/modules/*/vmlinuz
 rm -f /usr/share/grub/themes/starfield/starfield.png
 rm -f /usr/share/keepassxc/docs/*
+rm -f /usr/share/qt6/translations/*
+rm -f /usr/share/qt/translations/*
 
 # Cleanup XFCE menu
 sed -i '2 i NoDisplay=true' /usr/share/applications/{xfce4-mail-reader,xfce4-web-browser}.desktop
