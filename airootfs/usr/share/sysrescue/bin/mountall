@@ -15,10 +15,11 @@ print_help()
     echo "mountall - mount all suitable block devices"
     echo ""
     echo "Usage:"
-    echo "mountall [-n|--no-bind] [-v|--verbose]"
+    echo "mountall [-n|--no-bind] [-o|--ro|--readonly] [-v|--verbose]"
     echo ""
     echo "--no-bind                   Don't try to bind-mount /dev /proc and /sys when"
     echo "                            the partition has these dirs"
+    echo "--readonly                  Mount read-only"
     echo "--verbose                   Verbose output."
     echo ""
     echo "See https://www.system-rescue.org/scripts/mountall/ for details."
@@ -51,11 +52,12 @@ parse_args()
         exit 1
     fi
 
-    local OPTIONS="nvh"
-    local LONGOPTS="no-bind,verbose,help"
+    local OPTIONS="novh"
+    local LONGOPTS="no-bind,readonly,ro,verbose,help"
 
     # option variables as globals, set to default values
     declare -g BIND=1
+    declare -g READONLY=0
     declare -g VERBOSE=0
     
     # -regarding ! and PIPESTATUS see above
@@ -77,6 +79,10 @@ parse_args()
         case "$1" in
             -n|--no-bind)
                 BIND=0
+                shift
+                ;;
+            -o|--readonly|--ro)
+                READONLY=1
                 shift
                 ;;
             -v|--verbose)
@@ -197,14 +203,25 @@ create_mountpoint()
     local NUMBER=1
 
     while [[ -e "$MOUNTPOINT" ]]; do
-        [[ $VERBOSE -eq 1 ]] && echo "wanted mountpoint $MOUNTPOINT already existing, choosing a different one"
+        [[ $VERBOSE -eq 1 ]] && echo "wanted mountpoint $MOUNTPOINT already existing"
+
+        # check if it is an empty directory and unmounted, then we can still use it
+        if [[ -d "$MOUNTPOINT" ]] && \
+           find "$MOUNTPOINT" -maxdepth 0 -type d -empty | grep -q "." && \
+           ! findmnt --mountpoint "$MOUNTPOINT" >/dev/null 2>&1 ; then
+           [[ $VERBOSE -eq 1 ]] && echo "wanted mountpoint $MOUNTPOINT existing, but empty and nothing mounted"
+           break
+        fi
+
         MOUNTPOINT="/mnt/${DEVNAME}_${NUMBER}"
         NUMBER=$[$NUMBER+1]
+
+        [[ $VERBOSE -eq 1 ]] && echo "testing new mountpoint: $MOUNTPOINT"
     done
 
     [[ $VERBOSE -eq 1 ]] && echo "creating mountpoint $MOUNTPOINT"
     
-    if ! mkdir "$MOUNTPOINT"; then
+    if ! mkdir -p "$MOUNTPOINT"; then
         echo "error creating mountpoint $MOUNTPOINT"
         false
         return
@@ -252,8 +269,14 @@ try_mount()
     
     create_mountpoint "$DEV" || return
 
-    if ! mount "$DEV" "$MOUNTPOINT"; then
-        echo "error mounting $DEV"
+    local OPTIONS=""
+    if [[ $READONLY -eq 1 ]]; then
+        [[ $VERBOSE -eq 1 ]] && echo "mounting read-only"
+        OPTIONS="--read-only"
+    fi
+
+    if ! mount $OPTIONS "$DEV" "$MOUNTPOINT"; then
+        echo "error mounting $DEV to $MOUNTPOINT (options $OPTIONS)"
         return
     fi
     
