@@ -197,14 +197,25 @@ create_mountpoint()
     local NUMBER=1
 
     while [[ -e "$MOUNTPOINT" ]]; do
-        [[ $VERBOSE -eq 1 ]] && echo "wanted mountpoint $MOUNTPOINT already existing, choosing a different one"
+        [[ $VERBOSE -eq 1 ]] && echo "wanted mountpoint $MOUNTPOINT already existing"
+
+        # check if it is an empty directory and unmounted, then we can still use it
+        if [[ -d "$MOUNTPOINT" ]] && \
+           find "$MOUNTPOINT" -maxdepth 0 -type d -empty | grep -q "." && \
+           ! findmnt --mountpoint "$MOUNTPOINT" >/dev/null 2>&1 ; then
+           [[ $VERBOSE -eq 1 ]] && echo "wanted mountpoint $MOUNTPOINT existing, but empty and nothing mounted"
+           break
+        fi
+
         MOUNTPOINT="/mnt/${DEVNAME}_${NUMBER}"
         NUMBER=$[$NUMBER+1]
+
+        [[ $VERBOSE -eq 1 ]] && echo "testing new mountpoint: $MOUNTPOINT"
     done
 
     [[ $VERBOSE -eq 1 ]] && echo "creating mountpoint $MOUNTPOINT"
     
-    if ! mkdir "$MOUNTPOINT"; then
+    if ! mkdir -p "$MOUNTPOINT"; then
         echo "error creating mountpoint $MOUNTPOINT"
         false
         return
