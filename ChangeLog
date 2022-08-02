@@ -8,13 +8,15 @@ https://gitlab.com/systemrescue/systemrescue-sources/-/issues/278
 ------------------------------------------------------------------------------
 9.04 (YYYY-MM-DD):
 -------------------------------------------------------------------------------
-* New "nomdlvm" boot option doesn't activate md raid and lvm devices, preventing disk writes
-* Speed up boot process and fix pacman usage by using a preconfigured pacman trust database
+* New "nomdlvm" boot option doesn't activate md raid and lvm devices, preventing disk writes (#272)
+* Speed up boot process and fix pacman usage by using a preconfigured pacman trust database (#290)
 * Improve "mountall" script: detect more partitions, ignore swap, LUKS encryption support
+* Improve "mountall" script: add --readonly option, reuse empty mountpoints
 * Fix DNS name resolution during the initramfs boot phase
 * The "ca-trust" config option is applied to Firefox too
 * Add options to the "sysconfig" scope of YAML configs: timezone, authorized_keys, bookmarks
 * Fix configuration when there is no YAML file at all (e.g. when booting via PXE)
+* Added packages: rclone, qemu-img, multipath-tools, unrar
 
 ------------------------------------------------------------------------------
 9.03 (2022-05-28):

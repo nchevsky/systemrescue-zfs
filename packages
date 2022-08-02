@@ -139,6 +139,7 @@ moreutils
 ms-sys
 mtools
 mtr
+multipath-tools
 nano
 nbd
 ncdu
@@ -193,6 +194,8 @@ python-llfuse
 python-pip
 python-yaml
 qemu-guest-agent
+qemu-img
+rclone
 rdesktop
 rdiff-backup
 readline
@@ -232,6 +235,7 @@ tree
 ttf-dejavu
 udftools
 udpcast
+unrar
 unzip
 usb_modeswitch
 usbutils
