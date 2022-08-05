@@ -159,8 +159,8 @@ make_documentation() {
         exit 1
     fi
 
-    # is the documentation up to date? ignore for beta versions
-    if ! echo "${iso_version}" | grep -i -q "beta" && \
+    # is the documentation up to date? ignore for beta and test versions
+    if ! echo "${iso_version}" | grep -i -q "beta\|test" && \
        ! grep -q "${iso_version}" website/content/Changes-x86/_index.md; then
         echo "ERROR: current version not in changelog. Did you update the website submodule?"
         exit 1
@@ -225,8 +225,10 @@ make_customize_airootfs() {
 
     setarch ${arch} mkarchiso ${verbose} -w "${work_dir}/${arch}" -C "${work_dir}/pacman.conf" -D "${install_dir}" -r '/root/customize_airootfs.sh' run
 
-    # unmount chroot /dev again as it could have been busy before due to gpg-agent
-    umount ${work_dir}/${arch}/airootfs/dev
+    if findmnt --mountpoint "${work_dir}/${arch}/airootfs/dev" >/dev/null 2>&1 ; then
+        # unmount chroot /dev again, it was busy before due to gpg-agent
+        umount "${work_dir}/${arch}/airootfs/dev"
+    fi
 
     rm -f ${work_dir}/${arch}/airootfs/root/customize_airootfs.sh
 
