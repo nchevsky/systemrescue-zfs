@@ -225,8 +225,10 @@ make_customize_airootfs() {
 
     setarch ${arch} mkarchiso ${verbose} -w "${work_dir}/${arch}" -C "${work_dir}/pacman.conf" -D "${install_dir}" -r '/root/customize_airootfs.sh' run
 
-    # unmount chroot /dev again as it could have been busy before due to gpg-agent
-    umount ${work_dir}/${arch}/airootfs/dev
+    if findmnt --mountpoint "${work_dir}/${arch}/airootfs/dev" >/dev/null 2>&1 ; then
+        # unmount chroot /dev again, it was busy before due to gpg-agent
+        umount "${work_dir}/${arch}/airootfs/dev"
+    fi
 
     rm -f ${work_dir}/${arch}/airootfs/root/customize_airootfs.sh
 
