@@ -264,6 +264,8 @@ end
 
 cmdline_options = {
     ['copytoram'] = "global",
+    ['cow_label'] = "global",
+    ['cow_directory'] = "global",
     ['checksum'] = "global",
     ['loadsrm'] = "global",
     ['dostartx'] = "global",
