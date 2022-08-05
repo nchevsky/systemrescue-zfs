@@ -159,8 +159,8 @@ make_documentation() {
         exit 1
     fi
 
-    # is the documentation up to date? ignore for beta versions
-    if ! echo "${iso_version}" | grep -i -q "beta" && \
+    # is the documentation up to date? ignore for beta and test versions
+    if ! echo "${iso_version}" | grep -i -q "beta\|test" && \
        ! grep -q "${iso_version}" website/content/Changes-x86/_index.md; then
         echo "ERROR: current version not in changelog. Did you update the website submodule?"
         exit 1
