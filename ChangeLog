@@ -8,6 +8,7 @@ https://gitlab.com/systemrescue/systemrescue-sources/-/issues/278
 ------------------------------------------------------------------------------
 9.04 (YYYY-MM-DD):
 -------------------------------------------------------------------------------
+* "cow_label" and "cow_directory" boot options can now also be set via the YAML config file
 * New "nomdlvm" boot option doesn't activate md raid and lvm devices, preventing disk writes (#272)
 * Speed up boot process and fix pacman usage by using a preconfigured pacman trust database (#290)
 * Improve "mountall" script: detect more partitions, ignore swap, LUKS encryption support
