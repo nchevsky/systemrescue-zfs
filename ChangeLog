@@ -6,7 +6,7 @@ unless volunteers are found to help maintaining it. See
 https://gitlab.com/systemrescue/systemrescue-sources/-/issues/278
 
 ------------------------------------------------------------------------------
-9.04 (YYYY-MM-DD):
+9.04 (2022-08-07):
 -------------------------------------------------------------------------------
 * "cow_label" and "cow_directory" boot options can now also be set via the YAML config file
 * New "nomdlvm" boot option doesn't activate md raid and lvm devices, preventing disk writes (#272)
