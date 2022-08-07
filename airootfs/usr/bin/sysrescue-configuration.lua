@@ -169,7 +169,8 @@ function download_file(fileurl)
     local headers, stream = req:go(req_timeout)
 
     if headers == nil then
-        io.stderr:write(string.format("Failed to download %s: Could not connect\n", fileurl))
+        --- the second return variable (=stream) contains the error message in case of an error
+        io.stderr:write(string.format("Failed to download %s: %s\n", fileurl, stream))
         return nil
     end
 
