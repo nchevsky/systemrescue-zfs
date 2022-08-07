@@ -24,6 +24,9 @@ local lfs = require('lfs')
 local yaml = require('yaml')
 local json = require("dkjson")
 local request = require("http.request")
+local tls_ctx = require "http.tls".new_client_context()
+local tls_ctx_noverify = require "openssl.ssl.context".VERIFY_NONE
+local tls_ctx_doverify = require "openssl.ssl.context".VERIFY_PEER
 
 -- ==============================================================================
 -- Utility functions
@@ -166,6 +169,11 @@ end
 function download_file(fileurl)
     local req_timeout = 10
     local req = request.new_from_uri(fileurl)
+
+    --- we (usually) run during initramfs where the CA database is not available, so don't verify certificates
+    tls_ctx:setVerify(tls_ctx_noverify)
+    req.ctx = tls_ctx
+
     local headers, stream = req:go(req_timeout)
 
     if headers == nil then
