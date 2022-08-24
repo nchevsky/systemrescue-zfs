@@ -10,6 +10,7 @@ import sys
 import re
 import tempfile
 import functools
+import configparser
 
 # flush stdout buffer after each print call: immediately show the user what is going on
 print = functools.partial(print, flush=True)
@@ -248,6 +249,33 @@ if 'sysconfig' in config and 'bookmarks' in config['sysconfig'] and config['sysc
         os.makedirs(os.path.dirname(firefox_policy_path))
     with open(firefox_policy_path, "w", encoding='utf-8') as polfile:
         json.dump(ff_policy, polfile, ensure_ascii=False, indent=2)
+
+# ==============================================================================
+# configure rclone
+# ==============================================================================
+
+if 'sysconfig' in config and 'rclone' in config['sysconfig'] and \
+  config['sysconfig']['rclone'] and isinstance(config['sysconfig']['rclone'], dict) and \
+  'config' in config['sysconfig']['rclone'] and \
+  config['sysconfig']['rclone']['config'] and \
+  isinstance(config['sysconfig']['rclone']['config'], dict):
+    print(f"====> Adding rclone config ...")
+    
+    try:
+        if not os.path.isdir("/root/.config"):
+            os.mkdir("/root/.config")
+        if not os.path.isdir("/root/.config/rclone"):
+            os.mkdir("/root/.config/rclone")
+            os.chmod("/root/.config/rclone", 0o700)
+
+        iniparser = configparser.ConfigParser()
+        iniparser.read_dict(config['sysconfig']['rclone']['config'])
+        with open('/root/.config/rclone/rclone.conf', 'w') as configfile:
+            os.chmod("/root/.config/rclone/rclone.conf", 0o600)
+            iniparser.write(configfile)
+    except Exception as e:
+        print(e)
+        errcnt+=1
 
 # ==============================================================================
 # Configure custom CA certificates
