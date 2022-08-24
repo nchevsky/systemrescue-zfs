@@ -6,6 +6,11 @@ unless volunteers are found to help maintaining it. See
 https://gitlab.com/systemrescue/systemrescue-sources/-/issues/278
 
 ------------------------------------------------------------------------------
+9.05 (YYYY-MM-DD):
+-------------------------------------------------------------------------------
+* Add rclone option to the "sysconfig" scope of YAML config file, it writes a rclone.conf file
+
+------------------------------------------------------------------------------
 9.04 (2022-08-07):
 -------------------------------------------------------------------------------
 * "cow_label" and "cow_directory" boot options can now also be set via the YAML config file
