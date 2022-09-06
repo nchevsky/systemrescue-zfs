@@ -197,6 +197,8 @@ create_mountpoint()
 {
     local DEV="$1"
 
+    [[ $VERBOSE -eq 1 ]] && echo "looking for a suitable mountpoint for $DEV"
+
     DEVNAME=$(basename "$DEV")
     
     MOUNTPOINT="/mnt/$DEVNAME"
@@ -265,9 +267,9 @@ try_mount()
 {
     local DEV="$1"
 
-    echo -n "mounting $DEV... "
-    
     create_mountpoint "$DEV" || return
+
+    echo -n "mounting $DEV to $MOUNTPOINT... "
 
     local OPTIONS=""
     if [[ $READONLY -eq 1 ]]; then
