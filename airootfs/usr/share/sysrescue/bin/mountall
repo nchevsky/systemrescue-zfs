@@ -197,6 +197,8 @@ create_mountpoint()
 {
     local DEV="$1"
 
+    [[ $VERBOSE -eq 1 ]] && echo "looking for a suitable mountpoint for $DEV"
+
     DEVNAME=$(basename "$DEV")
     
     MOUNTPOINT="/mnt/$DEVNAME"
@@ -265,9 +267,9 @@ try_mount()
 {
     local DEV="$1"
 
-    echo -n "mounting $DEV... "
-    
     create_mountpoint "$DEV" || return
+
+    echo -n "mounting $DEV to $MOUNTPOINT... "
 
     local OPTIONS=""
     if [[ $READONLY -eq 1 ]]; then
@@ -310,6 +312,10 @@ for BLKDEV in $(ls -1 "/sys/class/block"); do
         try_mount "/dev/${BLKDEV}"
     fi
 done
+
+# if we just opened a cryptodev we have to wait until it appears in /dev/mapper
+[[ $VERBOSE -eq 1 ]] && echo "waiting until recently opened lvm devices appear in /dev/mapper"
+udevadm settle --timeout=10
 
 # loop through device mapper / lvm volumes
 for LVMDEV in $(ls -1 "/dev/mapper"); do
