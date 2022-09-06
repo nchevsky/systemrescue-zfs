@@ -311,6 +311,10 @@ for BLKDEV in $(ls -1 "/sys/class/block"); do
     fi
 done
 
+# if we just opened a cryptodev we have to wait until it appears in /dev/mapper
+[[ $VERBOSE -eq 1 ]] && echo "waiting until recently opened lvm devices appear in /dev/mapper"
+udevadm settle --timeout=10
+
 # loop through device mapper / lvm volumes
 for LVMDEV in $(ls -1 "/dev/mapper"); do
     # there is always one central control entry, skip it
