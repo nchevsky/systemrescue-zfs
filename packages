@@ -246,6 +246,7 @@ vpnc
 wget
 whdd
 which
+whois
 wimlib
 wipe
 wireguard-tools
