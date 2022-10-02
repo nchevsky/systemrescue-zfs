@@ -322,6 +322,23 @@ if 'sysconfig' in config and 'ca-trust' in config['sysconfig'] and config['sysco
         json.dump(ff_policy, polfile, ensure_ascii=False, indent=2)
 
 # ==============================================================================
+# customize sysctl
+# ==============================================================================
+
+if 'sysconfig' in config and 'sysctl' in config['sysconfig'] and \
+  config['sysconfig']['sysctl'] and isinstance(config['sysconfig']['sysctl'], dict):
+    print(f"====> Customizing sysctl options ...")
+    sysctllines = ""
+    for key, value in config['sysconfig']['sysctl'].items():
+        sysctllines+=f"{key} = {value}\n"
+
+    # pipe config into sysctl
+    p = subprocess.run(["sysctl", "--load=-"], text=True, input=sysctllines)
+    if p.returncode is not 0:
+        print (f"Some or all sysctl options couldn't be set")
+        errcnt+=1
+
+# ==============================================================================
 # late-load a SystemRescueModule (SRM)
 # ==============================================================================
 
