@@ -60,6 +60,8 @@ systemctl mask ldconfig.service
 rm -f /etc/pacman.d/gnupg/*~
 
 # Cleanup
+# ATTENTION: adapt airootfs/usr/share/sysrescue/bin/yay-prepare when deleting anything that
+# could be required for building packages
 find /usr/lib -type f -name '*.py[co]' -delete -o -type d -name __pycache__ -delete
 find /usr/lib -type f,l -name '*.a' -delete
 rm -rf /usr/lib/{libgo.*,libgphobos.*,libgfortran.*}

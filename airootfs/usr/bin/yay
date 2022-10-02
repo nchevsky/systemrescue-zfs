@@ -1,0 +1,23 @@
+#!/bin/bash
+#
+# yay wrapper to adapt yay to SystemRescue
+#
+# Author: Gerd v. Egidy
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# see https://www.system-rescue.org/manual/Installing_packages_from_AUR/ for details
+#
+
+if ! id yay >/dev/null 2>&1; then
+    echo "system not prepared for running yay yet, call 'yay-prepare'"
+    exit 1
+fi
+
+# escape all parameters with ${var@Q}
+escArgArray=()
+for arg in "$@" ; do
+    escArgArray+=(${arg@Q})
+done
+cmdstr="/usr/bin/yay-real ${escArgArray[@]}"
+
+su -s /bin/bash yay -c "$cmdstr"
