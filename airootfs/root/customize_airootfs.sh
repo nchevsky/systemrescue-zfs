@@ -59,10 +59,6 @@ systemctl mask ldconfig.service
 /usr/bin/pacman-key --populate
 rm -f /etc/pacman.d/gnupg/*~
 
-# Provide additional commands (using busybox instead of binutils to save space)
-ln -sf /usr/bin/busybox /usr/local/bin/ar
-ln -sf /usr/bin/busybox /usr/local/bin/strings
-
 # Cleanup
 find /usr/lib -type f -name '*.py[co]' -delete -o -type d -name __pycache__ -delete
 find /usr/lib -type f,l -name '*.a' -delete
