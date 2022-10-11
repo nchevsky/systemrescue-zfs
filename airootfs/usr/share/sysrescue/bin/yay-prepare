@@ -54,8 +54,11 @@ for pkgfile in $(find /var/lib/pacman/local -name files -type f) ; do
             exit 1
         fi
         
-        REINSTALL+=($PKGNAME)
-        echo "package $PKGNAME needs to be reinstalled"
+        # exclude some packages from reinstallation, for example ones from the sysrescuerepo
+        if ! grep -q "$PKGNAME" /usr/share/sysrescue/lib/yay-prepare-exclude; then
+            REINSTALL+=($PKGNAME)
+            echo "package $PKGNAME needs to be reinstalled"
+        fi
     fi
 done
 
