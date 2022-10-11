@@ -59,6 +59,11 @@ systemctl mask ldconfig.service
 /usr/bin/pacman-key --populate
 rm -f /etc/pacman.d/gnupg/*~
 
+# get a list of all packages from sysrescuerepo to exclude them from reinstall by yay-prepare
+mkdir -p /usr/share/sysrescue/lib/
+pacman -Sl sysrescuerepo | sed -e "s/^sysrescuerepo //" \
+   | sed -e "s/\[installed.*\]//" >/usr/share/sysrescue/lib/yay-prepare-exclude
+
 # Cleanup
 # ATTENTION: adapt airootfs/usr/share/sysrescue/bin/yay-prepare when deleting anything that
 # could be required for building packages
