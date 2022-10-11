@@ -1,36 +1,17 @@
 #!/usr/bin/env python3
+#
 # Distributed under the terms of the GNU General Public License v2
+# SPDX-License-Identifier: GPL-2.0-only
+#
 # The original bash version of autorun was developed by Pierre Dorgueil in 2003
 # The current python implementation has been developed by Francois Dupoux in 2008
+# For more detailed history and contributors see git log
 #
-# ----------------------- changeslog: -----------------------------------------
-# 2003-10-01: Pierre Dorgueil --> original bash version of autorun for sysrescue
-# 2008-01-26: Francois Dupoux --> rewrote autorun in python to support http
-# 2008-01-27: Francois Dupoux --> added 'ar_ignorefail', 'ar_nodel', 'ar_disable'
-# 2017-05-30: Gernot Fink --> ported the script from python2 to python3
-# 2021-07-07: Alexander Mahr --> added 'ar_attempts'
-# 2022-01-09: Francois Dupoux --> added support for yaml configuration
-# 2022-01-09: Francois Dupoux --> option 'autoruns=' renamed 'ar_suffixes='
-# 2022-01-23: Francois Dupoux --> use the generated effective configuration file
+# For documentation see
+# https://www.system-rescue.org/manual/Run_your_own_scripts_with_autorun/
 #
-# ----------------------- autorun exec rules: ---------------------------------
-# - pass 'ar_source=/dev/fd#' to request floppy device test
-# - CD is tested if no floppy requested or no autorun found on floppy
-# - if a file named 'autorun' is found on any media, it is always run, except if
-#   option 'ar_disable' is used
-# - if a file named 'autorun[0-9A-F]' is found on any media, it is run if either
-#      - 'ar_suffixes=...' arg did specify its suffix (ex. ar_suffixes=1,3,5), or
-#      - no 'ar_suffixes=...' arg was passed
-# - pass ar_suffixes=no to prevent running any 'autorun[0-9A-F]' file
-# - defaults to allow all 'autorun[0-9A-F]' files
-# - if many autorun files are to be run,
-#      - always in alphab order: autorun, then autorun0, then autorun1 etc...
-#      - first non-zero exit code stops all (except if ar_ignorefail is used)
-# - if option 'ar_nodel' is used, the temp copy of the script will not be deleted
-# - if option 'ar_ignorefail' is used, do not stop autorun if a script failed
-# - if option 'ar_disable' is used, absolutely no autorun script will be run
 
-import sys, os, re, subprocess, logging, time, glob, json
+import sys, os, re, subprocess, logging, time, json, traceback, tty, termios, select, tempfile, stat
 
 # ------------------------ initialize internal variables -----------------------
 pidfile='/run/autorun.pid'
@@ -38,9 +19,8 @@ basedir='/var/autorun'
 autorunlog=basedir+'/log'
 autorunmnt=basedir+'/mnt'
 autoruntmp=basedir+'/tmp'
-defaultsrc=['/run/archiso/bootmnt/autorun','/run/archiso/bootmnt','/run/archiso/copytoram/autorun','/run/archiso/copytoram','/var/autorun/cdrom','/root','/usr/share/sys.autorun']
+defaultsrc=['/run/archiso/bootmnt/autorun','/run/archiso/bootmnt','/root','/usr/share/sys.autorun']
 effectivecfg="/etc/sysrescue/sysrescue-effective-config.json"
-autorunfiles=[]
 config = {}
 
 # ----------------------- functions definitions --------------------------------
@@ -64,8 +44,8 @@ def is_elf_binary(filename):
     with open(filename,'rb') as f:
         content = f.read(4)
         if len(content) == 4 and \
-            content[0] == '\x7f' and content[1] == 'E' and \
-            content[2] == 'L' and content[3] == 'F':
+            content[0] == 0x7f and content[1] == ord('E') and \
+            content[2] == ord('L') and content[3] == ord('F'):
             return True
         else:
             return False
@@ -85,9 +65,9 @@ def ensure_shebang(filename):
 
 def format_title(title, padding):
     totallen=80
-    startpos=int(totallen/2)-int(len(title)/2)
-    remain=totallen-startpos-len(title)
-    text=(padding*startpos)+title+(padding*remain)
+    startpos=int(totallen/2)-int(len(title)/2)-1
+    remain=totallen-startpos-len(title)-2
+    text=(padding*startpos)+" "+title+" "+(padding*remain)
     return text
 
 def copyfilefct_basic(src, dest):
@@ -95,32 +75,36 @@ def copyfilefct_basic(src, dest):
         dstfile=open(dest, 'wb')
         dstfile.write(open(src,'rb').read())
         dstfile.close()
-        os.chmod(dest, 755)
+        os.chmod(dest, 0o755)
         return 0
     else:
         return -1
 
 def copyfilefct_http(src, dest):
-    logging.debug(f"Attempting to download {src} ...")
-    cmd=('wget','-q',src,'-O',dest)
+    writemsg(f"Attempting to download {src} ...")
+    cmd=("curl","--connect-timeout","30","--silent","--show-error","--fail","--output",dest,src)
     p = subprocess.Popen(cmd)
     p.wait()
     if p.returncode == 0:
-        logging.info(f"Successfully downloaded {src}")
-        os.chmod(dest, 755)
+        writemsg(f"Successfully downloaded {src}")
+        os.chmod(dest, 0o755)
         return 0
     else:
-        logging.warning(f"Failed to download {src}")
-        os.unlink(dest)
+        writemsg(f"Failed to download {src}")
+        # delete anything we retrieved, but don't care if there is no file
+        try:
+            os.unlink(dest)
+        except:
+            pass
         return -1
 
-def search_autoruns(dirname, suffixes, copyfilefct):
+def search_autoruns(dirname, suffixes, autorunfiles, copyfilefct):
     found=0
     for ext in suffixes:
         curpath=os.path.join(dirname, f'autorun{ext}')
         newpath=os.path.join(autoruntmp, f'autorun{ext}')
         if copyfilefct(curpath, newpath)==0:
-            autorunfiles.append(newpath)
+            autorunfiles[ext]=newpath
             found+=1
     return found
 
@@ -142,7 +126,14 @@ def strtobool (val):
     else:
         raise ValueError("invalid truth value %r" % (val,))
 
-def read_cfg_value(name, defaultval):
+def is_float(str_to_test):
+    try:
+        float(str_to_test)
+        return True
+    except ValueError:
+        return False
+
+def read_cfg_value(name, defaultval, printit=True):
     if name in config:
         chkval = config[name]
         try:
@@ -157,178 +148,599 @@ def read_cfg_value(name, defaultval):
             val = defaultval
     else:
         val = defaultval
-    print(f"config['{name}']={val}")
+    if printit:
+        writemsg(f"config['{name}']={val}")
     return val
 
-def main():
-        global config
+def wait_for_keypress(timeout=None):
+    try:
+        # disable line buffering for stdin
+        old_settings = termios.tcgetattr(sys.stdin)
+        tty.setcbreak(sys.stdin.fileno())
 
-        errcnt=0 # in case no autorun executed
-        logging.basicConfig(filename='/var/log/sysrescue-autorun.log', format='%(asctime)s %(message)s', level=logging.DEBUG)
-        writemsg('Initializing autorun ...')
+        pollObj = select.poll()
+        pollObj.register(sys.stdin.fileno(), select.POLLIN | select.POLLHUP | select.POLLERR)
 
-        # ---- read the effective configuration file
-        if os.path.exists(effectivecfg) == False:
-            print (f"Failed to find effective configuration file in {effectivecfg}")
-            sys.exit(1)
-        with open(effectivecfg) as file:
-            fullcfg = json.load(file)
-            if 'autorun' in fullcfg:
-                config = fullcfg['autorun']
-            else:
-                config = { }
+        # is there input data available? clear it. we just want *new* keypresses, not old input
+        while len(pollObj.poll(0)) > 0:
+            os.read(sys.stdin.fileno(), 4096)
 
-        # ---- parse legacy options passed on the boot command line
-        for curopt in open("/proc/cmdline","r").read().split():
-            if re.match('^autoruns=', curopt): # "autoruns" is the legacy name for 'ar_suffixes'
-                config['ar_suffixes'] = curopt.replace('autoruns=','')
-
-        # ---- load the config into local variables, allow the keys not to exist
-        # ---- also print the effective configuration
-        logging.info(f"Showing the effective autorun configuration ...")
-        ar_suffixes = read_cfg_value('ar_suffixes', "")
-        ar_disable = read_cfg_value('ar_disable', False)
-        ar_attempts = read_cfg_value('ar_attempts', 1)
-        ar_source = read_cfg_value('ar_source', "")
-        ar_ignorefail = read_cfg_value('ar_ignorefail', False)
-        ar_nodel = read_cfg_value('ar_nodel', False)
-        ar_nowait = read_cfg_value('ar_nowait', False)
-
-        # ---- determine the effective script files suffixes
-        if ar_suffixes in (None, 'no', ''):
-            suffixes=['']
+        if timeout is None:
+            print('Press any key to continue')
         else:
-            suffixes=[''] + str(ar_suffixes).split(',')
-        logging.info(f"suffixes={suffixes}")
+            # timeout in seconds
+            countdown = int(timeout)
 
-        # ---- exit here is there is nothing to do
-        if ar_disable == True:
-            writemsg(f"Autorun has been disabled using ar_disable, exiting now")
-            sys.exit(0)
+        while timeout is None or countdown > 0:
+            if timeout is not None:
+                # ESC M is reverse linefeed
+                # If it can't be interpreted (for example on a dumb serial console) we just get the regular newlines
+                print(f'\n\033MWait {countdown} seconds or press any key to continue   ', end="")
+            # 1 second wait for event
+            if len(pollObj.poll(1000)) > 0:
+                # we got some input, read as much as we can to not leave the next script with half-processed input
+                os.read(sys.stdin.fileno(), 4096)
+                # we don't really care for the data, any key is ok to abort
+                break
+            if timeout is not None:
+                countdown -= 1
 
-        # ---- parse autorun sources ----
-        if re.match('^https?://', ar_source):
-            while ar_attempts > 0 and not autorunfiles:
-                time.sleep(1)
-                ar_attempts -= 1
-                search_autoruns(ar_source, suffixes, copyfilefct_http)
-        elif re.match('^/dev/', ar_source): # mount a partition/device
-            mnt1=('mount',ar_source,autorunmnt)
-            mnt2=('umount',autorunmnt)
-            p = subprocess.Popen(mnt1)
-            p.wait()
-            if p.returncode != 0:
-                writemsg('fatal error: cannot mount', mnt1)
-                sys.exit(1)
-            search_autoruns(autorunmnt, suffixes, copyfilefct_basic)
-            subprocess.Popen(mnt2)
-        elif re.match('^nfs://', ar_source): # mount an nfs share
-            source=ar_source.replace('nfs://','')
-            mnt1=('mount','-t','nfs','-o','nolock',source,autorunmnt)
-            mnt2=('umount',autorunmnt)
-            p = subprocess.Popen(mnt1)
-            p.wait()
-            if p.returncode != 0:
-                writemsg ('fatal error: cannot mount', mnt1)
-                sys.exit(1)
-            search_autoruns(autorunmnt, suffixes, copyfilefct_basic)
-            subprocess.Popen(mnt2)
-        elif re.match('^smb://', ar_source): # mount a samba share
-            source=ar_source.replace('smb://','')
-            mnt1=('mount','-t','cifs','//%s'%source,autorunmnt)
-            mnt2=('umount',autorunmnt)
-            p = subprocess.Popen(mnt1)
-            p.wait()
-            if p.returncode != 0:
-                writemsg ('fatal error: cannot mount',mnt1)
-                sys.exit(1)
-            search_autoruns(autorunmnt, suffixes, copyfilefct_basic)
-            subprocess.Popen(mnt2)
-        else: # search in all default directories
-            writemsg ('Cannot find a valid ar_source, searching scripts in the default directories')
-            found=0
-            for curdir in defaultsrc:
-                if found == 0:
-                    found += search_autoruns(curdir, suffixes, copyfilefct_basic)
+        # key pressed or countdown reached 0
+        print()
+        return
 
-        # ---- remove user setable ar_nowait flag if set ----
-        if os.path.isfile('/etc/ar_nowait'):
-            os.unlink('/etc/ar_nowait')
+    except KeyboardInterrupt:
+        # ctrl+c counts as just any other key
+        print()
+        return
 
-        # ---- execute the autorun scripts found ----
-        for curfile in autorunfiles:
+    except termios.error:
+        # probably some strange stdin pipe, so no keypress to wait for -> just sleep
+        if timeout is None:
+            timeout = 30
+        print(f'Wait for {timeout} seconds')
+        try:
+            time.sleep(float(timeout))
+        except KeyboardInterrupt:
+            # clean abort with ctrl+C
+            print()
+            return
+        pass
+
+    finally:
+        # always reset the stdin state
+        try:
+            # restore stdio terminal settings
+            termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
+        except:
+            # ignore termios errors, probably some strange stdin, so no keypress anyway
+            pass
+
+def build_config():
+    """Build the effective configuration for autorun.
+    
+    Searches for autorun-scripts in several paths and uses the old-style ar_suffixes= option to
+    merge the scripts found into the new-style "exec" structure which is then executed.
+    The scripts are copied to autoruntmp, regardless where they were found.
+    """
+    global config
+    global ar_ignorefail, ar_nodel, ar_nowait, ar_attempts
+    
+    # ---- read the effective configuration file, build basic config structure
+    if not os.path.exists(effectivecfg):
+        writemsg(f"Failed to find effective configuration file in {effectivecfg}")
+        sys.exit(1)
+    with open(effectivecfg) as file:
+        fullcfg = json.load(file)
+        if 'autorun' in fullcfg:
+            config = fullcfg['autorun']
+        else:
+            config = { }
+    if not 'exec' in config or not isinstance(config['exec'], dict):
+        config["exec"] = { }
+
+    # ---- parse legacy options passed on the boot command line
+    for curopt in open("/proc/cmdline","r").read().split():
+        if re.match('^autoruns=', curopt): # "autoruns" is the legacy name for 'ar_suffixes'
+            writemsg('WARNING: deprecated option `autoruns=` used, it will be removed soon. Use `ar_suffixes` instead')
+            config['ar_suffixes'] = curopt.replace('autoruns=','')
+
+    # ---- load the config into local variables, allow the keys not to exist
+    # ---- also print the effective configuration
+    writemsg("Showing the effective autorun configuration ...")
+    ar_suffixes = read_cfg_value('ar_suffixes', "", printit=False)
+    ar_disable = read_cfg_value('ar_disable', False)
+    ar_attempts = read_cfg_value('ar_attempts', 1)
+    ar_source = read_cfg_value('ar_source', "")
+    ar_ignorefail = read_cfg_value('ar_ignorefail', False)
+    ar_nodel = read_cfg_value('ar_nodel', False)
+    ar_nowait = read_cfg_value('ar_nowait', True)
+
+    # ---- determine the effective script files suffixes
+    if ar_suffixes in (None, 'no', ''):
+        suffixes=['']
+    else:
+        suffixes=[''] + str(ar_suffixes).split(',')
+    # validate suffixes, remove everything that is not on the whitelist
+    to_remove = []
+    for suf in suffixes:
+        if suf not in ( "", "0", "1", "2", "3", "4", "5", "6" ,"7", "8" ,"9", "A" ,"B" ,"C" ,"D", "E" , "F" ):
+            writemsg(f"Illegal autorun suffix {suf}: removed")
+            to_remove.append(suf)
+    for suf in to_remove:
+        suffixes.remove(suf)
+    writemsg(f"ar_suffixes={suffixes}")
+
+    # print+log at least the root exec entry names for debugging
+    if 'exec' in config and isinstance(config['exec'], dict):
+        exectext = str(list(config['exec'].keys()))
+    else:
+        exectext = "[]"
+    writemsg(f"exec={exectext}")
+
+    # ---- exit here is there is nothing to do
+    if ar_disable:
+        writemsg("Autorun has been disabled using ar_disable, exiting now")
+        sys.exit(0)
+
+    # ---- parse autorun sources ----
+    autorunfiles= {}
+    if re.match('^https?://', ar_source):
+        retries = int(ar_attempts)
+        while retries > 0 and not autorunfiles:
+            time.sleep(1)
+            retries -= 1
+            search_autoruns(ar_source, suffixes, autorunfiles, copyfilefct_http)
+    elif re.match('^/dev/', ar_source): # mount a partition/device
+        mnt1=('mount',ar_source,autorunmnt)
+        mnt2=('umount',autorunmnt)
+        p = subprocess.Popen(mnt1)
+        p.wait()
+        if p.returncode != 0:
+            writemsg(f'error: cannot mount {ar_source}')
+            return
+        search_autoruns(autorunmnt, suffixes, autorunfiles, copyfilefct_basic)
+        subprocess.Popen(mnt2)
+    elif re.match('^nfs://', ar_source): # mount an nfs share
+        source=ar_source.replace('nfs://','')
+        # retry=1 means retry it for 1 minute, but there also is a 3 minute tcp timeout -> 3 minutes timeout
+        mnt1=('mount','-t','nfs','-o','nolock,retry=1',source,autorunmnt)
+        mnt2=('umount',autorunmnt)
+        p = subprocess.Popen(mnt1)
+        p.wait()
+        if p.returncode != 0:
+            writemsg (f'error: cannot mount {source}')
+            return
+        search_autoruns(autorunmnt, suffixes, autorunfiles, copyfilefct_basic)
+        subprocess.Popen(mnt2)
+    elif re.match('^smb://', ar_source): # mount a samba share
+        source=ar_source.replace('smb://','')
+        # use -o guest to prevent mount from asking for a password
+        mnt1=('mount','-t','cifs','-o','guest','//%s'%source,autorunmnt)
+        mnt2=('umount',autorunmnt)
+        p = subprocess.Popen(mnt1)
+        p.wait()
+        if p.returncode != 0:
+            writemsg (f'error: cannot mount {source}')
+            return
+        search_autoruns(autorunmnt, suffixes, autorunfiles, copyfilefct_basic)
+        subprocess.Popen(mnt2)
+    else: # search in all default directories
+        writemsg ('Cannot find a valid ar_source, searching scripts in the default directories')
+        for curdir in defaultsrc:
+            if search_autoruns(curdir, suffixes, autorunfiles, copyfilefct_basic) > 0:
+                writemsg (f'Using autorun scripts from {curdir}')
+                if curdir == '/run/archiso/bootmnt':
+                    writemsg('WARNING: Storing autorun scripts in the root of the boot device is deprecated!')
+                    writemsg('These scripts will be ignored in a future release. Use the autorun directory instead.')
+                    writemsg("")
+                break
+
+    # build exec structure
+    for ext, curfile in sorted(autorunfiles.items()):
+        # build entry name for the exec dict
+        if ext == '':
+            entryno = 1000
+        elif ext[0].isdigit():
+            entryno = 1010 + int(ext[0])
+        elif ord(ext[0]) >= ord('A') and ord(ext[0]) <= ord('F'):
+            entryno = 1020 + ord(ext[0]) - ord('A')
+        else:
+            writemsg (f'fatal error: illegal autorun extension {ext}')
+            sys.exit(1)
+
+        filebase=os.path.basename(curfile)
+        entryname = f'{entryno}-{filebase}'
+        
+        # overwrite entry if it already exists
+        config["exec"][entryname] = { }
+        config["exec"][entryname]['path'] = curfile
+        # leave everything else at default values
+
+def download_script(url, execname):
+    global ar_attempts
+
+    retries = int(ar_attempts)
+    while retries > 0:
+        writemsg(f'Downloading {execname} from {url} ...')
+
+        if retries != int(ar_attempts):
+            time.sleep(3)
+        retries -= 1
+
+        try:
+            success = False
+            targetfile=tempfile.NamedTemporaryFile(dir=autoruntmp, delete=False)
+            targetfilename=targetfile.name
+            targetfile.close()
+
+            if re.match('^https?://', url):
+                if copyfilefct_http(url,targetfilename) == 0:
+                    success = True
+                    return success, targetfilename
+            elif re.match('^/dev/', url):
+                # mount a partition/device, something like /dev/disk/by-label/some-disklabel/dir/file
+                # we have to split the path to the device from the path below first
+                dircomponents = url.split('/')
+                path = "/"
+                for dircomp in dircomponents:
+                    try:
+                        path = os.path.join(path, dircomp)
+                        mode = os.stat(path).st_mode
+                        if stat.S_ISBLK(mode):
+                            # we found our block device to mount
+                            break
+                        elif stat.S_ISDIR(mode):
+                            # continue to descent the path
+                            continue
+                        else:
+                            writemsg(f'Error: unexpected file type at {path}')
+                            return False, ""
+                    except FileNotFoundError:
+                        writemsg(f'Error: can\'t find file {path}')
+                        return False, ""
+
+                mountbase = path
+                srcfile = url.removeprefix(path)
+                srcfile = srcfile.removeprefix("/")
+
+                mnt1=('mount',mountbase,autorunmnt)
+                mnt2=('umount',autorunmnt)
+                p = subprocess.Popen(mnt1)
+                p.wait()
+                if p.returncode != 0:
+                    writemsg(f'Error: cannot mount {mountbase}')
+                    return False, ""
+                ret = copyfilefct_basic(os.path.join(autorunmnt,srcfile),targetfilename)
+                subprocess.Popen(mnt2)
+                if ret == 0:
+                    success = True
+                    return success, targetfilename
+                else:
+                    writemsg(f'Error: cannot find file {srcfile} in mountpoint {mountbase}')
+                    return False, ""
+
+            elif re.match('^nfs://', url):
+                # mount an nfs share, nfs://servername:/dir/script
+                source=url.replace('nfs://','')
+                sourcesplit = source.split(":", maxsplit=1)
+                if len(sourcesplit) != 2 or len(sourcesplit[1]) == 0:
+                    writemsg(f'Illegal nfs url, not in the form nfs://servername:/dir/script')
+                    return False, ""
+
+                srcdir = os.path.dirname(sourcesplit[1])
+                srcfile = os.path.basename(sourcesplit[1])
+                if len(srcfile) == 0:
+                    writemsg(f'Illegal nfs url, not in the form nfs://servername:/dir/script')
+                    return False, ""
+
+                mountbase=sourcesplit[0]+":"+srcdir
+                # retry=1 means retry it for 1 minute, but there also is a 3 minute tcp timeout -> 3 minutes timeout
+                mnt1=('mount','-t','nfs','-o','nolock,retry=1',mountbase,autorunmnt)
+                mnt2=('umount',autorunmnt)
+                p = subprocess.Popen(mnt1)
+                p.wait()
+                if p.returncode != 0:
+                    writemsg(f'Error: cannot mount {mountbase}')
+                    # retry it, it is a network operation after all
+                    continue
+                ret = copyfilefct_basic(os.path.join(autorunmnt,srcfile),targetfilename)
+                subprocess.Popen(mnt2)
+                if ret == 0:
+                    success = True
+                    return success, targetfilename
+                else:
+                    writemsg(f'Error: cannot find file {srcfile} in mountpoint {mountbase}')
+                    return False, ""
+
+            elif re.match('^smb://', url):
+                # mount a samba share, smb://host/share/dir/script
+                source=url.replace('smb://','')
+                srchostdir = os.path.dirname(source)
+                srcfile = os.path.basename(source)
+                if len(srchostdir) == 0 or len(srchostdir.split("/")) < 2 or len(srcfile) == 0:
+                    writemsg(f'Illegal smb url, not in the form smb://host/share/dir/script')
+                    return False, ""
+
+                mountbase="//"+srchostdir
+                # use -o guest to prevent mount from asking for a password
+                mnt1=('mount','-t','cifs','-o','guest',mountbase,autorunmnt)
+                mnt2=('umount',autorunmnt)
+                p = subprocess.Popen(mnt1)
+                p.wait()
+                if p.returncode != 0:
+                    writemsg(f'Error: cannot mount {mountbase}')
+                    # retry it, it is a network operation after all
+                    continue
+                ret = copyfilefct_basic(os.path.join(autorunmnt,srcfile),targetfilename)
+                subprocess.Popen(mnt2)
+                if ret == 0:
+                    success = True
+                    return success, targetfilename
+                else:
+                    writemsg(f'Error: cannot find file {srcfile} in mountpoint {mountbase}')
+                    return False, ""
+
+        finally:
             try:
-                if not is_elf_binary(curfile):
-                    processdostextfiles(curfile)
-                    # compatibility with old autorun: add #!/bin/sh if no shebang
-                    ensure_shebang(curfile)
+                if not success:
+                    os.remove(targetfilename)
             except:
+                # ignore it if the tmpfile is already deleted
                 pass
-            filebase=os.path.basename(curfile)
-            writemsg("\n")
-            writemsg(format_title(f'executing {filebase}', '='))
-            redir=os.path.join(autorunlog, filebase)
 
-            logoutput=open(redir,'wt')
-            try:
-                # directly (=without extra shell) execute the script
-                # stdin=None means the stdin of sysrescue-autorun will be passed through
-                # this allows the autorun script to take input from the terminal
-                proc = subprocess.Popen(curfile, stdin=None, stdout=subprocess.PIPE,
-                                        stderr=subprocess.STDOUT, shell=False,universal_newlines=True)
-                # pipe through stdout&stderr live, write it to the autorunlog too
-                # we do not expect too much data here, so reading byte-by-byte is ok
-                # but it allows us to show for example progress indicators live on the console
-                while not proc.stdout.closed and proc.stdout.readable() and proc.poll() is None:
-                    output = proc.stdout.read(1)
-                    sys.stdout.write(output)
-                    sys.stdout.flush()
-                    logoutput.write(output)
+    return False, ""
 
-                # the program has ended. read the rest of data that is in the buffer
-                if not proc.stdout.closed and proc.stdout.readable():
-                    output = proc.stdout.read(-1)
-                    sys.stdout.write(output)
-                    sys.stdout.flush()
-                    logoutput.write(output)
-                    logoutput.close()
+def exec_script_errorwrapper(entryname, data):
+    """ provides errorhandling around exec_script()
 
-                returncode = proc.returncode
-            except OSError as e:
-                # for example the program wasn't found or is not executable
-                writemsg (f'Execution of {filebase} failed: {e.strerror}')
-                returncode = e.errno
+        does waiting for keypress and similar, depending on result
+        returns: 0 = ok, 1 = error but continue, 2 = error don't continue
+    """
 
-            fileres=open(redir+'.return','wt')
-            fileres.write(str(returncode)+'\n')
-            fileres.close()
-            writemsg('='*80)
-            writemsg (f'Execution of {filebase} returned {returncode}')
-            if returncode != 0:
-                errcnt += 1
-                if ar_ignorefail == False:
-                    writemsg (f'Now aborting autorun as {filebase} has failed')
-                    break; # Stop on the first script failure
+    global ar_ignorefail
 
-        # ---- delete the copies of the scripts ----
-        if ar_nodel == False:
-            for curfile in autorunfiles:
-                writemsg (f'removing {curfile}')
-                os.unlink(curfile)
+    # determine what to do in case of an error
+    if "wait" in data and \
+       ( data["wait"] == "always" or data["wait"] == "on_error" or data["wait"] == "never" ):
+           waitwhen = data["wait"]
+    else:
+        waitwhen = "on_error"
 
-        # ---- wait a keypress feature -----
-        if os.path.isfile('/etc/ar_nowait'):
-            ar_nowait = True
-        if (ar_nowait != True) and (len(autorunfiles) > 0):
-            writemsg(f'Autorun scripts completed with {errcnt} errors, press <Enter> to continue')
-            sys.stdin.read(1)
+    if "waitmode" in data and \
+       ( data["waitmode"] == "key" or is_float(data["waitmode"]) ):
+           waitmode = data["waitmode"]
+    else:
+        waitmode = 30
 
-        return errcnt
+    if "on_error" in data and \
+       ( data["on_error"] == "break" or data["on_error"] == "continue" ):
+           errmode = data["on_error"]
+    else:
+        if not ar_ignorefail:
+            errmode = "break"
+        else:
+            errmode = "continue"
+
+    # execute the script
+    try:
+        errcount = exec_script(entryname, data)
+
+    except Exception as e:
+        # some exception we did not expect, deal with it like any other script error
+        writemsg('='*80)
+        writemsg (f'Exception {e.__class__.__name__} occured when executing {entryname}: {e}')
+        writemsg(traceback.format_exc())
+        errcount = 1
+
+    # waiting for timeout / keypress wanted?
+    if waitwhen == "always" or \
+       ( waitwhen == "on_error" and errcount > 0 ):
+            # we need to wait
+            if waitmode == "key":
+                wait_for_keypress()
+            else:
+                wait_for_keypress(int(waitmode))
+
+    if errcount > 0:
+        if errmode == "break":
+            # don't continue executing other scripts
+            return 2
+        else:
+            # error, but continue
+            return 1
+    else:
+        # everything ok
+        return 0
+
+def exec_script(entryname, data):
+    global config
+
+    if 'path' in data and 'url' in data:
+        writemsg (f'illegal configuration for {entryname}: both "path" and "url" given')
+        return 1
+    if not 'path' in data and not 'url' in data:
+        writemsg (f'illegal configuration for {entryname}: neither "path" nor "url" given')
+        return 1
+
+    if 'url' in data:
+        # resolve the URL, download to a tmp file, store tmp filename in path
+        success, path = download_script(str(data["url"]), entryname)
+        if not success:
+            return 1
+        # store temporary filename in config structure so we can delete it later
+        config["exec"][entryname]["path"] = path
+    else:
+        path = str(data["path"])
+
+    # we now have something in path, work it
+
+    try:
+        # only modify files in our tmp dir
+        if os.path.dirname(path) == autoruntmp and not is_elf_binary(path):
+            processdostextfiles(path)
+            # compatibility with old autorun: add #!/bin/sh if no shebang
+            ensure_shebang(path)
+    except:
+        pass
+
+    # sanitize parameters
+    if "parameters" in data and isinstance(data['parameters'], (str, int, float, bool)):
+        # we always want a list, even if we just have one parameter
+        data['parameters'] = [ data['parameters'] ]
+    if "parameters" in data and isinstance(data['parameters'], list):
+        # ensure all parameters are strings
+        new_param = [ ]
+        for p in data['parameters']:
+            new_param.append(str(p))
+        data['parameters'] = new_param
+
+    if "shell" in data and strtobool(data['shell']) is True:
+        # execution with shell
+        shell = True
+
+        # path_and_param must be just a string that is then interpreted by the shell
+        # since the user can't always control "path" (think urls), we append all the
+        # parameters as they are, the user has to ensure quoting etc.
+        path_and_param = path
+        if "parameters" in data and isinstance(data['parameters'], list):
+            for p in data['parameters']:
+                path_and_param += " " + p
+    else:
+        # execution without shell (default, recommended when not needing shell features)
+        shell = False
+        path_and_param = [ path ]
+        if "parameters" in data and isinstance(data['parameters'], list):
+            path_and_param += data['parameters']
+
+    writemsg("")
+    writemsg(format_title(f'executing {entryname}', '='))
+
+    # open logfile, sanitize filename
+    redir=os.path.join(autorunlog, re.sub('[^-a-zA-Z0-9_.]+', '_', entryname))
+    logoutput=open(redir,'wt')
+
+    exception = False
+    linelog = ""
+    try:
+        # stdin=None means the stdin of sysrescue-autorun will be passed through
+        # this allows the autorun script to take input from the terminal
+        proc = subprocess.Popen(path_and_param, stdin=None, stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT, shell=shell,universal_newlines=True)
+        # pipe through stdout&stderr live, write it to the autorunlog too
+        # we do not expect too much data here, so reading byte-by-byte is ok
+        # but it allows us to show for example progress indicators live on the console
+        while not proc.stdout.closed and proc.stdout.readable() and proc.poll() is None:
+            output = proc.stdout.read(1)
+            sys.stdout.write(output)
+            sys.stdout.flush()
+            logoutput.write(output)
+
+            # also write to the main autorun log. add manual line buffering because of timestamps added
+            if output == '\n':
+                # don't log newlines themselves
+                logging.info(linelog)
+                linelog = ""
+            else:
+                linelog += output
+
+        # the program has ended. read the rest of data that is in the buffer
+        if not proc.stdout.closed and proc.stdout.readable():
+            output = proc.stdout.read(-1)
+            sys.stdout.write(output)
+            sys.stdout.flush()
+            logoutput.write(output)
+            logoutput.close()
+
+            # also write to the main autorun log. add manual line buffering because of timestamps added
+            for char in output:
+                if char == '\n':
+                    # don't log newlines themselves
+                    logging.info(linelog)
+                    linelog = ""
+                else:
+                    linelog += char
+
+        returncode = proc.returncode
+    except OSError as e:
+        # for example the program wasn't found or is not executable
+        writemsg('='*80)
+        writemsg (f'Execution of {entryname} failed: {e.strerror}')
+        returncode = e.errno
+        exception = True
+    except KeyboardInterrupt:
+        print()
+        writemsg('='*80)
+        writemsg (f'Execution of {entryname} aborted')
+        returncode = 1
+        exception = True
+
+    fileres=open(redir+'.return','wt')
+    fileres.write(str(returncode)+'\n')
+    fileres.close()
+    if not exception:
+        writemsg('='*80)
+        writemsg (f'Execution of {entryname} returned {returncode}')
+
+    if exception or returncode != 0:
+        # we have an error
+        return 1
+    else:
+        return 0
+
+def main():
+    global config
+    global ar_ignorefail, ar_nodel, ar_nowait, ar_attempts
+
+    logging.basicConfig(filename='/var/log/sysrescue-autorun.log', format='%(asctime)s %(message)s', level=logging.DEBUG)
+    writemsg("")
+    writemsg(format_title('Initializing autorun','#'))
+
+    build_config()
+
+    if len(config['exec']) == 0:
+        writemsg('No autorun scripts found, nothing to do.')
+        return 0
+        
+    writemsg('Starting autorun execution ...')
+    
+    # ---- remove user setable ar_nowait flag if set ----
+    if os.path.isfile('/etc/ar_nowait'):
+        os.unlink('/etc/ar_nowait')
+
+    # ---- execute the autorun scripts found ----
+    errcnt=0
+    for entryname, data in sorted(config['exec'].items()):
+        err = exec_script_errorwrapper(entryname, data)
+        if err > 0:
+            errcnt += 1
+            if err == 2:
+                # Stop on the first script failure
+                writemsg (f'Now aborting autorun as {entryname} has failed')
+                break
+            
+    writemsg("")
+
+    # ---- delete tmp copies of the scripts ----
+    if not ar_nodel:
+        for name, data in sorted(config['exec'].items()):
+            if "path" in data and os.path.dirname(data["path"]) == autoruntmp:
+                writemsg (f'removing {data["path"]}')
+                os.unlink(data["path"])
+
+    # ---- wait a keypress feature -----
+    if os.path.isfile('/etc/ar_nowait'):
+        ar_nowait = True
+    if not ar_nowait and len(config['exec'].items()) > 0:
+        writemsg(f'Autorun scripts completed with {errcnt} errors')
+        wait_for_keypress()
+
+    return errcnt
 
 # ----------------------- autorun main ----------------------------------------
 for curdir in (basedir, autorunlog, autorunmnt, autoruntmp):
-        if not os.path.isdir(curdir):
-                os.mkdir(curdir)
+    if not os.path.isdir(curdir):
+        os.mkdir(curdir)
 
 # Exit if already running
 if os.path.isfile(pidfile):
@@ -339,7 +751,7 @@ lockfile = open(pidfile, 'wt')
 lockfile.write(str(os.getpid()))
 
 try:
-        res = main()
-        sys.exit(res)
+    res = main()
+    sys.exit(res)
 finally:
-        os.unlink(pidfile)
+    os.unlink(pidfile)
