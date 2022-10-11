@@ -1,0 +1,82 @@
+#! /bin/bash
+#
+# yay-prepare - prepare SystemRescue for running yay
+#
+# Author: Gerd v. Egidy
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# see https://www.system-rescue.org/manual/Installing_packages_from_AUR/ for details
+#
+
+# abort on failures
+set -o errexit -o pipefail -o noclobber -o nounset
+
+if id yay >/dev/null 2>&1; then
+    echo "It looks like yay-prepare has already been run, aborting."
+    exit 1
+fi
+
+echo "To prepare SystemRescue for using yay many packages must be downloaded and reinstalled."
+echo "This will need more than a Gigabyte of Copy-on-Write (CoW) storage, usually in RAM."
+echo "Compiling packages will need additional space in CoW."
+echo "Consider using a disk-backed CoW-space ('cow_label=' boot option)."
+echo
+
+read -p "Reinstall packages into CoW space now (y/n)? " answer
+case ${answer:0:1} in
+    y|Y )
+        echo Ok
+    ;;
+    * )
+        echo "Aborting"
+        exit 1
+    ;;
+esac
+
+REINSTALL=()
+
+# loop over all installed packages
+IFS=$'\n'
+for pkgfile in $(find /var/lib/pacman/local -name files -type f) ; do
+
+    # check if this package contains anything build-related we deleted in customize_airootfs.sh
+    if grep -q -E "^usr/include/" "$pkgfile" || \
+       grep -q -E "^usr/lib/.*\.a\$" "$pkgfile" || \
+       grep -q -E "^usr/lib/(libgo\.|libgphobos\.|libgfortran\.)" "$pkgfile" ; then
+       
+        # we need to reinstall this package -> find out it's name
+        DIR=$(dirname "$pkgfile")
+        DESCFILE="${DIR}/desc"
+        PKGNAME=$(grep "%NAME%" -A1 "$DESCFILE" | grep -v "%NAME%")
+        
+        if [[ -z "$PKGNAME" ]]; then
+            echo "failed to extract package name from ${pkgfile}"
+            exit 1
+        fi
+        
+        REINSTALL+=($PKGNAME)
+        echo "package $PKGNAME needs to be reinstalled"
+    fi
+done
+
+# update pacman package database
+pacman -Sy
+
+# reinstall all required packages
+pacman -S "${REINSTALL[@]}"
+
+# install base-devel group, but don't reinstall what we already have
+# we want to ask the user for confirmation, but don't give them a choice what to install
+# this isn't supported by pacman directly, so we need to get the group contents first and then install them
+
+BASE_DEVEL_PKGS=$(pacman -Sg base-devel | sed -e "s/^base-devel \(.*\)/\1/")
+pacman -S --needed $BASE_DEVEL_PKGS git cmake
+
+useradd -m yay
+
+# don't require a password for yay user when installing packages
+echo "yay ALL=(ALL:ALL) NOPASSWD: ALL" >/etc/sudoers.d/yay
+
+echo
+echo "all done, ready for yay"
+echo
