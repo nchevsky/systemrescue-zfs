@@ -25,3 +25,12 @@ diff -urN archiso-43-a/archiso/initcpio/hooks/archiso archiso-43-b/archiso/initc
      [[ "${loadsrm}" == "y" ]] && _mnt_srm "/run/archiso/bootmnt/${archisobasedir}"
  
      if [[ -f "/run/archiso/sfs/airootfs/airootfs.img" ]]; then
+@@ -328,6 +328,8 @@
+ 
+     if [[ "${copytoram}" == "y" ]]; then
+         umount -d /run/archiso/bootmnt
++        # bind-mount bootmnt to create a stable path, for example for autorun scripts
++        mount --bind /run/archiso/copytoram /run/archiso/bootmnt
+     fi
+ }
+ 

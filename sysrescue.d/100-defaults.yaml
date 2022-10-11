@@ -10,7 +10,7 @@ global:
 
 autorun:
     ar_disable: false
-    ar_nowait: false
+    ar_nowait: true
     ar_nodel: false
     ar_attempts: 1
     ar_ignorefail: false
