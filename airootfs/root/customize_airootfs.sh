@@ -39,7 +39,8 @@ systemctl enable iptables.service
 systemctl enable ip6tables.service
 systemctl enable choose-mirror.service
 systemctl enable sshd.service
-systemctl enable sysrescue-initialize.service
+systemctl enable sysrescue-initialize-prenet.service
+systemctl enable sysrescue-initialize-whilenet.service
 systemctl enable sysrescue-autorun.service
 systemctl enable qemu-guest-agent.service
 systemctl enable var-lib-pacman\\x2drolling-local.mount

@@ -1,0 +1,13 @@
+[Unit]
+Description=SystemRescue Initialization, before networking
+Before=network-pre.target iptables.service ip6tables.service sysrescue-initialize-whilenet.service
+Wants=network-pre.target sysrescue-initialize-whilenet.service
+
+[Service]
+Type=oneshot
+ExecStart=/etc/systemd/scripts/sysrescue-initialize-prenet
+RemainAfterExit=true
+StandardOutput=journal+console
+
+[Install]
+WantedBy=multi-user.target

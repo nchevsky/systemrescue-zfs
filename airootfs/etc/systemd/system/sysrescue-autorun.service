@@ -1,6 +1,6 @@
 [Unit]
 Description=SystemRescue Autorun
-After=network.target network-online.target sysrescue-initialize.service
+After=network.target network-online.target sysrescue-initialize-whilenet.service
 Before=getty-pre.target
 Wants=getty-pre.target network-online.target
 

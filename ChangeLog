@@ -8,6 +8,7 @@ https://gitlab.com/systemrescue/systemrescue-sources/-/issues/278
 ------------------------------------------------------------------------------
 9.05 (YYYY-MM-DD):
 ------------------------------------------------------------------------------
+* Split initialization of SystemRescue into parts done before and in parallel to networking (#304)
 * Add a new style for configuring autorun scripts ("autorun.exec") (#287)
 * Change the default for ar_nowait to true: don't wait at the end of autorun by default anymore
 * Deprecate storing autorun scripts in the root of the boot disk (#252)

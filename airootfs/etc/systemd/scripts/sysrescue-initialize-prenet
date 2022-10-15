@@ -1,0 +1,129 @@
+#!/usr/bin/env python3
+#
+# initialize SystemRescue, do the parts that must be finished before networking is started
+# Keep as short as possible, move non-critical parts to -whilenet to not block the boot unnecessarily
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+import subprocess
+import json
+import glob
+import os
+import sys
+import re
+import tempfile
+import functools
+import configparser
+
+# flush stdout buffer after each print call: immediately show the user what is going on
+print = functools.partial(print, flush=True)
+
+def strtobool (val):
+    """Convert a string representation of truth to true (1) or false (0).
+
+    True values are 'y', 'yes', 't', 'true', 'on', '1', '1.0'; false values
+    are 'n', 'no', 'f', 'false', 'off', '0', '0.0'.  Raises ValueError if
+    'val' is anything else.
+    
+    Function adapted from Pythons distutils.util.py because it will be deprecated soon
+    Copyright (c) Python Software Foundation; All Rights Reserved
+    """
+    val = str(val).lower()
+    if val in ('y', 'yes', 't', 'true', 'on', '1', '1.0'):
+        return True
+    elif val in ('n', 'no', 'f', 'false', 'off', '0', '0.0'):
+        return False
+    else:
+        raise ValueError("invalid truth value %r" % (val,))
+
+# ==============================================================================
+# Initialization
+# ==============================================================================
+print(f"====> Script {sys.argv[0]} starting ...")
+errcnt = 0
+
+# ==============================================================================
+# Read the effective configuration file
+# ==============================================================================
+print(f"====> Read the effective configuration file ...")
+effectivecfg = "/run/archiso/config/sysrescue-effective-config.json"
+if os.path.exists(effectivecfg) == False:
+    print (f"Failed to find effective configuration file in {effectivecfg}")
+    sys.exit(1)
+
+with open(effectivecfg) as file:
+    config = json.load(file)
+
+# ==============================================================================
+# Sanitize config, initialize variables
+# Make sysrescue-initialize work safely without them being defined or have a wrong type
+# Also show the effective configuration
+# ==============================================================================
+print(f"====> Showing the effective global configuration (except clear passwords) ...")
+
+def read_cfg_value(scope, name, defaultval, printval):
+    if not scope in config:
+        val = defaultval
+    elif name in config[scope]:
+        chkval = config[scope][name]
+        try:
+            if isinstance(chkval, list) or isinstance(chkval, dict):
+                raise TypeError(f"must be a {type(defaultval)}, not a {type(chkval)}")
+            elif isinstance(defaultval, bool) and not isinstance(chkval, bool):
+                val = strtobool(chkval)
+            else:
+                val = type(defaultval)(chkval)
+        except (TypeError, ValueError) as e:
+            if printval:
+                print(f"config['{scope}']['{name}'] with {chkval} is not the same type as defaultval: {e}")
+            else:
+                print(f"config['{scope}']['{name}'] is not the same type as defaultval: {e}")
+            val = defaultval
+    else:
+        val = defaultval
+
+    if printval:
+        print(f"config['{scope}']['{name}']={val}")
+    
+    return val
+
+nofirewall = read_cfg_value('global','nofirewall', False, True)
+
+# ==============================================================================
+# Apply the effective configuration
+# ==============================================================================
+print(f"====> Applying pre-network configuration ...")
+
+# Disable the firewall
+if nofirewall == True:
+    # The firewall service(s) must be in the Before-section of sysrescue-initialize-prenet.service
+    p = subprocess.run(["systemctl", "disable", "--now", "iptables.service", "ip6tables.service"], text=True)
+    if p.returncode == 0:
+        print (f"Have disabled the firewall successfully")
+    else:
+        print (f"Failed to disable the firewall")
+        errcnt+=1
+
+# ==============================================================================
+# customize sysctl
+# Should be pre-network to allow tweaking network-specific sysctls
+# ==============================================================================
+
+if 'sysconfig' in config and 'sysctl' in config['sysconfig'] and \
+  config['sysconfig']['sysctl'] and isinstance(config['sysconfig']['sysctl'], dict):
+    print(f"====> Customizing sysctl options ...")
+    sysctllines = ""
+    for key, value in config['sysconfig']['sysctl'].items():
+        sysctllines+=f"{key} = {value}\n"
+
+    # pipe config into sysctl
+    p = subprocess.run(["sysctl", "--load=-"], text=True, input=sysctllines)
+    if p.returncode != 0:
+        print (f"Some or all sysctl options couldn't be set")
+        errcnt+=1
+
+# ==============================================================================
+# End of the script
+# ==============================================================================
+print(f"====> Script {sys.argv[0]} completed with {errcnt} errors ...")
+sys.exit(errcnt)
