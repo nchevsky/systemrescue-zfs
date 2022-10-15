@@ -334,7 +334,7 @@ if 'sysconfig' in config and 'sysctl' in config['sysconfig'] and \
 
     # pipe config into sysctl
     p = subprocess.run(["sysctl", "--load=-"], text=True, input=sysctllines)
-    if p.returncode is not 0:
+    if p.returncode != 0:
         print (f"Some or all sysctl options couldn't be set")
         errcnt+=1
 
