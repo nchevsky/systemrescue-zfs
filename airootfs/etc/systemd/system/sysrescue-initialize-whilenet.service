@@ -1,11 +1,12 @@
 [Unit]
-Description=SystemRescue Initialization
+Description=SystemRescue Initialization, parallel to networking
 Before=getty-pre.target
 Wants=getty-pre.target
+After=sysrescue-initialize-prenet.service
 
 [Service]
 Type=oneshot
-ExecStart=/etc/systemd/scripts/sysrescue-initialize.py
+ExecStart=/etc/systemd/scripts/sysrescue-initialize-whilenet
 RemainAfterExit=true
 StandardOutput=journal+console
 
