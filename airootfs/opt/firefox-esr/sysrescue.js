@@ -20,3 +20,8 @@ pref("datareporting.policy.dataSubmissionPolicyBypassNotification", true);
 // this is necessary for being able to resolve local hostnames e.g. in a split dns setup
 // 5 means "off by choice"
 pref("network.trr.mode", 5);
+// disable advertising
+pref("browser.newtabpage.activity-stream.showSponsoredTopSites", false);
+pref("browser.newtabpage.activity-stream.showSponsored", false);
+// disable "pocket" icon to not clutter the interface
+pref("extensions.pocket.enabled", false);
