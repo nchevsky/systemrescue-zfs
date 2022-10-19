@@ -212,7 +212,8 @@ config = { }
 -- Merge one yaml file after the other in lexicographic order
 -- ==============================================================================
 print ("====> Merging configuration with values from yaml files ...")
-confdirs = {"/run/archiso/bootmnt/sysrescue.d", "/run/archiso/copytoram/sysrescue.d"}
+-- bootmnt is bind-mounted in case of copytoram, so it doesn't need to be searched explicitly
+confdirs = {"/run/archiso/bootmnt/sysrescue.d"}
 
 -- Process local yaml configuration files
 for _, curdir in ipairs(confdirs) do
