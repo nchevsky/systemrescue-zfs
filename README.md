@@ -11,7 +11,7 @@ https://gitlab.archlinux.org/archlinux/archiso/
 SystemRescue can be built for x86_64 or i686 architectures. It must be built
 on archlinux if you want to build a 64bit edition, or archlinux32 if you want
 to create a 32bit edition. The following packages must be installed on the
-build system: archiso, grub, mtools, edk2-shell, hugo. 
+build system: archiso, grub, isomd5sum, mtools, edk2-shell, hugo. 
 
 You need to use a modified version of archiso for the build to work. This 
 version is provided in the custom `sysrescuerepo` repository. See the 
