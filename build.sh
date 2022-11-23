@@ -12,6 +12,7 @@ iso_label="RESCUE${iso_mainver//.}"
 iso_publisher="SystemRescue <http://www.system-rescue.org>"
 iso_application="SystemRescue"
 install_dir=sysresccd
+image_info_file="${install_dir}/.imageinfo"
 work_dir=work
 out_dir=out
 gpg_key=
@@ -385,6 +386,20 @@ make_prepare() {
     # rm -rf ${work_dir}/${arch}/airootfs (if low space, this helps)
 }
 
+# Create the .imageinfo file, used by systemrescue-usbwriter to check compatibility
+make_imageinfo() {
+    local syslinux_ver=$(grep -E "^syslinux " "${work_dir}/${arch}/airootfs/root/packages-list.txt" | sed -e "s#syslinux \(.*\)#\1#")
+
+    echo "# SystemRescue imageinfo - used by systemrescue-usbwriter to check compatibility" >"${work_dir}/iso/${image_info_file}"
+    echo "NAME=SystemRescue" >>"${work_dir}/iso/${image_info_file}"
+    echo "VERSION=${iso_version}" >>"${work_dir}/iso/${image_info_file}"
+    echo "ARCH=${arch}" >>"${work_dir}/iso/${image_info_file}"
+    echo "SYSLINUX_VERSION=${syslinux_ver}" >>"${work_dir}/iso/${image_info_file}"
+    echo "" >>"${work_dir}/iso/${image_info_file}"
+    echo "# FORMAT_EPOCH can be used to explicitly declare incompatibility" >>"${work_dir}/iso/${image_info_file}"
+    echo "FORMAT_EPOCH=1" >>"${work_dir}/iso/${image_info_file}"
+}
+
 # Build ISO
 make_iso() {
     # Copy version file
@@ -451,4 +466,5 @@ run_once make_isolinux
 run_once make_efi
 run_once make_efiboot
 run_once make_prepare
+run_once make_imageinfo
 run_once make_iso
