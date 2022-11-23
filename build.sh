@@ -403,6 +403,9 @@ make_iso() {
     )
     # Create the ISO image
     setarch ${arch} mkarchiso ${verbose} -w "${work_dir}" -D "${install_dir}" -L "${iso_label}" -P "${iso_publisher}" -A "${iso_application}" -o "${out_dir}" iso "${iso_name}-${iso_version}-${arch/x86_64/amd64}.iso"
+
+    # embed checksum
+    implantisomd5 "${out_dir}/${iso_name}-${iso_version}-${arch/x86_64/amd64}.iso"
 }
 
 if [[ ${EUID} -ne 0 ]]; then
