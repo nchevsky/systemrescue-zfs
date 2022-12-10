@@ -162,7 +162,7 @@ if rootcryptpass != "":
         errcnt+=1
 
 # Auto-start the graphical environment (tty1 only)
-if dostartx == True:
+if dostartx == True or dovnc == True:
     str = '[[ ! $DISPLAY ]] && [[ ! $SSH_TTY ]] && [[ $XDG_VTNR == 1 ]] && startx'
     if (os.path.exists("/root/.bash_profile") == False) or (open("/root/.bash_profile", 'r').read().find(str) == -1):
         file1 = open("/root/.bash_profile", "a")
