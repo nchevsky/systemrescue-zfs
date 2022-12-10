@@ -60,6 +60,11 @@ systemctl mask ldconfig.service
 /usr/bin/pacman-key --populate
 rm -f /etc/pacman.d/gnupg/*~
 
+echo "" >>/etc/pacman.d/gnupg/gpg.conf
+echo "# disable caching & trustdb regeneration to be able to use pacman with faketime in the pacman-faketime wrapper" >>/etc/pacman.d/gnupg/gpg.conf
+echo "no-sig-cache" >>/etc/pacman.d/gnupg/gpg.conf
+echo "no-auto-check-trustdb" >>/etc/pacman.d/gnupg/gpg.conf
+
 # get a list of all packages from sysrescuerepo to exclude them from reinstall by yay-prepare
 mkdir -p /usr/share/sysrescue/lib/
 pacman -Sl sysrescuerepo | sed -e "s/^sysrescuerepo //" \

@@ -1,0 +1,25 @@
+#! /usr/bin/env bash
+#
+# call pacman and fake the system date to the day this version of SystemRescue was released
+# this can help to work around expired package signatures
+#
+# Author: Gerd v. Egidy
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# see https://www.system-rescue.org/manual/Installing_packages_with_pacman/ for details
+#
+
+# get SystemRescue release date
+RELEASE_DATE=$(grep BUILD_ID /etc/os-release  | sed -e "s/.*\"\(.*\)\"/\1/")
+if [[ -z "$RELEASE_DATE" ]] || ! echo "$RELEASE_DATE" | grep -E -q "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"; then
+    echo "ERROR: can't determine SystemRescue release date"
+    exit 1
+fi
+
+if ! command -v faketime &>/dev/null ; then
+    echo "ERROR: 'faketime' command not found. Is this the correct release of SystemRescue?"
+    exit 1
+fi
+
+# wrap pacman with all arguments
+faketime "$RELEASE_DATE" pacman "$@"

@@ -101,6 +101,7 @@ keepassxc
 kexec-tools
 less
 lftp
+libfaketime
 libisoburn
 libvncserver
 linux-atm

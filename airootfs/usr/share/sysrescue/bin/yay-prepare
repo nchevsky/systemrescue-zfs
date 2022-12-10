@@ -66,14 +66,14 @@ done
 pacman -Sy
 
 # reinstall all required packages
-pacman -S "${REINSTALL[@]}"
+pacman-faketime -S "${REINSTALL[@]}"
 
 # install base-devel group, but don't reinstall what we already have
 # we want to ask the user for confirmation, but don't give them a choice what to install
 # this isn't supported by pacman directly, so we need to get the group contents first and then install them
 
 BASE_DEVEL_PKGS=$(pacman -Sg base-devel | sed -e "s/^base-devel \(.*\)/\1/")
-pacman -S --needed $BASE_DEVEL_PKGS git cmake
+pacman-faketime -S --needed $BASE_DEVEL_PKGS git cmake
 
 useradd -m yay
 
