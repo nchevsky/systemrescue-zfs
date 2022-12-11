@@ -123,6 +123,27 @@ if 'sysconfig' in config and 'sysctl' in config['sysconfig'] and \
         errcnt+=1
 
 # ==============================================================================
+# configure hosts file
+# Should be pre-network to be available throughout the whole network setup
+# ==============================================================================
+
+if 'sysconfig' in config and 'hosts' in config['sysconfig'] and \
+  config['sysconfig']['hosts'] and isinstance(config['sysconfig']['hosts'], dict):
+    print(f"====> Configuring /etc/hosts ...")
+
+    try:
+        # append all our entries to the hosts file
+        with open("/etc/hosts", "a") as hostsfile:
+            # key is the IPv4/IPv6, value the hostname(s)
+            for ip, hostname in config['sysconfig']['hosts'].items():
+                hostsfile.write(f"{ip}\t{hostname}\n")
+            hostsfile.close()
+
+    except Exception as e:
+        print(e)
+        errcnt+=1
+
+# ==============================================================================
 # End of the script
 # ==============================================================================
 print(f"====> Script {sys.argv[0]} completed with {errcnt} errors ...")
