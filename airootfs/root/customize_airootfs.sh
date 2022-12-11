@@ -55,6 +55,9 @@ systemctl mask updatedb.timer
 # ldconfig ("Rebuild Dynamic Linker Cache") unnecessarily slows down boot some time after the release
 systemctl mask ldconfig.service
 
+# systemd-gpt-auto-generator could automatically mount filesystems given the right config. Prevent that.
+rm -f /usr/lib/systemd/system-generators/systemd-gpt-auto-generator
+
 # setup pacman signing key storage
 /usr/bin/pacman-key --init
 /usr/bin/pacman-key --populate
