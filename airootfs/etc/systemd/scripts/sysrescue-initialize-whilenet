@@ -365,6 +365,27 @@ if 'sysconfig' in config and 'authorized_keys' in config['sysconfig'] and \
         errcnt+=1
 
 # ==============================================================================
+# configure bash_history
+# do this after late-loading SRMs because we want to add to what is contained in a SRM
+# ==============================================================================
+
+if 'sysconfig' in config and 'bash_history' in config['sysconfig'] and \
+  config['sysconfig']['bash_history'] and isinstance(config['sysconfig']['bash_history'], dict):
+    print(f"====> Configuring bash_history ...")
+
+    try:
+        # append all our entries in case the file already exists
+        with open("/root/.bash_history", "a") as historyfile:
+            # iterate reverse sorted, the first key is written last and will appear first when pressing the up key
+            for key, command in sorted(config['sysconfig']['bash_history'].items(),reverse=True):
+                historyfile.write(f"{command}\n")
+            historyfile.close()
+
+    except Exception as e:
+        print(e)
+        errcnt+=1
+
+# ==============================================================================
 # autoterminal: programs that take over a virtual terminal for user interaction
 # ==============================================================================
 
