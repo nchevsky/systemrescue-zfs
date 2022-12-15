@@ -143,18 +143,20 @@ function prepare()
     # we want to copy these too
 
     # read all systemd symlinks in the cow-dir
-    for SYMLINK in `find "${UPPERDIR}/etc/systemd/system/" -type l -printf "%P\n"`; do
-        TARGET=$(readlink "${UPPERDIR}/etc/systemd/system/${SYMLINK}")
+    if [ -d "${UPPERDIR}/etc/systemd/system/" ]; then
+        for SYMLINK in `find "${UPPERDIR}/etc/systemd/system/" -type l -printf "%P\n"`; do
+            TARGET=$(readlink "${UPPERDIR}/etc/systemd/system/${SYMLINK}")
 
-        # targets the symlink something that is in our packages?
-        if grep -q "${TARGET}" $PKG_FILELIST; then
-            echo "Copying systemd link /etc/systemd/system/${SYMLINK}"
-            # copy the symlink to our target dir
-            LINKDIR=$(dirname "${TMP_TARGET}/etc/systemd/system/${SYMLINK}")
-            mkdir -p "${LINKDIR}"
-            cp --no-dereference "${UPPERDIR}/etc/systemd/system/${SYMLINK}" "${TMP_TARGET}/etc/systemd/system/${SYMLINK}"
-        fi
-    done
+            # targets the symlink something that is in our packages?
+            if grep -q "${TARGET}" $PKG_FILELIST; then
+                echo "Copying systemd link /etc/systemd/system/${SYMLINK}"
+                # copy the symlink to our target dir
+                LINKDIR=$(dirname "${TMP_TARGET}/etc/systemd/system/${SYMLINK}")
+                mkdir -p "${LINKDIR}"
+                cp --no-dereference "${UPPERDIR}/etc/systemd/system/${SYMLINK}" "${TMP_TARGET}/etc/systemd/system/${SYMLINK}"
+            fi
+        done
+    fi
 
     # restore line separator
     IFS=$IFS_SAVE
