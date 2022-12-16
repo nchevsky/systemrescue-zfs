@@ -367,7 +367,7 @@ make_efiboot() {
 
     mkdir -p ${work_dir}/iso/EFI/archiso
     rm -f "${work_dir}/iso/EFI/archiso/efiboot.img"
-    mformat -C -f 1440 -L 16 -i "${work_dir}/iso/EFI/archiso/efiboot.img" ::
+    mkfs.fat -C "${work_dir}/iso/EFI/archiso/efiboot.img" 1440
     mcopy -s -i "${work_dir}/iso/EFI/archiso/efiboot.img" "${work_dir}/efitemp/efi" ::/
 }
 
