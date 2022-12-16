@@ -88,6 +88,7 @@ hwinfo
 iftop
 inetutils
 intel-ucode
+inxi
 iotop
 iperf3
 ipmitool
