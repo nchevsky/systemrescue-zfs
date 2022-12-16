@@ -128,6 +128,7 @@ man-pages
 mc
 mdadm
 memtest86+
+memtest86+-efi
 memtester
 mesa-minimal
 minicom

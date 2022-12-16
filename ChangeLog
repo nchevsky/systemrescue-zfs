@@ -6,6 +6,11 @@ unless volunteers are found to help maintaining it. See
 https://gitlab.com/systemrescue/systemrescue-sources/-/issues/278
 
 ------------------------------------------------------------------------------
+9.06 (YYYY-MM-DD):
+------------------------------------------------------------------------------
+* Added Memtest86+ memory tester v6.00 for UEFI in the Grub boot menu (#308)
+
+------------------------------------------------------------------------------
 9.05 (2022-10-21):
 ------------------------------------------------------------------------------
 * Split initialization of SystemRescue into parts done before and in parallel to networking (#304)
