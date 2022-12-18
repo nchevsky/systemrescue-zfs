@@ -51,6 +51,7 @@ systemctl mask atop-rotate.timer
 systemctl mask shadow.timer
 systemctl mask man-db.timer
 systemctl mask updatedb.timer
+systemctl mask archlinux-keyring-wkd-sync.timer
 
 # ldconfig ("Rebuild Dynamic Linker Cache") unnecessarily slows down boot some time after the release
 systemctl mask ldconfig.service
