@@ -6,16 +6,16 @@ unless volunteers are found to help maintaining it. See
 https://gitlab.com/systemrescue/systemrescue-sources/-/issues/278
 
 ------------------------------------------------------------------------------
-9.06 (YYYY-MM-DD):
+9.06 (2022-12-18):
 ------------------------------------------------------------------------------
 * Added Memtest86+ memory tester v6.00 for UEFI in the Grub boot menu (#308)
-* sysrescueusbwriter to create USB media on Linux, creates writeable FAT filesystem
+* sysrescueusbwriter to create USB media on Linux, creates writable FAT filesystem
 * Added pacman-faketime command to work around expired package signing keys (#313)
 * "dovnc" option now implies "dostartx" again (#310)
 * Added "bash_history" and "hosts" options to the "sysconfig" scope of the YAML config file
 * Reduced timeout until automatic boot with default options from 90 to 30 seconds
 * Support for using a serial console in bootloader and boot options (ttyS0,115200n8)
-* .iso images now have a checksum embedded against accidental corruption (isomd5sum)
+* ISO images now have a checksum embedded against accidental corruption (isomd5sum)
 * Added packages: inxi, libfaketime
 
 ------------------------------------------------------------------------------
