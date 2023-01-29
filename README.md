@@ -61,3 +61,9 @@ If you want to include your own [SystemRescueModules][srm], place their srm file
 in the [srm](./srm) directory of the repository before running the build script.
 
 [srm]: https://www.system-rescue.org/Modules/
+
+## Project sponsors
+
+Infrastructure for SystemRescue is sponsored by:
+
+|&nbsp;&nbsp;&nbsp; [<img src="https://www.system-rescue.org/images/fastly_logo.png" width=150 alt="fastly">](https://www.fastly.com)&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp; [<img src="https://www.system-rescue.org/images/netcup_logo_RGB_color.png" width=150 alt="netcup">](https://www.netcup.eu)&nbsp;&nbsp;&nbsp; |
