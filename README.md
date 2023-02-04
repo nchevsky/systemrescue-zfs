@@ -66,4 +66,4 @@ in the [srm](./srm) directory of the repository before running the build script.
 
 Infrastructure for SystemRescue is sponsored by:
 
-|&nbsp;&nbsp;&nbsp; [<img src="https://www.system-rescue.org/images/fastly_logo.png" width=150 alt="fastly">](https://www.fastly.com)&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp; [<img src="https://www.system-rescue.org/images/netcup_logo_RGB_color.png" width=150 alt="netcup">](https://www.netcup.eu)&nbsp;&nbsp;&nbsp; |
+|&nbsp;&nbsp;&nbsp; [<img src="https://www.system-rescue.org/images/fastly_logo_large.png" width=150 alt="fastly">](https://www.fastly.com)&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp; [<img src="https://www.system-rescue.org/images/netcup_logo_large.png" width=150 alt="netcup">](https://www.netcup.eu)&nbsp;&nbsp;&nbsp; |
