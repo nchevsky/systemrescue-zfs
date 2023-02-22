@@ -341,6 +341,7 @@ make_efi() {
          s|%DEFAULT_KERNEL_PARAM%|${default_kernel_param}|g;
          s|%INSTALL_DIR%|${install_dir}|g" \
          ${script_path}/efiboot/grub/grubsrcd.cfg > ${work_dir}/iso/boot/grub/grubsrcd.cfg
+    cp ${script_path}/efiboot/grub/loopback.cfg ${work_dir}/iso/boot/grub/
     cp -a /usr/share/edk2-shell/${edk2arch}/Shell_Full.efi ${work_dir}/iso/EFI/shell.efi
     cp ${work_dir}/${arch}/airootfs/boot/memtest86+/memtest.efi ${work_dir}/iso/EFI/memtest.efi
 }
