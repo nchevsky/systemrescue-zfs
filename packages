@@ -223,6 +223,8 @@ squashfs-tools
 sshfs
 strace
 stress
+stress-ng
+stressapptest
 sudo
 syslinux
 sysstat
