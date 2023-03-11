@@ -18,6 +18,7 @@ busybox
 bzip2
 cabextract
 ca-certificates
+casync
 cdrtools
 chntpw
 cifs-utils
