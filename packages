@@ -171,6 +171,7 @@ par2cmdline
 partclone
 parted
 partimage
+pass
 patch
 pavucontrol
 pciutils
@@ -196,6 +197,7 @@ python-pip
 python-yaml
 qemu-guest-agent
 qemu-img
+qtpass
 rclone
 rdesktop
 rdiff-backup
