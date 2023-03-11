@@ -18,6 +18,7 @@ busybox
 bzip2
 cabextract
 ca-certificates
+casync
 cdrtools
 chntpw
 cifs-utils
@@ -234,6 +235,7 @@ tar
 tcl
 tcpdump
 testdisk
+tk
 tmux
 traceroute
 tree
