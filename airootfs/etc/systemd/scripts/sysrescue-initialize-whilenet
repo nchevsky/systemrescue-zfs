@@ -313,6 +313,46 @@ if 'sysconfig' in config and 'ca-trust' in config['sysconfig'] and config['sysco
         json.dump(ff_policy, polfile, ensure_ascii=False, indent=2)
 
 # ==============================================================================
+# Configure gui_autostart
+# ==============================================================================
+
+if 'gui_autostart' in config and isinstance(config['gui_autostart'], dict):
+    print(f"====> Preparing gui_autostart ...")
+    try:
+        for name, starter in sorted(config['gui_autostart'].items()):
+            # create a sane filename out of the dict key
+            name_sane=re.sub('[^-a-zA-Z0-9_.]+', '_', name)
+
+            if 'desktop' in starter:
+                # symlink an existing desktop file
+                
+                if 'exec' in starter or 'terminal' in starter:
+                    # only allow either desktop or exec, not both
+                    print (f"Ignoring ambiguous gui_autostart '{name}'")
+                    errcnt+=1
+                    continue
+
+                # the desktop file doesn't need to exist at this stage, could be loaded later via SRM for example
+                symlink_overwrite(starter['desktop'],f"/root/.config/autostart/{name_sane}.desktop")
+
+            if 'exec' in starter:
+                # create a new autostart desktop file
+                with open(f"/root/.config/autostart/{name_sane}.desktop", "w") as df:
+                    df.write(f"[Desktop Entry]\n")
+                    df.write(f"Type=Application\n")
+                    df.write(f"Name={name_sane}\n")
+                    df.write(f"Exec={starter['exec']}\n")
+                    df.write(f"NoDisplay=true\n")
+                    if 'terminal' in starter and strtobool(starter['terminal']):
+                        df.write(f"Terminal=true\n")
+                    else:
+                        df.write(f"Terminal=false\n")
+                
+    except Exception as e:
+        print(e)
+        errcnt+=1
+
+# ==============================================================================
 # late-load a SystemRescueModule (SRM)
 # load-srm contains code that waits for the networking being up if necessary
 # ==============================================================================
