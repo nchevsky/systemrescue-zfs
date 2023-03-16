@@ -239,12 +239,6 @@ def build_config():
     if not 'exec' in config or not isinstance(config['exec'], dict):
         config["exec"] = { }
 
-    # ---- parse legacy options passed on the boot command line
-    for curopt in open("/proc/cmdline","r").read().split():
-        if re.match('^autoruns=', curopt): # "autoruns" is the legacy name for 'ar_suffixes'
-            writemsg('WARNING: deprecated option `autoruns=` used, it will be removed soon. Use `ar_suffixes` instead')
-            config['ar_suffixes'] = curopt.replace('autoruns=','')
-
     # ---- load the config into local variables, allow the keys not to exist
     # ---- also print the effective configuration
     writemsg("Showing the effective autorun configuration ...")
