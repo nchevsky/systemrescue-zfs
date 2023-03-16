@@ -19,7 +19,7 @@ basedir='/var/autorun'
 autorunlog=basedir+'/log'
 autorunmnt=basedir+'/mnt'
 autoruntmp=basedir+'/tmp'
-defaultsrc=['/run/archiso/bootmnt/autorun','/run/archiso/bootmnt','/root','/usr/share/sys.autorun']
+defaultsrc=['/run/archiso/bootmnt/autorun','/root','/usr/share/sys.autorun']
 effectivecfg="/etc/sysrescue/sysrescue-effective-config.json"
 config = {}
 
