@@ -19,7 +19,7 @@ basedir='/var/autorun'
 autorunlog=basedir+'/log'
 autorunmnt=basedir+'/mnt'
 autoruntmp=basedir+'/tmp'
-defaultsrc=['/run/archiso/bootmnt/autorun','/run/archiso/bootmnt','/root','/usr/share/sys.autorun']
+defaultsrc=['/run/archiso/bootmnt/autorun','/root','/usr/share/sys.autorun']
 effectivecfg="/etc/sysrescue/sysrescue-effective-config.json"
 config = {}
 
@@ -27,18 +27,6 @@ config = {}
 def writemsg(message):
     print(message)
     logging.info(message)
-
-# remove all '\r' in that file
-def processdostextfiles(curfile):
-    txt=open(curfile,'rb').read()
-    origlen=len(txt)
-    txt=txt.replace(b'\r',b'')
-    if len(txt) != origlen:
-        writemsg(f'WARNING: \\r line endings removed from {curfile}.')
-        writemsg('Relying on automatic line ending sanitizing is deprecated and it will be removed from a future release.')
-    txtfile=open(curfile, 'wb')
-    txtfile.write(txt)
-    txtfile.close()
 
 def is_elf_binary(filename):
     with open(filename,'rb') as f:
@@ -49,19 +37,6 @@ def is_elf_binary(filename):
             return True
         else:
             return False
-
-def ensure_shebang(filename):
-    # does the file have a shebang?
-    with open(filename,'r+') as f:
-        content = f.read()
-        if len(content) > 2 and content[0] == '#' and content[1] == '!':
-            # we have a shebang, nothing to do
-            return
-        # no shebang, we have to add one
-        writemsg(f'WARNING: no shebang in {filename}.')
-        writemsg('This is deprecated and a shebang will be required in future releases.')
-        f.seek(0, 0)
-        f.write("#!/bin/sh\n" + content)
 
 def format_title(title, padding):
     totallen=80
@@ -238,12 +213,6 @@ def build_config():
             config = { }
     if not 'exec' in config or not isinstance(config['exec'], dict):
         config["exec"] = { }
-
-    # ---- parse legacy options passed on the boot command line
-    for curopt in open("/proc/cmdline","r").read().split():
-        if re.match('^autoruns=', curopt): # "autoruns" is the legacy name for 'ar_suffixes'
-            writemsg('WARNING: deprecated option `autoruns=` used, it will be removed soon. Use `ar_suffixes` instead')
-            config['ar_suffixes'] = curopt.replace('autoruns=','')
 
     # ---- load the config into local variables, allow the keys not to exist
     # ---- also print the effective configuration
@@ -574,15 +543,6 @@ def exec_script(entryname, data):
         path = str(data["path"])
 
     # we now have something in path, work it
-
-    try:
-        # only modify files in our tmp dir
-        if os.path.dirname(path) == autoruntmp and not is_elf_binary(path):
-            processdostextfiles(path)
-            # compatibility with old autorun: add #!/bin/sh if no shebang
-            ensure_shebang(path)
-    except:
-        pass
 
     # sanitize parameters
     if "parameters" in data and isinstance(data['parameters'], (str, int, float, bool)):
