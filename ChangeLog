@@ -2,15 +2,14 @@ SystemRescue ChangeLog
 ======================
 
 ------------------------------------------------------------------------------
-10.00 (YYYY-MM-DD):
+10.00 (2023-03-19):
 ------------------------------------------------------------------------------
 * Updated the kernel to the Long-Term-Supported linux-6.1.20
-* Added grub loopback.cfg support (Daniel Richard G)
+* Added grub loopback.cfg support (Daniel Richard G) (#326)
 * Add boot customization hooks for grub and syslinux
 * Add "gui_autostart" YAML config to run programs when X is started
-* Bring back xf86-video-qxl driver as it's bugs have been fixed
-* Improve autorun config consistency by removing deprecated features
-  (autoruns=, scripts without shebang, scripts with \r\n, root of the iso for scripts)
+* Bring back xf86-video-qxl driver as its bugs have been fixed (#324)
+* Removed deprecated autorun features (autoruns=, scripts with \r\n, old paths) (#315)
 * Added pass and qtpass (simple password manager which supports GnuPG encryption)
 * Added packages: casync, stressapptest, stress-ng, tk
 
