@@ -57,7 +57,8 @@ systemctl mask archlinux-keyring-wkd-sync.timer
 systemctl mask ldconfig.service
 
 # systemd-gpt-auto-generator could automatically mount filesystems given the right config. Prevent that.
-rm -f /usr/lib/systemd/system-generators/systemd-gpt-auto-generator
+mkdir -p /etc/systemd/system-generators/
+ln -sf /dev/null /etc/systemd/system-generators/systemd-gpt-auto-generator
 
 # setup pacman signing key storage
 /usr/bin/pacman-key --init
