@@ -63,10 +63,9 @@
       <property name="enable-keyboard-shortcuts" type="bool" value="true"/>
     </property>
     <property name="plugin-9" type="string" value="systray">
-      <property name="show-frame" type="bool" value="false"/>
-      <property name="size-max" type="uint" value="24"/>
-      <property name="names-visible" type="array">
-        <value type="string" value="networkmanager applet"/>
+      <property name="icon-size" type="int" value="0"/>
+      <property name="known-items" type="array">
+        <value type="string" value="nm-applet"/>
       </property>
     </property>
     <property name="plugin-10" type="string" value="clock">
