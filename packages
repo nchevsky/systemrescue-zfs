@@ -201,7 +201,6 @@ qemu-img
 qtpass
 rclone
 rdesktop
-rdiff-backup
 readline
 refind
 reiserfsprogs
@@ -284,7 +283,6 @@ yay
 yubikey-manager
 yubikey-personalization-gui
 zerofree
-zile
 zip
 zsh
 zstd
