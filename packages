@@ -201,6 +201,7 @@ qemu-img
 qtpass
 rclone
 rdesktop
+rdiff-backup
 readline
 refind
 reiserfsprogs
