@@ -6,6 +6,7 @@ SystemRescue ChangeLog
 ------------------------------------------------------------------------------
 * Removed package which has been dropped by upstream: zile
 * Disable recent features by default on ext4 to improve compatibility (#330)
+* Added package: speedtest-cli
 
 ------------------------------------------------------------------------------
 10.00 (2023-03-19):

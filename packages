@@ -221,6 +221,7 @@ shadow
 smartmontools
 smbclient
 socat
+speedtest-cli
 sqlite
 squashfs-tools
 sshfs
