@@ -5,6 +5,7 @@ SystemRescue ChangeLog
 10.01 (YYYY-MM-DD):
 ------------------------------------------------------------------------------
 * Removed packages which have been dropped by upstream: rdiff-backup + zile
+* Disable recent features by default on ext4 to improve compatibility (#330)
 
 ------------------------------------------------------------------------------
 10.00 (2023-03-19):
