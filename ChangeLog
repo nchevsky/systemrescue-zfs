@@ -4,9 +4,9 @@ SystemRescue ChangeLog
 ------------------------------------------------------------------------------
 10.01 (YYYY-MM-DD):
 ------------------------------------------------------------------------------
-* Removed package which has been dropped by upstream: zile
-* Disable recent features by default on ext4 to improve compatibility (#330)
-* Added package: speedtest-cli
+* Disabled recent default ext4 features to improve compatibility (#330)
+* Added package: speedtest-cli (command for testing internet bandwidth)
+* Removed package which has been dropped by upstream: zile (emacs clone)
 
 ------------------------------------------------------------------------------
 10.00 (2023-03-19):
