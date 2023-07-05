@@ -30,7 +30,7 @@ sed -i 's/#\(HandleLidSwitch=\)suspend/\1ignore/' /etc/systemd/logind.conf
 ln -sf /dev/null /etc/udev/rules.d/90-alsa-restore.rules
 
 # config symlink
-mkdir /etc/sysrescue/
+mkdir -p /etc/sysrescue/
 ln -sf /run/archiso/config/sysrescue-effective-config.json /etc/sysrescue/sysrescue-effective-config.json
 
 # Services
@@ -122,6 +122,11 @@ sed -i -e '/# ==== BEGIN sysrescuerepo ====/,/# ==== END sysrescuerepo ====/d' /
 
 # Customizations
 /usr/bin/updatedb
+
+# Trust archzfs key
+pacman-key --init
+pacman-key -r DDF7DB817396A49B2A2723F7403BD972F75D9D76
+pacman-key --lsign-key DDF7DB817396A49B2A2723F7403BD972F75D9D76
 
 # Packages
 pacman -Q > /root/packages-list.txt

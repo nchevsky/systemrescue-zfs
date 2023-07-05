@@ -5,12 +5,13 @@ set -e -u
 script_path=$(readlink -f ${0%/*})
 version_file="${script_path}/VERSION"
 
-iso_name=systemrescue
+consoles='console=ttyS0,115200 console=tty0'
+iso_application="SystemRescue+ZFS"
 iso_version="$(<${version_file})"
-iso_mainver="${iso_version%-*}"
-iso_label="RESCUE${iso_mainver//.}"
-iso_publisher="SystemRescue <http://www.system-rescue.org>"
-iso_application="SystemRescue"
+iso_name=$(echo "$iso_application" | tr '[:upper:]' '[:lower:]')
+iso_label="${iso_application}_${iso_version}"
+iso_url="http://oss.blazis.com/systemrescue+zfs"
+iso_publisher="Nick Chevsky <${iso_url}>"
 install_dir=sysresccd
 image_info_file="${install_dir}/.imageinfo"
 work_dir=work
@@ -129,9 +130,14 @@ determine_snapshot_date() {
 
 # Helper function to run make_*() only one time per architecture.
 run_once() {
+    echo -e "\n================================================================================"
+    echo -e "$1\n================================================================================"
     if [[ ! -e ${work_dir}/build.${1} ]]; then
         $1
         touch ${work_dir}/build.${1}
+        echo -e "\nDone."
+    else
+        echo -e "\nSkipped. To rebuild this step, delete ${work_dir}/build.${1}."
     fi
 }
 
@@ -161,8 +167,8 @@ make_documentation() {
     fi
 
     # is the documentation up to date? ignore for beta and test versions
-    if ! echo "${iso_version}" | grep -i -q "beta\|test" && \
-       ! grep -q "${iso_version}" website/content/Changes-x86/_index.md; then
+    if ! echo "${iso_version%+*}" | grep -i -q "beta\|test" && \
+       ! grep -q "${iso_version%+*}" website/content/Changes-x86/_index.md; then
         echo "ERROR: current version not in changelog. Did you update the website submodule?"
         exit 1
     fi
@@ -201,7 +207,8 @@ make_customize_airootfs() {
 
     cp ${version_file} ${work_dir}/${arch}/airootfs/root/version
 
-    sed "s|%ARCHISO_LABEL%|${iso_label}|g;
+    sed "s|%ISO_APPLICATION%|${iso_application}|g;
+         s|%ISO_URL%|${iso_url}|g;
          s|%ISO_VERSION%|${iso_version}|g;
          s|%ISO_ARCH%|${arch}|g;
          s|%INSTALL_DIR%|${install_dir}|g" \
@@ -305,6 +312,9 @@ make_syslinux() {
     mkdir -p ${work_dir}/iso/${install_dir}/boot/syslinux
     for _cfg in ${script_path}/syslinux/*.cfg; do
         sed "s|%ARCHISO_LABEL%|${iso_label}|g;
+             s|%CONSOLES%|${consoles}|g;
+             s|%ISO_APPLICATION%|${iso_application}|g;
+             s|%ISO_URL%|${iso_url}|g;
              s|%ISO_VERSION%|${iso_version}|g;
              s|%ISO_ARCH%|${arch}|g;
              s|%DEFAULT_KERNEL_PARAM%|${default_kernel_param}|g;
@@ -336,6 +346,8 @@ make_efi() {
     cp -a /usr/lib/grub/${efiarch} ${work_dir}/iso/boot/grub/
     cp ${script_path}/efiboot/grub/font.pf2 ${work_dir}/iso/boot/grub/
     sed "s|%ARCHISO_LABEL%|${iso_label}|g;
+         s|%CONSOLES%|${consoles}|g;
+         s|%ISO_APPLICATION%|${iso_application}|g;
          s|%ISO_VERSION%|${iso_version}|g;
          s|%ISO_ARCH%|${arch}|g;
          s|%DEFAULT_KERNEL_PARAM%|${default_kernel_param}|g;
@@ -395,7 +407,7 @@ make_imageinfo() {
 
     echo "# SystemRescue imageinfo - used by systemrescue-usbwriter to check compatibility" >"${work_dir}/iso/${image_info_file}"
     echo "NAME=SystemRescue" >>"${work_dir}/iso/${image_info_file}"
-    echo "VERSION=${iso_version}" >>"${work_dir}/iso/${image_info_file}"
+    echo "VERSION=${iso_version%+*}" >>"${work_dir}/iso/${image_info_file}"
     echo "ARCH=${arch}" >>"${work_dir}/iso/${image_info_file}"
     echo "SYSLINUX_VERSION=${syslinux_ver}" >>"${work_dir}/iso/${image_info_file}"
     echo "" >>"${work_dir}/iso/${image_info_file}"
