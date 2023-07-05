@@ -112,6 +112,7 @@ linux-firmware
 linux-firmware-bnx2x
 linux-firmware-marvell
 linux-lts
+linux-lts-headers
 lm_sensors
 localepurge
 lshw
@@ -287,6 +288,7 @@ yay
 yubikey-manager
 yubikey-personalization-gui
 zerofree
+zfs-dkms
 zip
 zsh
 zstd
