@@ -4,7 +4,8 @@ SystemRescue ChangeLog
 ------------------------------------------------------------------------------
 10.02 (YYYY-MM-DD):
 ------------------------------------------------------------------------------
-* Added nmon (Nigel's Performance Monitoring tool for Linux)
+* Added nmon (Nigel's Performance Monitoring tool for Linux) (#351)
+* Added libldm (Tools for managing Microsoft Windows Dynamic Disks) (#348)
 
 ------------------------------------------------------------------------------
 10.01 (2023-05-27):
