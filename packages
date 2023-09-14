@@ -155,6 +155,7 @@ networkmanager-vpnc
 nfs-utils
 nilfs-utils
 nmap
+nmon
 nm-connection-editor
 ntfs-3g
 ntfs-3g-system-compression
