@@ -105,6 +105,7 @@ less
 lftp
 libfaketime
 libisoburn
+libldm
 libvncserver
 linux-atm
 linux-firmware
