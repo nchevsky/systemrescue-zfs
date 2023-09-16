@@ -2,12 +2,16 @@ SystemRescue ChangeLog
 ======================
 
 ------------------------------------------------------------------------------
+10.03 (YYYY-MM-DD):
+------------------------------------------------------------------------------
+* Added sleuthkit (Tools for raw file system inspection) (#349)
+* Added timeshift (snapshot-based backup solution) (#350)
+
+------------------------------------------------------------------------------
 10.02 (2023-09-16):
 ------------------------------------------------------------------------------
 * Added nmon (Nigel's Performance Monitoring tool for Linux) (#351)
 * Added libldm (Tools for managing Microsoft Windows Dynamic Disks) (#348)
-* Added sleuthkit (Tools for raw file system inspection) (#349)
-* Added timeshift (snapshot-based backup solution) (#350)
 
 ------------------------------------------------------------------------------
 10.01 (2023-05-27):
