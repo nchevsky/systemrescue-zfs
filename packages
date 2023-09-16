@@ -222,6 +222,7 @@ sg3_utils
 shadow
 smartmontools
 smbclient
+sleuthkit
 socat
 speedtest-cli
 sqlite
@@ -239,6 +240,7 @@ tcl
 tcpdump
 testdisk
 thunar-archive-plugin
+timeshift
 tk
 tmux
 traceroute
