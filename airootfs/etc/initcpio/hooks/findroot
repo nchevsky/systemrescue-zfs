@@ -17,12 +17,15 @@ run_hook() {
         if cryptsetup isLuks ${curdev} >/dev/null 2>&1
         then
             echo "A passphrase is required to access device ${curdev}:"
-            local cryptname="${curdev##*/}"
+            local cryptname="luks-${curdev##*/}"
             local cryptargs=""
-            while ! eval cryptsetup open --type luks ${curdev} ${cryptname} ${cryptargs}
-            do
-                sleep 2;
-            done
+            if ! cryptsetup open --type luks ${curdev} ${cryptname} ${cryptargs}; then
+                if ! cryptsetup open --type luks ${curdev} ${cryptname} ${cryptargs}; then
+                    # each cryptsetup call offers 3 tries to enter a valid password
+                    # all 6 failed failed, so continue with the next device
+                    continue
+                fi
+            fi
             if [ ! -e "/dev/mapper/${cryptname}" ]
             then
                 err "Password succeeded but ${cryptname} creation failed, aborting..."
@@ -45,7 +48,15 @@ run_hook() {
         echo "Checking for ${init} on device ${curdev} ..."
         if mount -r ${curdev} ${newroot} 2>/dev/null
         then
-            if test -x ${newroot}/${init}
+            # check if /sbin is a symlink and if it is absolute or relative
+            if test -L "${newroot}/sbin" && readlink "${newroot}/sbin" | grep -q "^/"
+            then
+                echo "Absolute /sbin symlink on device ${curdev}"
+                echo "This usrmerge layout is currently not supported by findroot."
+                umount ${newroot}
+                continue
+            fi
+            if test -x ${newroot}/${init} || test -L ${newroot}/${init}
             then
                 echo "Found ${init} on device ${curdev}"
                 rootcount=$((rootcount + 1))
