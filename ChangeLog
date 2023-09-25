@@ -4,6 +4,7 @@ SystemRescue ChangeLog
 ------------------------------------------------------------------------------
 10.03 (YYYY-MM-DD):
 ------------------------------------------------------------------------------
+* Fix using findroot when /sbin/init is an absolute symlink (#340)
 * Added sleuthkit (Tools for raw file system inspection) (#349)
 * Added timeshift (snapshot-based backup solution) (#350)
 
