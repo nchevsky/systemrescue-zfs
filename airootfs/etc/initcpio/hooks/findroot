@@ -17,12 +17,15 @@ run_hook() {
         if cryptsetup isLuks ${curdev} >/dev/null 2>&1
         then
             echo "A passphrase is required to access device ${curdev}:"
-            local cryptname="${curdev##*/}"
+            local cryptname="luks-${curdev##*/}"
             local cryptargs=""
-            while ! eval cryptsetup open --type luks ${curdev} ${cryptname} ${cryptargs}
-            do
-                sleep 2;
-            done
+            if ! cryptsetup open --type luks ${curdev} ${cryptname} ${cryptargs}; then
+                if ! cryptsetup open --type luks ${curdev} ${cryptname} ${cryptargs}; then
+                    # each cryptsetup call offers 3 tries to enter a valid password
+                    # all 6 failed failed, so continue with the next device
+                    continue
+                fi
+            fi
             if [ ! -e "/dev/mapper/${cryptname}" ]
             then
                 err "Password succeeded but ${cryptname} creation failed, aborting..."
