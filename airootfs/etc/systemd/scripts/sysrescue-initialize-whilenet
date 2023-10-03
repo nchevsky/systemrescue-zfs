@@ -405,6 +405,38 @@ if 'sysconfig' in config and 'authorized_keys' in config['sysconfig'] and \
         errcnt+=1
 
 # ==============================================================================
+# configure SSH known hosts
+# do this after late-loading SRMs because we want to add to what is contained in a SRM
+# ==============================================================================
+
+if 'sysconfig' in config and 'ssh_known_hosts' in config['sysconfig'] and \
+  config['sysconfig']['ssh_known_hosts'] and isinstance(config['sysconfig']['ssh_known_hosts'], dict):
+    print(f"====> Adding SSH known hosts ...")
+    # create list of key lines we want to add
+    keylines = []
+    for key, value in config['sysconfig']['ssh_known_hosts'].items():
+        keylines.append(f"{key} {value}")
+
+    try:
+        if os.path.exists("/etc/ssh/ssh_known_hosts"):
+            # check if we already have one of our keylines in the file: don't add it again
+            with open("/etc/ssh/ssh_known_hosts", "r") as khfile:
+                for line in khfile:
+                    line = line.strip()
+                    # iterate backwards through the list to make deletion safe
+                    for i in range(len(keylines)-1, -1, -1):
+                        if line == keylines[i]:
+                            del keylines[i]
+        if keylines:
+            with open("/etc/ssh/ssh_known_hosts", "a") as khfile:
+                # append all our keylines
+                for line in keylines:
+                    khfile.write(f"{line}\n")
+    except Exception as e:
+        print(e)
+        errcnt+=1
+
+# ==============================================================================
 # configure bash_history
 # do this after late-loading SRMs because we want to add to what is contained in a SRM
 # ==============================================================================
