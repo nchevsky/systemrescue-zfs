@@ -4,6 +4,7 @@ SystemRescue ChangeLog
 ------------------------------------------------------------------------------
 10.03 (YYYY-MM-DD):
 ------------------------------------------------------------------------------
+* new option ssh_known_hosts in yaml config allows to trust SSH CAs signatures on host keys
 * Fix findroot loop when the password to any encrypted device is unknown (#342)
 * Fix using findroot when /sbin/init is an absolute symlink (#340)
 * Added sleuthkit (Tools for raw file system inspection) (#349)
