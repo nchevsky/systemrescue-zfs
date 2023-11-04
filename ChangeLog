@@ -9,6 +9,7 @@ SystemRescue ChangeLog
 * Fix using findroot when /sbin/init is an absolute symlink (#340)
 * Added sleuthkit (Tools for raw file system inspection) (#349)
 * Added timeshift (snapshot-based backup solution) (#350)
+* Added bcachefs-tools (file system utilities for bcachefs)
 
 ------------------------------------------------------------------------------
 10.02 (2023-09-16):
