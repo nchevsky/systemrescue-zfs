@@ -9,6 +9,7 @@ b43-fwcutter
 bash
 bash-completion
 bc
+bcachefs-tools
 beep
 bind-tools
 binutils
