@@ -67,9 +67,14 @@
       <property name="known-items" type="array">
         <value type="string" value="nm-applet"/>
       </property>
+      <property name="known-legacy-items" type="array">
+        <value type="string" value="xfce4-power-manager"/>
+      </property>
     </property>
     <property name="plugin-10" type="string" value="clock">
-      <property name="digital-format" type="string" value="%T">
+      <property name="digital-format" type="string" value="%T"/>
+      <property name="digital-time-format" type="string" value="%T"/>
+      <property name="digital-layout" type="uint" value="3"/>
     </property>
   </property>
 </channel>
