@@ -64,11 +64,13 @@
     </property>
     <property name="plugin-9" type="string" value="systray">
       <property name="icon-size" type="int" value="0"/>
+      <property name="known-legacy-items" type="array">
+        <value type="string" value="network"/>
+        <value type="string" value="networkmanager applet"/>
+        <value type="string" value="xfce4-power-manager"/>
+      </property>
       <property name="known-items" type="array">
         <value type="string" value="nm-applet"/>
-      </property>
-      <property name="known-legacy-items" type="array">
-        <value type="string" value="xfce4-power-manager"/>
       </property>
     </property>
     <property name="plugin-10" type="string" value="clock">
