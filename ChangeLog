@@ -8,6 +8,7 @@ SystemRescue ChangeLog
 * Fix findroot loop when the password to any encrypted device is unknown (#342)
 * Fix using findroot when /sbin/init is an absolute symlink (#340)
 * Update XFCE Configuration (enabled screen saver, added battery icon)
+* Package dstat has been replaced with dool which is a fork of dstat
 * Added sleuthkit (Tools for raw file system inspection) (#349)
 * Added timeshift (snapshot-based backup solution) (#350)
 * Added bcachefs-tools (file system utilities for bcachefs)
