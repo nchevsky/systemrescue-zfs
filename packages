@@ -158,8 +158,8 @@ networkmanager-vpnc
 nfs-utils
 nilfs-utils
 nmap
-nmon
 nm-connection-editor
+nmon
 ntfs-3g
 ntfs-3g-system-compression
 ntp
@@ -222,9 +222,9 @@ sdparm
 sed
 sg3_utils
 shadow
+sleuthkit
 smartmontools
 smbclient
-sleuthkit
 socat
 speedtest-cli
 sqlite
