@@ -12,6 +12,7 @@ SystemRescue ChangeLog
 * Added sleuthkit (Tools for raw file system inspection) (#349)
 * Added timeshift (snapshot-based backup solution) (#350)
 * Added bcachefs-tools (file system utilities for bcachefs)
+* Added blocksync-fast (Block device sync tool for block-based backups) (#361)
 
 ------------------------------------------------------------------------------
 10.02 (2023-09-16):

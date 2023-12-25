@@ -13,6 +13,7 @@ bcachefs-tools
 beep
 bind-tools
 binutils
+blocksync-fast
 borg
 btrfs-progs
 busybox
