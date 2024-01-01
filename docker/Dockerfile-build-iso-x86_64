@@ -1,4 +1,4 @@
-FROM archlinux:latest
+FROM docker.io/archlinux/archlinux:latest
 RUN mkdir -p /workspace
 COPY tmpfiles/pacman.conf /etc/pacman.conf
 RUN pacman -Syyu --noconfirm strace vim archiso binutils edk2-shell grub hugo isomd5sum mtools && rm -rf /var/cache/pacman/pkg/*
