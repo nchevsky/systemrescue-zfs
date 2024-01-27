@@ -100,8 +100,7 @@ sed -i '2 i NoDisplay=true' /usr/share/applications/{xfce4-mail-reader,xfce4-web
 sed -i "s/^\(Categories=\).*\$/Categories=Utility;/" /usr/share/applications/{geany,*ristretto*,*GHex*}.desktop
 
 # nm-applet with application indicator enabled gives better integration with xfce4-panel's systray
-mkdir -p /root/.config/autostart/ /usr/local/share/applications/
-sed 's/^Exec=nm-applet$/& --indicator/' /etc/xdg/autostart/nm-applet.desktop > /root/.config/autostart/nm-applet.desktop
+mkdir -p /usr/local/share/applications/
 sed 's/^Exec=nm-applet$/& --indicator/' /usr/share/applications/nm-applet.desktop > /usr/local/share/applications/nm-applet.desktop
 
 # Remove large/irrelevant firmwares
