@@ -2,17 +2,18 @@ SystemRescue ChangeLog
 ======================
 
 ------------------------------------------------------------------------------
-10.03 (YYYY-MM-DD):
+11.00 (2024-01-28):
 ------------------------------------------------------------------------------
-* New option ssh_known_hosts in yaml config allows to trust SSH CAs signatures on host keys
-* Fix findroot loop when the password to any encrypted device is unknown (#342)
-* Fix using findroot when /sbin/init is an absolute symlink (#340)
+* Updated the kernel to the Long-Term-Supported linux-6.6.14
+* Added option "ssh_known_hosts" in yaml config to trust SSH CAs signatures on host keys
+* Fix the "findroot" boot option when /sbin/init is an absolute symlink (#340)
+* Fix the "findroot" loop when the password to any encrypted device is unknown (#342)
 * Update XFCE Configuration (enabled screen saver, added battery icon)
-* Package dstat has been replaced with dool which is a fork of dstat
-* Added sleuthkit (Tools for raw file system inspection) (#349)
-* Added timeshift (snapshot-based backup solution) (#350)
-* Added bcachefs-tools (file system utilities for bcachefs)
-* Added blocksync-fast (Block device sync tool for block-based backups) (#361)
+* Package "dstat" has been replaced with "dool" which is a fork of dstat
+* Added bcachefs-tools (file system utilities for bcachefs, no kernel module yet)
+* Added blocksync-fast (block device sync tool for block-based backups) (#361)
+* Added sleuthkit (tools for raw file system inspection) (#349)
+* Added timeshift (snapshot-based backup program) (#350)
 
 ------------------------------------------------------------------------------
 10.02 (2023-09-16):
