@@ -35,7 +35,7 @@ if ! findmnt ${pkgcache} >/dev/null; then
 fi
 
 # Run the build process in the container
-docker run --rm --user 0:0 --privileged -it --workdir /workspace \
+docker run --rm --pids-limit=4096 --user 0:0 --privileged -it --workdir /workspace \
     --volume=${repodir}:/workspace \
     --volume=${pkgcache}:/var/cache/pacman/pkg \
     ${dockerimg} setarch ${sysrescuearch} /bin/bash /workspace/build.sh "$@"
