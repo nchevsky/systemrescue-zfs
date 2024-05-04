@@ -2,9 +2,12 @@ SystemRescue ChangeLog
 ======================
 
 ------------------------------------------------------------------------------
-11.01 (UNRELEASED):
+11.01 (2024-05-04):
 ------------------------------------------------------------------------------
+* Updated the kernel to the Long-Term-Supported linux-6.6.30
 * Added helper script to add support for ZFS in a custom SystemRescue ISO (#359)
+* Added firmwares for Qlogic Cards: linux-firmware-qlogic (#374)
+* Updated disk utilities: GParted-1.6.0, nwipe 0.36
 
 ------------------------------------------------------------------------------
 11.00 (2024-01-28):
