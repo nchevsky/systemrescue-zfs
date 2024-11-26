@@ -26,11 +26,8 @@ sed -i 's/#\(HandleSuspendKey=\)suspend/\1ignore/' /etc/systemd/logind.conf
 sed -i 's/#\(HandleHibernateKey=\)hibernate/\1ignore/' /etc/systemd/logind.conf
 sed -i 's/#\(HandleLidSwitch=\)suspend/\1ignore/' /etc/systemd/logind.conf
 
-# PulseAudio takes care of volume restore
-ln -sf /dev/null /etc/udev/rules.d/90-alsa-restore.rules
-
 # config symlink
-mkdir /etc/sysrescue/
+mkdir -p /etc/sysrescue/
 ln -sf /run/archiso/config/sysrescue-effective-config.json /etc/sysrescue/sysrescue-effective-config.json
 
 # Services
@@ -42,7 +39,6 @@ systemctl enable sshd.service
 systemctl enable sysrescue-initialize-prenet.service
 systemctl enable sysrescue-initialize-whilenet.service
 systemctl enable sysrescue-autorun.service
-systemctl enable qemu-guest-agent.service
 systemctl enable var-lib-pacman\\x2drolling-local.mount
 systemctl set-default multi-user.target
 
@@ -62,6 +58,9 @@ ln -sf /dev/null /etc/systemd/system-generators/systemd-gpt-auto-generator
 
 # setup pacman signing key storage
 /usr/bin/pacman-key --init
+pacman-key --recv-keys 3A9917BF0DED5C13F69AC68FABEC0A1208037BE9 DDF7DB817396A49B2A2723F7403BD972F75D9D76 # archzfs (experimental, stable)
+pacman-key --lsign-key 3A9917BF0DED5C13F69AC68FABEC0A1208037BE9 # archzfs (experimental)
+pacman-key --lsign-key DDF7DB817396A49B2A2723F7403BD972F75D9D76 # archzfs (stable)
 /usr/bin/pacman-key --populate
 rm -f /etc/pacman.d/gnupg/*~
 
@@ -97,7 +96,7 @@ rm -f /usr/share/qt/translations/*
 
 # Cleanup XFCE menu
 sed -i '2 i NoDisplay=true' /usr/share/applications/{xfce4-mail-reader,xfce4-web-browser}.desktop
-sed -i "s/^\(Categories=\).*\$/Categories=Utility;/" /usr/share/applications/{geany,*ristretto*,*GHex*}.desktop
+sed -i "s/^\(Categories=\).*\$/Categories=Utility;/" /usr/share/applications/{*ristretto*,*GHex*}.desktop
 
 # nm-applet with application indicator enabled gives better integration with xfce4-panel's systray
 mkdir -p /usr/local/share/applications/
@@ -112,6 +111,14 @@ then
     echo -e "MANDELETE\nDONTBOTHERNEWLOCALE\nSHOWFREEDSPACE\nen\nen_US\nen_US.UTF-8" > /etc/locale.nopurge
     /usr/bin/localepurge
 fi
+
+# remove ZFS build dependencies
+if [ ! -L "/etc/pacman.d/hooks/71-dkms-remove.hook" ]; then
+    mkdir -p /etc/pacman.d/hooks
+    ln -s /dev/null /etc/pacman.d/hooks/71-dkms-remove.hook # suppress automatic removal of zfs-dkms
+fi
+pacman --noconfirm -Rdds dkms linux-lts-headers || true
+rm /etc/pacman.d/hooks/71-dkms-remove.hook
 
 # Update pacman.conf
 sed -i -e '/# ==== BEGIN sysrescuerepo ====/,/# ==== END sysrescuerepo ====/d' /etc/pacman.conf

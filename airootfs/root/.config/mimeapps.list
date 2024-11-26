@@ -1,5 +1,4 @@
 [Default Applications]
-application/pdf=firefox-esr.desktop
-
-[Added Associations]
-application/pdf=firefox-esr.desktop;
+application/pdf=org.gnome.Epiphany.desktop
+x-scheme-handler/http=org.gnome.Epiphany.desktop
+x-scheme-handler/https=org.gnome.Epiphany.desktop
