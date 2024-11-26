@@ -1,5 +1,4 @@
 acpi
-alsa-utils
 amd-ucode
 archinstall
 arch-install-scripts
@@ -57,7 +56,6 @@ expac
 ext4magic
 f2fs-tools
 fatresize
-featherpad
 file
 findutils
 firefox-esr-bin
@@ -67,7 +65,7 @@ fsarchiver
 galculator
 gawk
 geany
-ghex
+systemrescue+zfs/ghex
 git
 gnu-netcat
 gnupg
@@ -110,11 +108,12 @@ libisoburn
 libldm
 libvncserver
 linux-atm
-linux-firmware
+systemrescue+zfs/linux-firmware
 linux-firmware-bnx2x
 linux-firmware-qlogic
 linux-firmware-marvell
 linux-lts
+linux-lts-headers
 lm_sensors
 localepurge
 lshw
@@ -142,6 +141,7 @@ mkinitcpio
 mkinitcpio-nfs-utils
 mlocate
 moreutils
+mousepad
 ms-sys
 mtools
 mtr
@@ -179,7 +179,6 @@ parted
 partimage
 pass
 patch
-pavucontrol
 pciutils
 pcre
 perl
@@ -194,7 +193,6 @@ ppp
 pptpclient
 procps-ng
 psmisc
-pulseaudio-alsa
 pv
 python
 python-llfuse
@@ -203,7 +201,7 @@ python-pythondialog
 python-yaml
 qemu-guest-agent
 qemu-img
-qtpass
+systemrescue+zfs/qtpass
 rclone
 rdesktop
 rdiff-backup
@@ -239,12 +237,10 @@ sudo
 syslinux
 sysstat
 tar
-tcl
 tcpdump
 testdisk
 thunar-archive-plugin
 timeshift
-tk
 tmux
 traceroute
 tree
@@ -253,7 +249,6 @@ udftools
 udpcast
 unrar
 unzip
-usb_modeswitch
 usbutils
 util-linux
 vi
@@ -273,9 +268,7 @@ wqy-microhei
 wvdial
 x11vnc
 xarchiver
-xfburn
 xfce4
-xfce4-pulseaudio-plugin
 xfce4-screenshooter
 xfce4-taskmanager
 xfsdump
@@ -292,6 +285,7 @@ yay
 yubikey-manager
 yubikey-personalization-gui
 zerofree
+zfs-dkms
 zip
 zsh
 zstd

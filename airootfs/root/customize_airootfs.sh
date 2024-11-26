@@ -26,11 +26,8 @@ sed -i 's/#\(HandleSuspendKey=\)suspend/\1ignore/' /etc/systemd/logind.conf
 sed -i 's/#\(HandleHibernateKey=\)hibernate/\1ignore/' /etc/systemd/logind.conf
 sed -i 's/#\(HandleLidSwitch=\)suspend/\1ignore/' /etc/systemd/logind.conf
 
-# PulseAudio takes care of volume restore
-ln -sf /dev/null /etc/udev/rules.d/90-alsa-restore.rules
-
 # config symlink
-mkdir /etc/sysrescue/
+mkdir -p /etc/sysrescue/
 ln -sf /run/archiso/config/sysrescue-effective-config.json /etc/sysrescue/sysrescue-effective-config.json
 
 # Services
@@ -60,8 +57,17 @@ systemctl mask ldconfig.service
 mkdir -p /etc/systemd/system-generators/
 ln -sf /dev/null /etc/systemd/system-generators/systemd-gpt-auto-generator
 
+# remove kernel headers (no longer needed once zfs-dkms has been installed)
+mkdir -p /etc/pacman.d/hooks
+ln -s /dev/null /etc/pacman.d/hooks/71-dkms-remove.hook # suppress automatic removal of zfs-dkms
+pacman --noconfirm -Rs linux-lts-headers
+rm /etc/pacman.d/hooks/71-dkms-remove.hook
+
 # setup pacman signing key storage
 /usr/bin/pacman-key --init
+pacman-key --recv-keys 3A9917BF0DED5C13F69AC68FABEC0A1208037BE9 DDF7DB817396A49B2A2723F7403BD972F75D9D76 # archzfs (experimental, stable)
+pacman-key --lsign-key 3A9917BF0DED5C13F69AC68FABEC0A1208037BE9 # archzfs (experimental)
+pacman-key --lsign-key DDF7DB817396A49B2A2723F7403BD972F75D9D76 # archzfs (stable)
 /usr/bin/pacman-key --populate
 rm -f /etc/pacman.d/gnupg/*~
 

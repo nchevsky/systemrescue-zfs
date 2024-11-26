@@ -1,18 +1,12 @@
 [Desktop Entry]
-Name=FeatherPad
+Name=Mousepad
 GenericName=Text Editor
-Comment=Lightweight Qt5 text editor
-Exec=featherpad %F
-Icon=featherpad
+Comment=Simple Text Editor
+Exec=mousepad
+Icon=org.xfce.mousepad
 Terminal=false
 Type=Application
 MimeType=text/plain;
-Categories=Qt;Utility;TextEditor;
+Categories=Utility;TextEditor;
 X-KDE-StartupNotify=false;
 Keywords=Text;Editor;Plaintext;
-Actions=new-window;
-X-XFCE-Source=file:///usr/share/applications/featherpad.desktop
-
-[Desktop Action new-window]
-Name=New Window
-Exec=featherpad --win
