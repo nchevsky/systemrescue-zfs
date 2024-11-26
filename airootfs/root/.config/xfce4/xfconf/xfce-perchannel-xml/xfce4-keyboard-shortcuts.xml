@@ -33,7 +33,6 @@
       <property name="&lt;Primary&gt;Escape" type="string" value="xfdesktop --menu"/>
       <property name="XF86WWW" type="string" value="exo-open --launch WebBrowser"/>
       <property name="&lt;Super&gt;p" type="string" value="xfce4-display-settings --minimal"/>
-      <property name="&lt;Primary&gt;&lt;Alt&gt;f" type="string" value="firefox-esr"/>
       <property name="&lt;Primary&gt;&lt;Alt&gt;g" type="string" value="gparted"/>
       <property name="&lt;Primary&gt;&lt;Alt&gt;t" type="string" value="xfce4-terminal"/>
       <property name="override" type="bool" value="true"/>

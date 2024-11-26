@@ -18,7 +18,6 @@
         <value type="int" value="11"/>
         <value type="int" value="6"/>
         <value type="int" value="7"/>
-        <value type="int" value="8"/>
         <value type="int" value="9"/>
         <value type="int" value="10"/>
       </property>
@@ -36,7 +35,7 @@
     </property>
     <property name="plugin-3" type="string" value="launcher">
       <property name="items" type="array">
-        <value type="string" value="15552315792.desktop"/>
+        <value type="string" value="/usr/share/applications/org.gnome.Epiphany.desktop"/>
       </property>
     </property>
     <property name="plugin-4" type="string" value="launcher">
@@ -58,9 +57,6 @@
     <property name="plugin-7" type="string" value="separator">
       <property name="expand" type="bool" value="true"/>
       <property name="style" type="uint" value="0"/>
-    </property>
-    <property name="plugin-8" type="string" value="pulseaudio">
-      <property name="enable-keyboard-shortcuts" type="bool" value="true"/>
     </property>
     <property name="plugin-9" type="string" value="systray">
       <property name="icon-size" type="int" value="0"/>

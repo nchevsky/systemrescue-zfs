@@ -1,0 +1,2 @@
+sysconfig:
+  bookmarks: false # don't generate Firefox configuration
