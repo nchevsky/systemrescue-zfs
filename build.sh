@@ -173,7 +173,7 @@ make_documentation() {
     rm -rf website/content/Download
 
     # parameters are all relative to --source dir
-    /usr/bin/hugo --source "website/" --config "config-offline.toml" --gc --verbose \
+    /usr/bin/hugo build --source "website/" --config "config-offline.toml" --gc \
         --destination "../${work_dir}/${arch}/airootfs/${documentation_dir}"
     RET=$?
 
