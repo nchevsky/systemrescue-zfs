@@ -199,7 +199,6 @@ pv
 python
 python-llfuse
 python-pip
-python-pythondialog
 python-yaml
 qemu-guest-agent
 qemu-img
