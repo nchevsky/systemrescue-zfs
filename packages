@@ -54,7 +54,6 @@ elinks
 ethtool
 exfatprogs
 expac
-ext4magic
 f2fs-tools
 fatresize
 featherpad
@@ -208,7 +207,6 @@ rdesktop
 rdiff-backup
 readline
 refind
-reiserfsprogs
 remmina
 ristretto
 rkhunter
