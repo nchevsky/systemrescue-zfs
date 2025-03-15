@@ -2,9 +2,9 @@ SystemRescue ChangeLog
 ======================
 
 ------------------------------------------------------------------------------
-12.00 (UNRELEASED):
+12.00 (2025-03-15):
 ------------------------------------------------------------------------------
-* Updated the kernel to the Long-Term-Supported linux-6.12
+* Updated the kernel to the Long-Term-Supported linux-6.12.19
 * Support for bcachefs (kernel module + file system tools + support in GParted)
 * Applied workaround to avoid possible display issues affecting grub (#399)
 * Updated disk utilities: GParted-1.7.0, nwipe-0.38, dump-0.4b49
