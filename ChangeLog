@@ -2,6 +2,13 @@ SystemRescue ChangeLog
 ======================
 
 ------------------------------------------------------------------------------
+12.01 (2025-05-26):
+------------------------------------------------------------------------------
+* Updated the kernel to the Long-Term-Supported linux-6.12.30
+* UEFI boot issues fixed by upgrading grub to version 2:2.12.r292 (#410)
+* Disabled the screen saver by default to avoid unlocking issues (#389)
+
+------------------------------------------------------------------------------
 12.00 (2025-03-15):
 ------------------------------------------------------------------------------
 * Updated the kernel to the Long-Term-Supported linux-6.12.19
