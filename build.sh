@@ -217,7 +217,7 @@ make_customize_airootfs() {
          ${script_path}/airootfs/etc/os-release > ${work_dir}/${arch}/airootfs/etc/os-release
     cp -f ${work_dir}/${arch}/airootfs/etc/os-release ${work_dir}/${arch}/airootfs/usr/lib/os-release
 
-    curl -o ${work_dir}/${arch}/airootfs/etc/pacman.d/mirrorlist "$mirrorlist_url"
+    curl --retry 5 --retry-delay 5 --retry-all-errors -o ${work_dir}/${arch}/airootfs/etc/pacman.d/mirrorlist "$mirrorlist_url"
 
     sed "s|%SNAPSHOT_DATE%|${snapshot_date}|g;" \
         ${script_path}/${archive_mirrorlist_file} > ${work_dir}/${arch}/airootfs/etc/pacman.d/mirrorlist-snapshot
