@@ -2,8 +2,9 @@ SystemRescue ChangeLog
 ======================
 
 ------------------------------------------------------------------------------
-12.02 (UNRELEASED):
+12.02 (2025-08-23):
 ------------------------------------------------------------------------------
+* Updated the kernel to the Long-Term-Supported linux-6.12.43
 * Added ssss-0.5.7-1 (cli implementation of the Shamir Secret Sharing Scheme)
 * Fixed sound issues by adding the missing pulseaudio package (#426)
 
