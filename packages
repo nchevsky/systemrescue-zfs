@@ -193,6 +193,7 @@ ppp
 pptpclient
 procps-ng
 psmisc
+pulseaudio
 pulseaudio-alsa
 pv
 python

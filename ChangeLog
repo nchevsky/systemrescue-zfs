@@ -5,6 +5,7 @@ SystemRescue ChangeLog
 12.02 (UNRELEASED):
 ------------------------------------------------------------------------------
 * Added ssss-0.5.7-1 (cli implementation of the Shamir Secret Sharing Scheme)
+* Fixed sound issues by adding the missing pulseaudio package (#426)
 
 ------------------------------------------------------------------------------
 12.01 (2025-05-26):
