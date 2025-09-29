@@ -4,6 +4,4 @@
 #
 Server = https://archive.archlinux.org/repos/%SNAPSHOT_DATE%/$repo/os/$arch
 Server = https://europe.archive.pkgbuild.com/repos/%SNAPSHOT_DATE%/$repo/os/$arch
-Server = https://america.archive.pkgbuild.com/repos/%SNAPSHOT_DATE%/$repo/os/$arch
-Server = https://asia.archive.pkgbuild.com/repos/%SNAPSHOT_DATE%/$repo/os/$arch
 
