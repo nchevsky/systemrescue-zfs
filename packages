@@ -68,7 +68,6 @@ gawk
 geany
 ghex
 git
-gnu-netcat
 gnupg
 gpart
 gparted
@@ -165,6 +164,7 @@ ntfs-3g-system-compression
 ntp
 nvme-cli
 nwipe
+openbsd-netcat
 openconnect
 openssh
 openssl
