@@ -2,8 +2,9 @@ SystemRescue ChangeLog
 ======================
 
 ------------------------------------------------------------------------------
-12.03 (UNRELEASED):
+12.03 (2025-12-13):
 ------------------------------------------------------------------------------
+* Updated the kernel to the Long-Term-Supported linux-6.12.61
 * Replaced gnu-netcat with openbsd-netcat because of the upstream change
 
 ------------------------------------------------------------------------------
