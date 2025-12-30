@@ -90,7 +90,7 @@ iftop
 inetutils
 intel-ucode
 inxi
-iotop
+iotop-c
 iperf3
 ipmitool
 iproute2

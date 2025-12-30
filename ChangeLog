@@ -5,6 +5,7 @@ SystemRescue ChangeLog
 12.04 (UNRELEASED):
 ------------------------------------------------------------------------------
 * Updated yay-prepare script to fix errors causing the script to fail (#373)
+* Replace python version of iotop with iotop-c (#383)
 
 ------------------------------------------------------------------------------
 12.03 (2025-12-13):
