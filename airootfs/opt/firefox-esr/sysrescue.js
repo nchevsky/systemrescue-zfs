@@ -35,11 +35,14 @@ pref("toolkit.telemetry.enabled", false);
 pref("toolkit.telemetry.server", "data:,");
 pref("toolkit.telemetry.archive.enabled", false);
 pref("toolkit.telemetry.dap_enabled", false);
+pref("toolkit.telemetry.dap_task1_enabled", false);
+pref("toolkit.telemetry.dap_visit_counting_enabled", false);
 pref("toolkit.telemetry.newProfilePing.enabled", false);
 pref("toolkit.telemetry.shutdownPingSender.enabled", false);
 pref("toolkit.telemetry.updatePing.enabled", false);
 pref("toolkit.telemetry.bhrPing.enabled", false);
 pref("toolkit.telemetry.firstShutdownPing.enabled", false);
+pref("toolkit.telemetry.user_characteristics_ping.opt-out", true);
 pref("toolkit.telemetry.coverage.opt-out", true);
 pref("toolkit.coverage.opt-out", true);
 pref("toolkit.coverage.enabled", false);
@@ -56,6 +59,9 @@ pref("network.predictor.enabled", false);
 pref("network.predictor.enable-prefetch", false);
 pref("network.http.speculative-parallel-limit", 0);
 pref("browser.places.speculativeConnect.enabled", false);
+pref("browser.urlbar.speculativeConnect.enabled", false);
+pref("dom.prefetch_dns_for_anchor_http_document", false);
+pref("dom.prefetch_dns_for_anchor_https_document", false);
 // Disable crash reporting
 pref("breakpad.reportURL", "");
 pref("browser.crashReports.unsubmittedCheck.enabled", false);
@@ -65,6 +71,7 @@ pref("browser.tabs.crashReporting.sendReport", false);
 pref("browser.discovery.enabled", false);
 pref("browser.newtabpage.activity-stream.asrouter.userprefs.cfr.addons", false);
 pref("browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features", false);
+pref("browser.urlbar.suggest.addons", false);
 pref("extensions.getAddons.showPane", false);
 pref("extensions.htmlaboutaddons.recommendations.enabled", false);
 // Disable advertising
@@ -77,6 +84,8 @@ pref("browser.newtabpage.activity-stream.system.showSponsoredCheckboxes", false)
 pref("browser.ml.chat.enabled", false);
 // Disable "Pocket" icon
 pref("extensions.pocket.enabled", false);
+// Disable shortened URLs
+pref("browser.urlbar.trimURLs", false);
 // Don't ever use DNS-over-HTTPS, we always want use the local resolver
 // this is necessary for being able to resolve local hostnames e.g. in a split dns setup
 // 5 means "off by choice"
