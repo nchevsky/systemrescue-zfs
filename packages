@@ -56,6 +56,7 @@ exfatprogs
 expac
 f2fs-tools
 fatresize
+fatsort
 featherpad
 file
 findutils
