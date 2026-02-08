@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=configure-display
+Comment=Configure the display in Xorg
+Type=Application
+Exec=/usr/bin/configure-display
+X-GNOME-Autostart-Phase=Initialization
+
