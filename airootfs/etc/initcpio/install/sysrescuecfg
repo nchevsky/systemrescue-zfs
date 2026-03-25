@@ -2,9 +2,9 @@
 
 build() {
     add_file "/usr/bin/sysrescue-configuration.lua"
-    add_binary "/usr/bin/lua"
-    add_full_dir "/usr/lib/lua"
-    add_full_dir "/usr/share/lua"
+    add_binary "/usr/bin/lua5.4"
+    add_full_dir "/usr/lib/lua/5.4"
+    add_full_dir "/usr/share/lua/5.4"
 
     # install our rules to handle the "nomdlvm" boot commandline option
     add_file /usr/lib/udev/rules.d/09-nomdlvm.rules

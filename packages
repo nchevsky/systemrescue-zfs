@@ -120,10 +120,11 @@ localepurge
 lshw
 lsof
 lsscsi
-lua
-lua-dkjson
-lua-http
-lua-yaml
+lua54
+lua54-dkjson
+lua54-filesystem
+lua54-http
+lua54-yaml
 lvm2
 lz4
 lzip
