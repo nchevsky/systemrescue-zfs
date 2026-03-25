@@ -1,4 +1,4 @@
-#!/usr/bin/env lua
+#!/usr/bin/env lua5.4
 --
 -- Author: Francois Dupoux
 -- SPDX-License-Identifier: GPL-3.0-or-later
@@ -267,8 +267,8 @@ end
 -- Override the configuration with values passed on the boot command line
 --
 -- NOTE: boot command line options are only for legacy compatibility and
---       very common options. Consider carfully before adding new boot 
---       command line options. New features should by default just be 
+--       very common options. Consider carfully before adding new boot
+--       command line options. New features should by default just be
 --       configured through the yaml config.
 -- ==============================================================================
 
