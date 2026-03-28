@@ -2,17 +2,17 @@ SystemRescue ChangeLog
 ======================
 
 ------------------------------------------------------------------------------
-13.00 (UNRELEASED):
+13.00 (2026-03-28):
 ------------------------------------------------------------------------------
-* Updated the kernel to the Long-Term-Supported linux-6.18
-* Updated bcachefs tools and kernel module to version 1.36.1
+* Updated the kernel to the Long-Term-Supported linux-6.18.20
+* Updated bcachefs tools and kernel module to version 1.37.3
 * Updated yay-prepare script to fix errors causing the script to fail (#373)
 * Use default font from the kernel to avoid tiny font on HiDPI screens (#439)
 * Script to change the scaling factor on HiDPI screens depending on config (#442)
 * Added yq command-line utility for processing YAML, XML, TOML (#379)
-* Added various packages: fatsort, nss-mdns
 * Replace python version of iotop with iotop-c (#383)
-* Updated GParted to version 1.8.0
+* Added various packages: fatsort, nss-mdns
+* Updated GParted to version 1.8.1
 
 ------------------------------------------------------------------------------
 12.03 (2025-12-13):
