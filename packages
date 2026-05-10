@@ -5,6 +5,7 @@ archinstall
 arch-install-scripts
 at
 atop
+b3sum
 b43-fwcutter
 bash
 bash-completion
