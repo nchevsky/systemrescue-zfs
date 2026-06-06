@@ -2,10 +2,12 @@ SystemRescue ChangeLog
 ======================
 
 ------------------------------------------------------------------------------
-13.01 (UNRELEASED):
+13.01 (2026-06-06):
 ------------------------------------------------------------------------------
-- Add 'checksum' to the boot options to check integrity when 'copytoram' is used
-- Added packages: reflector + b3sum
+* Updated the kernel to the Long-Term-Supported linux-6.18.34
+* Updated bcachefs tools and kernel module to version 1.38.3
+* Add 'checksum' to the boot options to check integrity when 'copytoram' is used
+* Added packages: reflector + b3sum
 
 ------------------------------------------------------------------------------
 13.00 (2026-03-28):
