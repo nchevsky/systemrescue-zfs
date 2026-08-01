@@ -2,9 +2,11 @@ SystemRescue ChangeLog
 ======================
 
 ------------------------------------------------------------------------------
-13.02 (UNRELEASED):
+13.02 (2026-08-01):
 ------------------------------------------------------------------------------
+* Updated the kernel to the Long-Term-Supported linux-6.18.41
 * Added age-1.3.1 (file encryption tool with support for post-quantum encryption)
+* Updated bcachefs tools and kernel module to version 1.38.8
 
 ------------------------------------------------------------------------------
 13.01 (2026-06-06):
